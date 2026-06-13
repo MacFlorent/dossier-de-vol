@@ -1,6 +1,7 @@
 import { useReducer } from 'react'
 import type { FlightDossier, DossierTab, Screen } from './types'
 import { HomeScreen } from './screens/HomeScreen'
+import { AircraftEditorScreen } from './screens/AircraftEditorScreen'
 import { AppChrome } from './components/AppChrome'
 
 interface AppState {
@@ -104,9 +105,11 @@ export function App() {
           />
         )}
         {state.screen === 'aircraft-editor' && (
-          <div className="p-8 text-[var(--text-muted)] text-center">
-            Aircraft editor — coming in Task 11
-          </div>
+          <AircraftEditorScreen
+            editingAircraftId={state.editingAircraftId}
+            onSave={() => dispatch({ type: 'GO_HOME' })}
+            onCancel={() => dispatch({ type: 'GO_HOME' })}
+          />
         )}
         {state.screen === 'dossier' && (
           <div className="p-8 text-[var(--text-muted)] text-center">
