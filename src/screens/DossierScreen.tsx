@@ -7,15 +7,6 @@ import { WBPanel } from '../features/wb/WBPanel'
 import { PerfPanel } from '../features/perf/PerfPanel'
 import { DossierPanel } from '../features/dossier/DossierPanel'
 
-// Stub components for other panels (will be replaced in Tasks 13-18)
-function PanelStub({ name }: { name: string }) {
-  return (
-    <div className="p-8 text-center text-[var(--text-muted)]">
-      {name} — à implémenter
-    </div>
-  )
-}
-
 interface DossierScreenProps {
   dossier: FlightDossier
   activeTab: DossierTab

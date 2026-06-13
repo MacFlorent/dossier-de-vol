@@ -3,7 +3,6 @@ import type { FlightDossier, StationLoading, WBResult } from '../../types'
 import { computeWB } from '../../lib/aviation/wbCalc'
 import { generateNavlog } from '../../lib/aviation/navlogGen'
 import { Card } from '../../components/ui/Card'
-import { Input } from '../../components/ui/Input'
 import { Badge } from '../../components/ui/Badge'
 
 interface Props {

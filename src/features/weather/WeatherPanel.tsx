@@ -32,7 +32,7 @@ export function WeatherPanel({ dossier, onUpdate }: Props) {
       ...weatherInputs,
       fields: {
         ...weatherInputs.fields,
-        [icao]: { qnh: 1013, temp: 15, ...weatherInputs.fields[icao], ...field },
+        [icao]: { ...{ qnh: 1013, temp: 15 }, ...weatherInputs.fields[icao], ...field },
       },
     })
   }
