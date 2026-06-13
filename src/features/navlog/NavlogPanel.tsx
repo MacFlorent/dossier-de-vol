@@ -32,26 +32,28 @@ export function NavlogPanel({ dossier, onUpdate }: Props) {
 
   const handleGsOverride = (legIndex: number, value: string) => {
     const gs = value === '' ? undefined : Number(value)
-    const existing = navOverrides[legIndex] ?? {}
     const next = { ...navOverrides }
     if (gs === undefined) {
-      delete next[legIndex]?.gs
-      if (!next[legIndex]?.ete) delete next[legIndex]
+      const inner = { ...navOverrides[legIndex] }
+      delete inner.gs
+      if (inner.ete !== undefined) next[legIndex] = inner
+      else delete next[legIndex]
     } else {
-      next[legIndex] = { ...existing, gs }
+      next[legIndex] = { ...navOverrides[legIndex], gs }
     }
     onUpdate({ navOverrides: next })
   }
 
   const handleEteOverride = (legIndex: number, value: string) => {
     const ete = value === '' ? undefined : Number(value)
-    const existing = navOverrides[legIndex] ?? {}
     const next = { ...navOverrides }
     if (ete === undefined) {
-      delete next[legIndex]?.ete
-      if (!next[legIndex]?.gs) delete next[legIndex]
+      const inner = { ...navOverrides[legIndex] }
+      delete inner.ete
+      if (inner.gs !== undefined) next[legIndex] = inner
+      else delete next[legIndex]
     } else {
-      next[legIndex] = { ...existing, ete }
+      next[legIndex] = { ...navOverrides[legIndex], ete }
     }
     onUpdate({ navOverrides: next })
   }
