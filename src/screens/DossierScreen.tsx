@@ -4,6 +4,7 @@ import { WeatherPanel } from '../features/weather/WeatherPanel'
 import { NavlogPanel } from '../features/navlog/NavlogPanel'
 import { FuelPanel } from '../features/fuel/FuelPanel'
 import { WBPanel } from '../features/wb/WBPanel'
+import { PerfPanel } from '../features/perf/PerfPanel'
 
 // Stub components for other panels (will be replaced in Tasks 13-18)
 function PanelStub({ name }: { name: string }) {
@@ -64,7 +65,12 @@ export function DossierScreen({ dossier, activeTab, onUpdate }: DossierScreenPro
           onUpdate={(loading) => update({ loading })}
         />
       )}
-      {activeTab === 'perf' && <PanelStub name="Performances" />}
+      {activeTab === 'perf' && (
+        <PerfPanel
+          dossier={dossier}
+          onUpdate={(perfInputs) => update({ perfInputs })}
+        />
+      )}
       {activeTab === 'dossier' && <PanelStub name="Dossier" />}
     </div>
   )
