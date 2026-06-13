@@ -62,7 +62,7 @@ function EnvelopeSVG({
       {/* Envelope polygon */}
       <path
         d={pathD}
-        fill="rgba(240,169,59,0.12)"
+        fill="color-mix(in srgb, var(--amber) 12%, transparent)"
         stroke="var(--amber)"
         strokeWidth="1.5"
       />
