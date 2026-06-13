@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import type { FlightDossier, WeatherInputs, WindLayer, FieldWeather } from '../../types'
 import { Card } from '../../components/ui/Card'
@@ -13,6 +13,13 @@ interface Props {
 export function WeatherPanel({ dossier, onUpdate }: Props) {
   const { route, weatherInputs } = dossier
   const [showMetar, setShowMetar] = useState(false)
+
+  // Stable IDs for wind rows so React reconciles correctly when a row is removed from the middle
+  const windIdsRef = useRef<string[]>([])
+  // Grow the id array when new rows are added
+  while (windIdsRef.current.length < weatherInputs.winds.length) {
+    windIdsRef.current.push(crypto.randomUUID())
+  }
 
   // Extract unique aerodromes from route
   const aerodromes = route
@@ -46,6 +53,7 @@ export function WeatherPanel({ dossier, onUpdate }: Props) {
   }
 
   const removeWind = (idx: number) => {
+    windIdsRef.current.splice(idx, 1)
     onUpdate({
       ...weatherInputs,
       winds: weatherInputs.winds.filter((_, i) => i !== idx),
@@ -144,30 +152,27 @@ export function WeatherPanel({ dossier, onUpdate }: Props) {
           </div>
           {weatherInputs.winds.map((wind, idx) => (
             <div
-              key={idx}
+              key={windIdsRef.current[idx]}
               className="grid items-center gap-2 px-4 py-2 border-b border-[var(--border)]"
               style={{ gridTemplateColumns: '120px 120px 120px 1fr' }}
             >
-              <input
+              <Input
                 type="number"
                 value={wind.altitude_ft}
                 onChange={(e) => updateWind(idx, { altitude_ft: Number(e.target.value) })}
-                className="font-mono text-sm bg-[var(--bg-inset)] border border-[var(--border)] rounded px-2 py-1 text-[var(--text-1)] focus:border-[var(--amber)] focus:outline-none"
               />
-              <input
+              <Input
                 type="number"
                 value={wind.direction_deg}
                 min={0}
                 max={360}
                 onChange={(e) => updateWind(idx, { direction_deg: Number(e.target.value) })}
-                className="font-mono text-sm bg-[var(--bg-inset)] border border-[var(--border)] rounded px-2 py-1 text-[var(--text-1)] focus:border-[var(--amber)] focus:outline-none"
               />
-              <input
+              <Input
                 type="number"
                 value={wind.speed_kt}
                 min={0}
                 onChange={(e) => updateWind(idx, { speed_kt: Number(e.target.value) })}
-                className="font-mono text-sm bg-[var(--bg-inset)] border border-[var(--border)] rounded px-2 py-1 text-[var(--text-1)] focus:border-[var(--amber)] focus:outline-none"
               />
               <button
                 onClick={() => removeWind(idx)}
