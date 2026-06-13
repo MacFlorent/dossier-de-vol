@@ -1,11 +1,4 @@
-import type { Aircraft, StationLoading } from '../../types'
-
-export interface WBResult {
-  totalWeight: number   // kg
-  totalMoment: number   // kg·mm
-  cg: number            // mm depuis datum
-  inEnvelope: boolean
-}
+import type { Aircraft, StationLoading, WBResult } from '../../types'
 
 export function computeWB(aircraft: Aircraft, loading: StationLoading): WBResult {
   let totalWeight = aircraft.emptyWeight

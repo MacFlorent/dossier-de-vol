@@ -45,7 +45,7 @@ export interface Aircraft {
   // Facteurs réglementaires (appliqués dans le PerfPanel, pas dans computePerf)
   factors: {
     regulatory: number      // ex: 1.15
-    grass: number           // ex: 1.20 (redonde avec grassFactor dans la table, utilisé dans UI)
+    grass: number           // ex: 1.20 — mirrors PerformanceTable.grassFactor; PerfPanel applies this directly
     headwindPerKt: number   // réduction par kt de vent de face
     tailwindPerKt: number   // majoration par kt de vent arrière
   }
