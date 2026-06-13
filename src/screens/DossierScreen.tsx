@@ -3,6 +3,7 @@ import { RoutePanel } from '../features/route/RoutePanel'
 import { WeatherPanel } from '../features/weather/WeatherPanel'
 import { NavlogPanel } from '../features/navlog/NavlogPanel'
 import { FuelPanel } from '../features/fuel/FuelPanel'
+import { WBPanel } from '../features/wb/WBPanel'
 
 // Stub components for other panels (will be replaced in Tasks 13-18)
 function PanelStub({ name }: { name: string }) {
@@ -57,7 +58,12 @@ export function DossierScreen({ dossier, activeTab, onUpdate }: DossierScreenPro
           onUpdate={(fuelInputs) => update({ fuelInputs })}
         />
       )}
-      {activeTab === 'wb' && <PanelStub name="Masse & Centrage" />}
+      {activeTab === 'wb' && (
+        <WBPanel
+          dossier={dossier}
+          onUpdate={(loading) => update({ loading })}
+        />
+      )}
       {activeTab === 'perf' && <PanelStub name="Performances" />}
       {activeTab === 'dossier' && <PanelStub name="Dossier" />}
     </div>
