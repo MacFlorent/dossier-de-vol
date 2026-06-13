@@ -1,5 +1,6 @@
 import type { FlightDossier, DossierTab } from '../types'
 import { RoutePanel } from '../features/route/RoutePanel'
+import { WeatherPanel } from '../features/weather/WeatherPanel'
 
 // Stub components for other panels (will be replaced in Tasks 13-18)
 function PanelStub({ name }: { name: string }) {
@@ -36,7 +37,12 @@ export function DossierScreen({ dossier, activeTab, onUpdate }: DossierScreenPro
           }}
         />
       )}
-      {activeTab === 'weather' && <PanelStub name="Météo" />}
+      {activeTab === 'weather' && (
+        <WeatherPanel
+          dossier={dossier}
+          onUpdate={(weatherInputs) => update({ weatherInputs })}
+        />
+      )}
       {activeTab === 'navlog' && <PanelStub name="Navlog" />}
       {activeTab === 'fuel' && <PanelStub name="Carburant" />}
       {activeTab === 'wb' && <PanelStub name="Masse & Centrage" />}
