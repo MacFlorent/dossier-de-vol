@@ -1,0 +1,47 @@
+import type { FlightDossier, DossierTab } from '../types'
+import { RoutePanel } from '../features/route/RoutePanel'
+
+// Stub components for other panels (will be replaced in Tasks 13-18)
+function PanelStub({ name }: { name: string }) {
+  return (
+    <div className="p-8 text-center text-[var(--text-muted)]">
+      {name} — à implémenter
+    </div>
+  )
+}
+
+interface DossierScreenProps {
+  dossier: FlightDossier
+  activeTab: DossierTab
+  onUpdate: (dossier: FlightDossier) => void
+}
+
+export function DossierScreen({ dossier, activeTab, onUpdate }: DossierScreenProps) {
+  const now = () => new Date().toISOString()
+  const update = (partial: Partial<FlightDossier>) =>
+    onUpdate({ ...dossier, ...partial, updatedAt: now() })
+
+  return (
+    <div className="flex flex-col min-h-0 flex-1">
+      {activeTab === 'route' && (
+        <RoutePanel
+          dossier={dossier}
+          onUpdateRoute={(route) => update({ route })}
+          onUpdateWaypoint={(wpId, changes) => {
+            if (!dossier.route) return
+            const waypoints = dossier.route.waypoints.map(w =>
+              w.id === wpId ? { ...w, ...changes } : w
+            )
+            update({ route: { ...dossier.route, waypoints } })
+          }}
+        />
+      )}
+      {activeTab === 'weather' && <PanelStub name="Météo" />}
+      {activeTab === 'navlog' && <PanelStub name="Navlog" />}
+      {activeTab === 'fuel' && <PanelStub name="Carburant" />}
+      {activeTab === 'wb' && <PanelStub name="Masse & Centrage" />}
+      {activeTab === 'perf' && <PanelStub name="Performances" />}
+      {activeTab === 'dossier' && <PanelStub name="Dossier" />}
+    </div>
+  )
+}

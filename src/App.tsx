@@ -2,6 +2,7 @@ import { useReducer } from 'react'
 import type { FlightDossier, DossierTab, Screen } from './types'
 import { HomeScreen } from './screens/HomeScreen'
 import { AircraftEditorScreen } from './screens/AircraftEditorScreen'
+import { DossierScreen } from './screens/DossierScreen'
 import { AppChrome } from './components/AppChrome'
 
 interface AppState {
@@ -111,10 +112,12 @@ export function App() {
             onCancel={() => dispatch({ type: 'GO_HOME' })}
           />
         )}
-        {state.screen === 'dossier' && (
-          <div className="p-8 text-[var(--text-muted)] text-center">
-            Dossier screen — coming in Task 12
-          </div>
+        {state.screen === 'dossier' && state.dossier && (
+          <DossierScreen
+            dossier={state.dossier}
+            activeTab={state.dossierTab}
+            onUpdate={(dossier) => dispatch({ type: 'UPDATE_DOSSIER', dossier })}
+          />
         )}
       </main>
     </div>
