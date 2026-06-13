@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { generateNavlog, NavlogAircraftParams } from '../../lib/aviation/navlogGen'
+import { generateNavlog } from '../../lib/aviation/navlogGen'
+import type { NavlogAircraftParams } from '../../lib/aviation/navlogGen'
 import type { ImportedRoute, WeatherInputs } from '../../types'
 
 const ac: NavlogAircraftParams = { tas: 100, fuelBurn: 20, magneticVariation: 0 }

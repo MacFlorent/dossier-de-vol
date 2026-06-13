@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<DivelementsFlightPlanner>
+  <AircraftReference Name="DR42-FGFXZ" Registration="FGFXZ" />
+  <PrimaryRoute CourseType="GreatCircle" Start="N484837.00 E0020424.00" StartType="Aerodrome" Level="2500" CruiseProfile="Cruise 75%" Rules="Vfr" PlannedFuel="110.000000">
+    <RhumbLineRoute To="N484837.40 E0015523.60" ToType="Unknown" Level="1500" LevelChange="B" />
+    <RhumbLineRoute To="N484722.95 E0013608.25" ToType="Town" Level="MSL" LevelChange="B" />
+    <RhumbLineRoute To="N483914.20 E0015939.20" ToType="RadioAid" Level="MSL" LevelChange="B" />
+    <RhumbLineRoute To="N484235.00 E0020637.00" ToType="ReportingPoint" Level="1500" LevelChange="B" />
+    <RhumbLineRoute To="N484459.10 E0020640.25" ToType="Aerodrome" Level="1500" LevelChange="B" />
+    <WeightBalance>
+      <LoadingPoint Name="Fuel" Weight="110.00" />
+      <LoadingPoint Name="Pilot" Weight="80.00" />
+      <LoadingPoint Name="Front Passenger" Weight="0.00" />
+      <LoadingPoint Name="Rear Passenger 1" Weight="0.00" />
+      <LoadingPoint Name="Rear Passenger 2" Weight="0.00" />
+      <LoadingPoint Name="Baggage" Weight="5.00" />
+    </WeightBalance>
+    <ReferencedAirfields />
+  </PrimaryRoute>
+  <Route CourseType="GreatCircle" Start="N484459.10 E0020640.25" StartType="Aerodrome" Level="3500" CruiseProfile="Cruise 75%" Rules="Vfr" PlannedFuel="110.000000">
+    <RhumbLineRoute To="N484214.00 E0015922.00" ToType="Unknown" Level="1500" LevelChange="B" />
+    <RhumbLineRoute To="N484350.10 E0014913.80" ToType="RadioAid" Level="1500" LevelChange="B" />
+    <RhumbLineRoute To="N484734.80 E0015340.45" ToType="Unknown" Level="1500" LevelChange="B" />
+    <RhumbLineRoute To="N484837.00 E0020424.00" ToType="Unknown" Level="1500" LevelChange="B" />
+    <WeightBalance>
+      <LoadingPoint Name="Fuel" Weight="110.00" />
+      <LoadingPoint Name="Pilot" Weight="80.00" />
+      <LoadingPoint Name="Front Passenger" Weight="0.00" />
+      <LoadingPoint Name="Rear Passenger 1" Weight="0.00" />
+      <LoadingPoint Name="Rear Passenger 2" Weight="0.00" />
+      <LoadingPoint Name="Baggage" Weight="5.00" />
+    </WeightBalance>
+    <ReferencedAirfields />
+  </Route>
+</DivelementsFlightPlanner>
