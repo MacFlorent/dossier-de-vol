@@ -66,13 +66,14 @@ function PerfTablePreview({ json }: { json: string }) {
   } catch { /* JSON invalide, on ne rend rien */ }
 
   if (!table) return null
+  const t = table
 
-  const safeIdx = Math.min(oatIdx, table.oats.length - 1)
+  const safeIdx = Math.min(oatIdx, t.oats.length - 1)
 
   return (
     <div className="mt-2 overflow-x-auto">
       <div className="flex gap-1 mb-2 flex-wrap">
-        {table.oats.map((oat, i) => (
+        {t.oats.map((oat, i) => (
           <button
             key={i}
             onClick={() => setOatIdx(i)}
@@ -90,18 +91,18 @@ function PerfTablePreview({ json }: { json: string }) {
         <thead>
           <tr>
             <th className="text-right pr-4 pb-1 text-[var(--text-dim)] font-normal">PA (ft)</th>
-            {table.weights.map(w => (
+            {t.weights.map(w => (
               <th key={w} className="text-right px-3 pb-1 text-[var(--text-dim)] font-normal">{w} kg</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {table.pressureAltitudes.map((pa, pi) => (
+          {t.pressureAltitudes.map((pa, pi) => (
             <tr key={pa} className="border-t border-[var(--border)]">
               <td className="text-right pr-4 py-1 text-[var(--text-muted)]">{pa}</td>
-              {table!.weights.map((_, wi) => (
+              {t.weights.map((_, wi) => (
                 <td key={wi} className="text-right px-3 py-1 text-[var(--text-1)]">
-                  {table!.values[wi]?.[pi]?.[safeIdx] ?? '—'}
+                  {t.values[wi]?.[pi]?.[safeIdx] ?? '—'}
                 </td>
               ))}
             </tr>
