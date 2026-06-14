@@ -1,22 +1,21 @@
-import type { Aircraft, StationLoading, WBResult } from '../../types'
+import type { AircraftMassBalance, StationLoading, WBResult } from '../../types'
 
-export function computeWB(aircraft: Aircraft, loading: StationLoading): WBResult {
-  let totalWeight = aircraft.emptyWeight
-  let totalMoment = aircraft.emptyWeight * aircraft.emptyArm
+export function computeWB(massBalance: AircraftMassBalance, loading: StationLoading): WBResult {
+  let totalWeight = massBalance.emptyWeight
+  let totalMoment = massBalance.emptyWeight * massBalance.emptyArm
 
-  for (const station of aircraft.stations) {
+  for (const station of massBalance.stations) {
     const w = loading[station.name] ?? 0
     totalWeight += w
     totalMoment += w * station.arm
   }
 
   const cg = totalWeight > 0 ? totalMoment / totalWeight : 0
-  const inEnvelope = pointInPolygon(totalWeight, cg, aircraft.envelopePoints)
+  const inEnvelope = pointInPolygon(totalWeight, cg, massBalance.envelopePoints)
 
   return { totalWeight, totalMoment, cg, inEnvelope }
 }
 
-/** Ray-casting algorithm : point [w, cg] dans le polygone de l'enveloppe */
 function pointInPolygon(w: number, cg: number, polygon: [number, number][]): boolean {
   let inside = false
   const n = polygon.length

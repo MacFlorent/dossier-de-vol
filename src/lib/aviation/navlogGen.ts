@@ -3,14 +3,13 @@ import { distanceNm, trueCourse, normAngle } from './coordinates'
 import { solveWindTriangle, windAtAltitude } from './windTriangle'
 
 export interface NavlogAircraftParams {
-  tas: number               // kt TAS
-  fuelBurn: number          // L/h
-  magneticVariation: number // degrees, positive = East
+  ias: number       // kt — utilisé directement comme vitesse de croisière
+  fuelBurn: number  // L/h
 }
 
 export interface NavlogOverride {
-  gs?: number   // kt — if set, overrides computed GS, ETE recalculated
-  ete?: number  // min — if set, overrides computed ETE, GS recalculated
+  gs?: number
+  ete?: number
 }
 
 export function generateNavlog(
@@ -30,20 +29,15 @@ export function generateNavlog(
     const from = wps[i]
     const to = wps[i + 1]
 
-    // 1. Distance and true course
     const dist_nm = Math.round(distanceNm(from.lat, from.lng, to.lat, to.lng) * 10) / 10
     const tc = Math.round(normAngle(trueCourse(from.lat, from.lng, to.lat, to.lng)))
 
-    // 2. Wind at destination altitude
     const wind = windAtAltitude(to.alt_ft, weather.winds)
+    const { wca, gs: calcGs, th } = solveWindTriangle(tc, ac.ias, wind.direction_deg, wind.speed_kt)
 
-    // 3. Wind triangle
-    const { wca, gs: calcGs, th } = solveWindTriangle(tc, ac.tas, wind.direction_deg, wind.speed_kt)
+    // Variation magnétique à 0 — sera injectée depuis FlightDossier dans une prochaine tâche
+    const mh = Math.round(normAngle(th))
 
-    // 4. Magnetic heading
-    const mh = Math.round(normAngle(th - ac.magneticVariation))
-
-    // 5. Apply overrides
     let gs: number
     let ete_min: number
     let gsOverridden = false
@@ -63,10 +57,8 @@ export function generateNavlog(
       ete_min = Math.round((dist_nm / gs * 60) * 10) / 10
     }
 
-    // 6. Fuel
     const fuel_l = Math.round((ete_min / 60 * ac.fuelBurn) * 100) / 100
 
-    // 7. Accumulate
     cumul_fuel_l = Math.round((cumul_fuel_l + fuel_l) * 100) / 100
     cumul_time_min = Math.round((cumul_time_min + ete_min) * 10) / 10
 

@@ -3,7 +3,7 @@ import { generateNavlog } from '../../lib/aviation/navlogGen'
 import type { NavlogAircraftParams } from '../../lib/aviation/navlogGen'
 import type { ImportedRoute, WeatherInputs } from '../../types'
 
-const ac: NavlogAircraftParams = { tas: 100, fuelBurn: 20, magneticVariation: 0 }
+const ac: NavlogAircraftParams = { ias: 100, fuelBurn: 20 }
 
 const calmsRoute: ImportedRoute = {
   waypoints: [
@@ -45,7 +45,7 @@ describe('generateNavlog', () => {
     expect(leg0.fromName).toBe('DEP')
     expect(leg0.toName).toBe('WP1')
     expect(leg0.dist_nm).toBeGreaterThan(0)
-    // calm wind: GS = TAS = 100
+    // calm wind: GS = IAS = 100
     expect(leg0.gs).toBe(100)
     // ETE = dist/gs*60
     expect(leg0.ete_min).toBeCloseTo(leg0.dist_nm / 100 * 60, 1)
@@ -81,17 +81,15 @@ describe('generateNavlog', () => {
     expect(leg1.cumul_time_min).toBeCloseTo(leg0.ete_min + leg1.ete_min, 1)
   })
 
-  it('magnetic variation shifts mh from th', () => {
-    const acEast: NavlogAircraftParams = { ...ac, magneticVariation: 5 }
-    const result = generateNavlog(calmsRoute, noWind, acEast)
+  it('mh equals rounded th (no magnetic variation)', () => {
+    const result = generateNavlog(calmsRoute, noWind, ac)
     const leg0 = result[0]
-    // mh should differ from th by magneticVariation
-    // normAngle(th - 5) must equal mh
-    const expected = ((leg0.th - 5) % 360 + 360) % 360
+    // mh = normAngle(th), no variation applied
+    const expected = ((leg0.th % 360) + 360) % 360
     expect(leg0.mh).toBe(Math.round(expected))
   })
 
-  it('headwind reduces GS below TAS', () => {
+  it('headwind reduces GS below IAS', () => {
     // First leg is northbound (tc ≈ 0°), wind from north = headwind
     const headwind: WeatherInputs = {
       fields: {},

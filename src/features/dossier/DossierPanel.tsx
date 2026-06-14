@@ -1,6 +1,7 @@
 import type { FlightDossier } from '../../types'
 import { generateNavlog } from '../../lib/aviation/navlogGen'
 import { computeWB } from '../../lib/aviation/wbCalc'
+import { FUEL_DENSITY_KGL } from '../../lib/aviation/constants'
 import { downloadDossier } from '../../lib/storage'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
@@ -12,21 +13,22 @@ export function DossierPanel({ dossier }: Props) {
   const { aircraft, route, weatherInputs, navOverrides, loading, fuelInputs } = dossier
 
   // Compute navlog
+  const regime = aircraft.characteristics.regimes[0]
   const navlog = route && route.waypoints.length >= 2
     ? generateNavlog(
         route, weatherInputs,
-        { tas: aircraft.tas, fuelBurn: aircraft.fuelBurn, magneticVariation: aircraft.magneticVariation },
+        { ias: regime.ias, fuelBurn: regime.fuelBurn },
         navOverrides
       )
     : []
 
   // Compute W&B departure
-  const fuelMassKg = aircraft.fuelCapacity * aircraft.fuelDensity
+  const fuelMassKg = aircraft.characteristics.fuelCapacity * FUEL_DENSITY_KGL
   const depLoading = { ...loading }
   // Set fuel station weight for departure
-  const fuelStation = aircraft.stations.find(s => s.name.toLowerCase().includes('carburant'))
+  const fuelStation = aircraft.massBalance.stations.find(s => s.name.toLowerCase().includes('carburant'))
   if (fuelStation) depLoading[fuelStation.name] = fuelMassKg
-  const wbDep = computeWB(aircraft, depLoading)
+  const wbDep = computeWB(aircraft.massBalance, depLoading)
 
   const totalDist = navlog.reduce((s, e) => s + e.dist_nm, 0)
   const totalTime = navlog.at(-1)?.cumul_time_min ?? 0
@@ -42,7 +44,7 @@ export function DossierPanel({ dossier }: Props) {
   const extrasMin = fuelInputs.extras.reduce((s, e) => s + e.durationMin, 0)
   const totalFuelMin = (totalTime + fuelInputs.roulage + extrasMin + fuelInputs.reserveMin + fuelInputs.derouteMin)
     * (1 + fuelInputs.marge / 100)
-  const fuelMinL = (totalFuelMin / 60) * aircraft.fuelBurn
+  const fuelMinL = (totalFuelMin / 60) * regime.fuelBurn
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -69,7 +71,7 @@ export function DossierPanel({ dossier }: Props) {
             </div>
             <div className="text-right text-sm font-mono text-[var(--text-muted)]">
               <p>{aircraft.name}</p>
-              <p>IAS {aircraft.ias} kt · {aircraft.fuelBurn} L/h</p>
+              <p>IAS {regime.ias} kt · {regime.fuelBurn} L/h</p>
             </div>
           </div>
         </header>
@@ -163,10 +165,10 @@ export function DossierPanel({ dossier }: Props) {
               <tbody>
                 <tr className="border-b border-[var(--border)]/30">
                   <td className="py-1 text-[var(--text-2)]">À vide</td>
-                  <td className="text-right py-1 font-mono">{aircraft.emptyArm}</td>
-                  <td className="text-right py-1 font-mono">{aircraft.emptyWeight}</td>
+                  <td className="text-right py-1 font-mono">{aircraft.massBalance.emptyArm}</td>
+                  <td className="text-right py-1 font-mono">{aircraft.massBalance.emptyWeight}</td>
                 </tr>
-                {aircraft.stations.map(st => (
+                {aircraft.massBalance.stations.map(st => (
                   <tr key={st.name} className="border-b border-[var(--border)]/30">
                     <td className="py-1 text-[var(--text-2)]">{st.name}</td>
                     <td className="text-right py-1 font-mono">{st.arm}</td>
@@ -215,19 +217,19 @@ export function DossierPanel({ dossier }: Props) {
               </div>
               <div className="flex justify-between">
                 <dt className="text-[var(--text-muted)]">Marge {fuelInputs.marge}%</dt>
-                <dd className="font-mono">+{((totalFuelMin - (totalFuelMin / (1 + fuelInputs.marge / 100))) * aircraft.fuelBurn / 60).toFixed(1)} L</dd>
+                <dd className="font-mono">+{((totalFuelMin - (totalFuelMin / (1 + fuelInputs.marge / 100))) * regime.fuelBurn / 60).toFixed(1)} L</dd>
               </div>
               <div className="flex justify-between border-t border-[var(--border)] pt-1 font-semibold">
                 <dt>Carbu min</dt>
-                <dd className="font-mono">{fuelMinL.toFixed(1)} L · {(fuelMinL * aircraft.fuelDensity).toFixed(1)} kg</dd>
+                <dd className="font-mono">{fuelMinL.toFixed(1)} L · {(fuelMinL * FUEL_DENSITY_KGL).toFixed(1)} kg</dd>
               </div>
               <div className="flex justify-between text-[var(--text-dim)]">
                 <dt>Capacité</dt>
-                <dd className="font-mono">{aircraft.fuelCapacity} L</dd>
+                <dd className="font-mono">{aircraft.characteristics.fuelCapacity} L</dd>
               </div>
               <div className="mt-1">
-                <Badge variant={fuelMinL <= aircraft.fuelCapacity ? 'success' : 'error'}>
-                  {fuelMinL <= aircraft.fuelCapacity ? 'Carbu OK' : 'INSUFFISANT'}
+                <Badge variant={fuelMinL <= aircraft.characteristics.fuelCapacity ? 'success' : 'error'}>
+                  {fuelMinL <= aircraft.characteristics.fuelCapacity ? 'Carbu OK' : 'INSUFFISANT'}
                 </Badge>
               </div>
             </dl>

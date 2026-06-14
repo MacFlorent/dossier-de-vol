@@ -84,7 +84,7 @@ export function App() {
                   navOverrides: {},
                   navNotes: {},
                   fuelInputs: {
-                    gsBase: aircraft.tas,
+                    gsBase: aircraft.characteristics.regimes[0].ias,
                     windAdjust: 0,
                     roulage: 10,
                     marge: 10,
@@ -93,7 +93,7 @@ export function App() {
                     derouteMin: 30,
                     plein: false,
                   },
-                  loading: Object.fromEntries(aircraft.stations.map(s => [s.name, 0])),
+                  loading: Object.fromEntries(aircraft.massBalance.stations.map(s => [s.name, 0])),
                   perfInputs: {},
                   notes: '',
                   createdAt: now.toISOString(),

@@ -41,43 +41,42 @@ export const DR221_TEMPLATE: Aircraft = {
   registration: '',
   sdReference: '',
 
-  ias: 100,
-  tas: 106,
-  fuelBurn: 20,
-  fuelCapacity: 116,
-  fuelDensity: 0.72,
-  taxiFuel: 2,
-
-  emptyWeight: 615,
-  emptyArm: 345,
-  maxWeight: 1000,
-
-  stations: [
-    { name: 'Pilote', arm: 375, maxWeight: 120 },
-    { name: 'Passager', arm: 505, maxWeight: 100 },
-    { name: 'Bagages', arm: 545, maxWeight: 30 },
-    { name: 'Carburant', arm: 350, maxWeight: 84 }, // 116L × 0.72 kg/L ≈ 84 kg
-  ],
-
-  // Envelope points [weight_kg, cg_mm]
-  envelopePoints: [
-    [615, 295],
-    [615, 430],
-    [880, 430],
-    [1000, 425],
-    [1000, 360],
-    [880, 295],
-  ],
-
-  toTable: buildTable(290),  // base TO run = 290m at sea level, MTOW, ISA
-  ldgTable: buildTable(480), // base LDG run = 480m at sea level, MTOW, ISA
-
-  factors: {
-    regulatory: 1.15,     // Alcyons France regulatory factor
-    grass: 1.20,
-    headwindPerKt: 0.025, // -2.5% per kt headwind
-    tailwindPerKt: 0.02,  // +2% per kt tailwind
+  characteristics: {
+    regimes: [
+      { label: '75% puissance', ias: 108, fuelBurn: 22 },
+      { label: '65% puissance', ias: 100, fuelBurn: 20 },
+    ],
+    fuelCapacity: 116,
   },
 
-  magneticVariation: 0, // degrees East (default for France, ~0 in 2026)
+  massBalance: {
+    emptyWeight: 615,
+    emptyArm: 345,
+    maxWeight: 1000,
+    stations: [
+      { name: 'Pilote', arm: 375, maxWeight: 120 },
+      { name: 'Passager', arm: 505, maxWeight: 100 },
+      { name: 'Bagages', arm: 545, maxWeight: 30 },
+      { name: 'Carburant', arm: 350, maxWeight: 84 },
+    ],
+    envelopePoints: [
+      [615, 295],
+      [615, 430],
+      [880, 430],
+      [1000, 425],
+      [1000, 360],
+      [880, 295],
+    ],
+  },
+
+  performance: {
+    toTable: buildTable(290),
+    ldgTable: buildTable(480),
+    factors: {
+      regulatory: 1.15,
+      grass: 1.20,
+      headwindPerKt: 0.025,
+      tailwindPerKt: 0.02,
+    },
+  },
 }

@@ -30,17 +30,13 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
 
   // Performances croisière
   const [ias, setIas] = useState(100)
-  const [tas, setTas] = useState(106)
   const [fuelBurn, setFuelBurn] = useState(20)
   const [fuelCapacity, setFuelCapacity] = useState(116)
-  const [fuelDensity, setFuelDensity] = useState(0.72)
-  const [taxiFuel, setTaxiFuel] = useState(2)
 
   // Masse & centrage
   const [emptyWeight, setEmptyWeight] = useState(615)
   const [emptyArm, setEmptyArm] = useState(345)
   const [maxWeight, setMaxWeight] = useState(1000)
-  const [magneticVariation, setMagneticVariation] = useState(0)
   const [stations, setStations] = useState<WeightStation[]>([])
 
   // Facteurs
@@ -59,24 +55,21 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
     setName(ac.name)
     setRegistration(ac.registration)
     setSdReference(ac.sdReference ?? '')
-    setIas(ac.ias)
-    setTas(ac.tas)
-    setFuelBurn(ac.fuelBurn)
-    setFuelCapacity(ac.fuelCapacity)
-    setFuelDensity(ac.fuelDensity)
-    setTaxiFuel(ac.taxiFuel)
-    setEmptyWeight(ac.emptyWeight)
-    setEmptyArm(ac.emptyArm)
-    setMaxWeight(ac.maxWeight)
-    setMagneticVariation(ac.magneticVariation)
-    setStations(ac.stations.map(s => ({ ...s })))
-    setRegulatory(ac.factors.regulatory)
-    setGrass(ac.factors.grass)
-    setHeadwindPerKt(ac.factors.headwindPerKt)
-    setTailwindPerKt(ac.factors.tailwindPerKt)
-    setEnvelopeJson(JSON.stringify(ac.envelopePoints, null, 2))
-    setToTableJson(JSON.stringify(ac.toTable, null, 2))
-    setLdgTableJson(JSON.stringify(ac.ldgTable, null, 2))
+    const regime = ac.characteristics.regimes[0]
+    setIas(regime.ias)
+    setFuelBurn(regime.fuelBurn)
+    setFuelCapacity(ac.characteristics.fuelCapacity)
+    setEmptyWeight(ac.massBalance.emptyWeight)
+    setEmptyArm(ac.massBalance.emptyArm)
+    setMaxWeight(ac.massBalance.maxWeight)
+    setStations(ac.massBalance.stations.map(s => ({ ...s })))
+    setRegulatory(ac.performance.factors.regulatory)
+    setGrass(ac.performance.factors.grass)
+    setHeadwindPerKt(ac.performance.factors.headwindPerKt)
+    setTailwindPerKt(ac.performance.factors.tailwindPerKt)
+    setEnvelopeJson(JSON.stringify(ac.massBalance.envelopePoints, null, 2))
+    setToTableJson(JSON.stringify(ac.performance.toTable, null, 2))
+    setLdgTableJson(JSON.stringify(ac.performance.ldgTable, null, 2))
   }, [])
 
   useEffect(() => {
@@ -110,29 +103,30 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
       name,
       registration,
       sdReference: sdReference || undefined,
-      ias,
-      tas,
-      fuelBurn,
-      fuelCapacity,
-      fuelDensity,
-      taxiFuel,
-      emptyWeight,
-      emptyArm,
-      maxWeight,
-      magneticVariation,
-      stations,
-      envelopePoints,
-      toTable,
-      ldgTable,
-      factors: { regulatory, grass, headwindPerKt, tailwindPerKt },
+      characteristics: {
+        regimes: [{ label: 'Croisière', ias, fuelBurn }],
+        fuelCapacity,
+      },
+      massBalance: {
+        emptyWeight,
+        emptyArm,
+        maxWeight,
+        stations,
+        envelopePoints,
+      },
+      performance: {
+        toTable,
+        ldgTable,
+        factors: { regulatory, grass, headwindPerKt, tailwindPerKt },
+      },
     }
     saveAircraft(aircraft)
     onSave()
   }, [
     editingAircraftId,
     name, registration, sdReference,
-    ias, tas, fuelBurn, fuelCapacity, fuelDensity, taxiFuel,
-    emptyWeight, emptyArm, maxWeight, magneticVariation,
+    ias, fuelBurn, fuelCapacity,
+    emptyWeight, emptyArm, maxWeight,
     stations,
     regulatory, grass, headwindPerKt, tailwindPerKt,
     envelopeJson, toTableJson, ldgTableJson,
@@ -223,12 +217,6 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
               onChange={e => setIas(Number(e.target.value))}
             />
             <Input
-              label="TAS (kt)"
-              type="number"
-              value={tas}
-              onChange={e => setTas(Number(e.target.value))}
-            />
-            <Input
               label="Consommation (L/h)"
               type="number"
               value={fuelBurn}
@@ -240,27 +228,13 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
               value={fuelCapacity}
               onChange={e => setFuelCapacity(Number(e.target.value))}
             />
-            <Input
-              label="Densité (kg/L)"
-              type="number"
-              step="0.01"
-              value={fuelDensity}
-              onChange={e => setFuelDensity(Number(e.target.value))}
-            />
-            <Input
-              label="Roulage (L)"
-              type="number"
-              step="0.5"
-              value={taxiFuel}
-              onChange={e => setTaxiFuel(Number(e.target.value))}
-            />
           </div>
         </Card>
 
         {/* 4. Masse & centrage */}
         <Card padding="md">
           <SectionTitle>Masse &amp; centrage</SectionTitle>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
             <Input
               label="Masse à vide (kg)"
               type="number"
@@ -278,13 +252,6 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
               type="number"
               value={maxWeight}
               onChange={e => setMaxWeight(Number(e.target.value))}
-            />
-            <Input
-              label="Variation magnétique (°E)"
-              type="number"
-              step="0.5"
-              value={magneticVariation}
-              onChange={e => setMagneticVariation(Number(e.target.value))}
             />
           </div>
 

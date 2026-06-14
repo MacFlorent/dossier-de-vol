@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { FlightDossier, FuelInputs, FuelExtra } from '../../types'
 import { generateNavlog } from '../../lib/aviation/navlogGen'
+import { FUEL_DENSITY_KGL } from '../../lib/aviation/constants'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
@@ -13,28 +14,28 @@ interface Props {
 
 export function FuelPanel({ dossier, onUpdate }: Props) {
   const { fuelInputs, aircraft } = dossier
-  const { fuelBurn, fuelCapacity, fuelDensity } = aircraft
+  const regime = aircraft.characteristics.regimes[0]
+  const fuelBurn = regime.fuelBurn
+  const fuelCapacity = aircraft.characteristics.fuelCapacity
 
-  // Compute navlog flight time
   const flightMin = useMemo(() => {
     if (!dossier.route || dossier.route.waypoints.length < 2) return 0
-    const ac = { tas: aircraft.tas, fuelBurn: aircraft.fuelBurn, magneticVariation: aircraft.magneticVariation }
+    const ac = { ias: regime.ias, fuelBurn: regime.fuelBurn }
     const entries = generateNavlog(dossier.route, dossier.weatherInputs, ac, dossier.navOverrides)
     return entries.at(-1)?.cumul_time_min ?? 0
-  }, [dossier.route, dossier.weatherInputs, dossier.navOverrides, aircraft])
+  }, [dossier.route, dossier.weatherInputs, dossier.navOverrides, regime])
 
-  // Compute fuel results
   const results = useMemo(() => {
     const extrasMin = fuelInputs.extras.reduce((s, e) => s + e.durationMin, 0)
     const totalMin = flightMin + fuelInputs.roulage + extrasMin + fuelInputs.reserveMin + fuelInputs.derouteMin
     const totalWithMargin = totalMin * (1 + fuelInputs.marge / 100)
     const fuelMinL = (totalWithMargin / 60) * fuelBurn
-    const fuelMinKg = fuelMinL * fuelDensity
+    const fuelMinKg = fuelMinL * FUEL_DENSITY_KGL
     const autonomyMin = (fuelCapacity / fuelBurn) * 60
     const insufficient = fuelMinL > fuelCapacity
     const tight = !insufficient && fuelMinL > fuelCapacity * 0.9
     return { totalMin, totalWithMargin, fuelMinL, fuelMinKg, autonomyMin, insufficient, tight }
-  }, [fuelInputs, flightMin, fuelBurn, fuelDensity, fuelCapacity])
+  }, [fuelInputs, flightMin, fuelBurn, fuelCapacity])
 
   const fmtTime = (min: number) => {
     const h = Math.floor(min / 60)

@@ -11,46 +11,50 @@ export interface PerformanceTable {
   pressureAltitudes: number[] // ft, triés croissant
   oats: number[]              // °C, triés croissant
   values: number[][][]        // [weight_idx][pa_idx][oat_idx] = distance en mètres
-  grassFactor?: number        // multiplicateur herbe (défaut 1.20)
-  headwindFactor?: number     // réduction par kt de vent de face (défaut 0.025)
-  tailwindFactor?: number     // majoration par kt de vent arrière (défaut 0.02)
-  slopeFactor?: number        // majoration par % de pente (défaut 0.07)
+  grassFactor?: number
+  headwindFactor?: number
+  tailwindFactor?: number
+  slopeFactor?: number
+}
+
+export interface CruiseRegime {
+  label: string    // ex: "75% puissance"
+  ias: number      // kt — utilisé directement comme vitesse de croisière
+  fuelBurn: number // L/h
+}
+
+export interface AircraftCharacteristics {
+  regimes: CruiseRegime[]  // premier = régime par défaut du navlog
+  fuelCapacity: number     // L utilisables
+}
+
+export interface AircraftMassBalance {
+  emptyWeight: number
+  emptyArm: number                    // mm depuis le datum
+  maxWeight: number                   // kg MTOW
+  stations: WeightStation[]
+  envelopePoints: [number, number][]  // [kg, mm][]
+}
+
+export interface AircraftPerformance {
+  toTable: PerformanceTable
+  ldgTable: PerformanceTable
+  factors: {
+    regulatory: number
+    grass: number
+    headwindPerKt: number
+    tailwindPerKt: number
+  }
 }
 
 export interface Aircraft {
   id: string
-  name: string              // ex: "DR221"
-  registration: string      // ex: "F-BPCT"
-  sdReference?: string      // pour auto-match à l'import .flightplan
-
-  // Performances croisière
-  ias: number               // kt IAS de croisière
-  tas: number               // kt TAS de croisière
-  fuelBurn: number          // L/h en croisière
-  fuelCapacity: number      // L utilisables
-  fuelDensity: number       // kg/L (0.72 Avgas)
-  taxiFuel: number          // L de roulage
-
-  // Masse & centrage
-  emptyWeight: number       // kg
-  emptyArm: number          // mm depuis le datum
-  maxWeight: number         // kg MTOW
-  stations: WeightStation[]
-  envelopePoints: [number, number][]  // [poids_kg, cg_mm][]
-
-  // Tables de performances
-  toTable: PerformanceTable
-  ldgTable: PerformanceTable
-
-  // Facteurs réglementaires (appliqués dans le PerfPanel, pas dans computePerf)
-  factors: {
-    regulatory: number      // ex: 1.15
-    grass: number           // ex: 1.20 — mirrors PerformanceTable.grassFactor; PerfPanel applies this directly
-    headwindPerKt: number   // réduction par kt de vent de face
-    tailwindPerKt: number   // majoration par kt de vent arrière
-  }
-
-  magneticVariation: number // degrés, positif = Est
+  name: string
+  registration: string
+  sdReference?: string
+  characteristics: AircraftCharacteristics
+  massBalance: AircraftMassBalance
+  performance: AircraftPerformance
 }
 
 export type AircraftSnapshot = Aircraft & { snapshotAt: string }

@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import type { FlightDossier, TerrainPerfInputs, PerfConditions, AircraftSnapshot } from '../../types'
 import { computePerf } from '../../lib/aviation/perfCalc'
 import { computeWB } from '../../lib/aviation/wbCalc'
+import { FUEL_DENSITY_KGL } from '../../lib/aviation/constants'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { Badge } from '../../components/ui/Badge'
@@ -67,7 +68,7 @@ function TerrainCard({
   const pa = pressureAlt(elevation, qnh)
   const da = densityAlt(pa, temp)
 
-  const table = tableKey === 'to' ? aircraft.toTable : aircraft.ldgTable
+  const table = tableKey === 'to' ? aircraft.performance.toTable : aircraft.performance.ldgTable
 
   const cond: PerfConditions = {
     weight,
@@ -79,7 +80,7 @@ function TerrainCard({
   }
 
   const distBase = computePerf(table, cond)
-  const distRegulatory = Math.round(distBase * aircraft.factors.regulatory)
+  const distRegulatory = Math.round(distBase * aircraft.performance.factors.regulatory)
 
   const todaOk = inputs.toda === undefined || distRegulatory <= inputs.toda
   const ldaOk = inputs.lda === undefined || distRegulatory <= inputs.lda
@@ -213,7 +214,7 @@ function TerrainCard({
             </div>
             <div className="flex justify-between font-semibold">
               <dt className="text-[var(--text-muted)]">
-                Dist. réglementaire (×{aircraft.factors.regulatory})
+                Dist. réglementaire (×{aircraft.performance.factors.regulatory})
               </dt>
               <dd className="font-mono text-[var(--text-1)]">{distRegulatory} m</dd>
             </div>
@@ -269,14 +270,14 @@ export function PerfPanel({ dossier, onUpdate }: Props) {
 
   // Compute departure weight (W&B with full fuel as in WBPanel)
   const depWeight = useMemo(() => {
-    const fuelStationName = aircraft.stations.find(s =>
+    const fuelStationName = aircraft.massBalance.stations.find(s =>
       s.name.toLowerCase().includes('carburant')
     )?.name
-    const fuelMassKg = aircraft.fuelCapacity * aircraft.fuelDensity
+    const fuelMassKg = aircraft.characteristics.fuelCapacity * FUEL_DENSITY_KGL
     const depLoading = { ...loading }
     if (fuelStationName) depLoading[fuelStationName] = fuelMassKg
-    const wb = computeWB(aircraft, depLoading)
-    return Math.min(wb.totalWeight, aircraft.maxWeight)
+    const wb = computeWB(aircraft.massBalance, depLoading)
+    return Math.min(wb.totalWeight, aircraft.massBalance.maxWeight)
   }, [aircraft, loading])
 
   // Helper to get pre-filled qnh/temp for a terrain from weatherInputs

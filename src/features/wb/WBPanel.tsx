@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import type { FlightDossier, StationLoading, WBResult } from '../../types'
 import { computeWB } from '../../lib/aviation/wbCalc'
 import { generateNavlog } from '../../lib/aviation/navlogGen'
+import { FUEL_DENSITY_KGL } from '../../lib/aviation/constants'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 
@@ -130,13 +131,9 @@ function wbStatus(dep: WBResult, arr: WBResult) {
 
 export function WBPanel({ dossier, onUpdate }: Props) {
   const { aircraft, loading } = dossier
-  const {
-    stations,
-    emptyWeight,
-    fuelCapacity,
-    fuelDensity,
-    envelopePoints,
-  } = aircraft
+  const { massBalance, characteristics } = aircraft
+  const { stations, emptyWeight, envelopePoints } = massBalance
+  const fuelCapacity = characteristics.fuelCapacity
 
   // Identify fuel station name (matches "Carburant" in DR221)
   const fuelStationName = stations.find(s =>
@@ -147,41 +144,28 @@ export function WBPanel({ dossier, onUpdate }: Props) {
   const editableStations = stations.filter(s => s.name !== fuelStationName)
 
   // Full fuel mass (departure)
-  const fuelMassKg = fuelCapacity * fuelDensity
+  const fuelMassKg = fuelCapacity * FUEL_DENSITY_KGL
 
   // Navlog fuel burn (for arrival estimate)
   const navlogFuelL = useMemo(() => {
     if (!dossier.route || dossier.route.waypoints.length < 2) return 0
-    const ac = {
-      tas: aircraft.tas,
-      fuelBurn: aircraft.fuelBurn,
-      magneticVariation: aircraft.magneticVariation,
-    }
-    const entries = generateNavlog(
-      dossier.route,
-      dossier.weatherInputs,
-      ac,
-      dossier.navOverrides
-    )
+    const regime = aircraft.characteristics.regimes[0]
+    const ac = { ias: regime.ias, fuelBurn: regime.fuelBurn }
+    const entries = generateNavlog(dossier.route, dossier.weatherInputs, ac, dossier.navOverrides)
     return entries.at(-1)?.cumul_fuel_l ?? 0
-  }, [
-    dossier.route,
-    dossier.weatherInputs,
-    dossier.navOverrides,
-    aircraft,
-  ])
+  }, [dossier.route, dossier.weatherInputs, dossier.navOverrides, aircraft])
 
   // Arrival fuel: max(0, full - burned)
   const arrivalFuelKg = Math.max(
     0,
-    fuelMassKg - navlogFuelL * fuelDensity
+    fuelMassKg - navlogFuelL * FUEL_DENSITY_KGL
   )
 
   // Departure W&B: loading + full fuel
   const depResult = useMemo(() => {
     const depLoading: StationLoading = { ...loading }
     if (fuelStationName !== null) depLoading[fuelStationName] = fuelMassKg
-    return computeWB(aircraft, depLoading)
+    return computeWB(aircraft.massBalance, depLoading)
   }, [aircraft, loading, fuelStationName, fuelMassKg])
 
   // Arrival W&B: loading + arrival fuel (or 0 if no fuel station)
@@ -191,7 +175,7 @@ export function WBPanel({ dossier, onUpdate }: Props) {
     else {
       // No explicit fuel station — arrival = same loading (fuel not modelled)
     }
-    return computeWB(aircraft, arrLoading)
+    return computeWB(aircraft.massBalance, arrLoading)
   }, [aircraft, loading, fuelStationName, arrivalFuelKg])
 
   const status = wbStatus(depResult, arrResult)
@@ -305,7 +289,7 @@ export function WBPanel({ dossier, onUpdate }: Props) {
                         </span>
                         {navlogFuelL > 0 && (
                           <span className="ml-1 text-[var(--text-dim)] text-xs">
-                            (−{(navlogFuelL * fuelDensity).toFixed(1)} kg navlog)
+                            (−{(navlogFuelL * FUEL_DENSITY_KGL).toFixed(1)} kg navlog)
                           </span>
                         )}
                         {navlogFuelL === 0 && (
@@ -405,7 +389,7 @@ export function WBPanel({ dossier, onUpdate }: Props) {
                     colSpan={4}
                     className="pt-3 text-xs text-[var(--text-dim)]"
                   >
-                    MTOW : {aircraft.maxWeight} kg
+                    MTOW : {aircraft.massBalance.maxWeight} kg
                   </td>
                 </tr>
               </tfoot>
@@ -425,19 +409,19 @@ export function WBPanel({ dossier, onUpdate }: Props) {
           </Card>
 
           {/* Warnings */}
-          {depResult.totalWeight > aircraft.maxWeight && (
+          {depResult.totalWeight > aircraft.massBalance.maxWeight && (
             <Card padding="sm">
               <p className="text-[var(--red)] text-sm font-medium">
                 Masse départ ({fmtKg(depResult.totalWeight)}) dépasse le MTOW
-                ({aircraft.maxWeight} kg)
+                ({aircraft.massBalance.maxWeight} kg)
               </p>
             </Card>
           )}
-          {arrResult.totalWeight > aircraft.maxWeight && (
+          {arrResult.totalWeight > aircraft.massBalance.maxWeight && (
             <Card padding="sm">
               <p className="text-[var(--red)] text-sm font-medium">
                 Masse arrivée ({fmtKg(arrResult.totalWeight)}) dépasse le MTOW
-                ({aircraft.maxWeight} kg)
+                ({aircraft.massBalance.maxWeight} kg)
               </p>
             </Card>
           )}
