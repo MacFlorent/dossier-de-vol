@@ -62,10 +62,14 @@ export function downloadFleet(): void {
 }
 
 export function importFleet(selected: Aircraft[]): { added: number; updated: number } {
+  // Deduplicate by registration — last entry wins for duplicate registrations in input
+  const deduped = selected.filter(
+    (ac, idx, arr) => arr.findLastIndex(a => a.registration === ac.registration) === idx
+  )
   const existing = listAircraft()
   let added = 0
   let updated = 0
-  for (const imported of selected) {
+  for (const imported of deduped) {
     const match = existing.find(ac => ac.registration === imported.registration)
     if (match) {
       saveAircraft({ ...imported, id: match.id })

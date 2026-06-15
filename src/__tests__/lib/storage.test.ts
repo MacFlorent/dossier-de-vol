@@ -76,6 +76,16 @@ describe('importFleet', () => {
     const result = importFleet([])
     expect(result).toEqual({ added: 0, updated: 0 })
   })
+
+  it('handles duplicate registrations in input — last entry wins', () => {
+    const first = makeAircraft({ id: 'id-1', name: 'First' })
+    const second = makeAircraft({ id: 'id-2', name: 'Second', registration: 'F-BPCT' })
+    const result = importFleet([first, second])
+    expect(result.added).toBe(1)
+    const fleet = listAircraft()
+    expect(fleet).toHaveLength(1)
+    expect(fleet[0].name).toBe('Second')
+  })
 })
 
 describe('duplicateAircraft', () => {
