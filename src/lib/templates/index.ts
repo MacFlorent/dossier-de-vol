@@ -1,5 +1,4 @@
 import type { Aircraft } from '../../types'
-import { DR221_TEMPLATE } from './dr221'
 
 export interface TemplateEntry {
   key: string
@@ -7,16 +6,20 @@ export interface TemplateEntry {
   template: Aircraft
 }
 
-export const TEMPLATES: TemplateEntry[] = [
-  { key: 'dr221', label: 'DR221', template: DR221_TEMPLATE },
-]
+const modules = import.meta.glob('../../../resources/*.json', { eager: true })
+
+export const TEMPLATES: TemplateEntry[] = Object.entries(modules).map(([path, mod]) => {
+  const aircraft = (mod as { default: Aircraft }).default
+  const key = path.split('/').pop()!.replace('.json', '')
+  return { key, label: aircraft.name, template: aircraft }
+})
 
 export function getTemplate(key: string): Aircraft | null {
   return TEMPLATES.find(t => t.key === key)?.template ?? null
 }
 
 export function createFromTemplate(key: string, id: string): Aircraft | null {
-  const tmpl = getTemplate(key)
-  if (!tmpl) return null
-  return { ...tmpl, id, registration: '' }
+  const entry = TEMPLATES.find(t => t.key === key)
+  if (!entry) return null
+  return { ...entry.template, id, registration: '' }
 }
