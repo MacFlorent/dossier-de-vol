@@ -131,10 +131,6 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
   const [stations, setStations] = useState<WeightStation[]>([])
   const [envelopeJson, setEnvelopeJson] = useState('[]')
 
-  const [regulatory, setRegulatory] = useState(1.15)
-  const [grass, setGrass] = useState(1.20)
-  const [headwindPerKt, setHeadwindPerKt] = useState(0.025)
-  const [tailwindPerKt, setTailwindPerKt] = useState(0.02)
   const [toTableJson, setToTableJson] = useState('{}')
   const [ldgTableJson, setLdgTableJson] = useState('{}')
   const [jsonError, setJsonError] = useState<string | null>(null)
@@ -149,10 +145,6 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
     setEmptyArm(ac.massBalance.emptyArm)
     setMaxWeight(ac.massBalance.maxWeight)
     setStations(ac.massBalance.stations.map(s => ({ ...s })))
-    setRegulatory(ac.performance.factors.regulatory)
-    setGrass(ac.performance.factors.grass)
-    setHeadwindPerKt(ac.performance.factors.headwindPerKt)
-    setTailwindPerKt(ac.performance.factors.tailwindPerKt)
     setEnvelopeJson(JSON.stringify(ac.massBalance.envelopePoints, null, 2))
     setToTableJson(JSON.stringify(ac.performance.toTable, null, 2))
     setLdgTableJson(JSON.stringify(ac.performance.ldgTable, null, 2))
@@ -191,11 +183,7 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
       sdReference: sdReference || undefined,
       characteristics: { regimes, fuelCapacity },
       massBalance: { emptyWeight, emptyArm, maxWeight, stations, envelopePoints },
-      performance: {
-        toTable,
-        ldgTable,
-        factors: { regulatory, grass, headwindPerKt, tailwindPerKt },
-      },
+      performance: { toTable, ldgTable },
     }
     saveAircraft(aircraft)
     onSave()
@@ -204,7 +192,7 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
     name, registration, sdReference,
     regimes, fuelCapacity,
     emptyWeight, emptyArm, maxWeight, stations, envelopeJson,
-    regulatory, grass, headwindPerKt, tailwindPerKt, toTableJson, ldgTableJson,
+    toTableJson, ldgTableJson,
     onSave,
   ])
 
@@ -221,7 +209,7 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
   }, [])
 
   const addStation = useCallback(() => {
-    setStations(prev => [...prev, { name: '', arm: 0, maxWeight: 0 }])
+    setStations(prev => [...prev, { name: '', arm: 0, kind: 'dry' as const }])
   }, [])
 
   const removeStation = useCallback((idx: number) => {
@@ -229,7 +217,12 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
   }, [])
 
   const updateStation = useCallback((idx: number, field: keyof WeightStation, value: string | number) => {
-    setStations(prev => prev.map((s, i) => i === idx ? { ...s, [field]: value } : s))
+    setStations(prev => prev.map((s, i) => {
+      if (i !== idx) return s
+      if (field === 'kind') return { ...s, kind: value as 'dry' | 'fuel' }
+      if (field === 'arm') return { ...s, arm: Number(value) }
+      return { ...s, [field]: value }
+    }))
   }, [])
 
   return (
@@ -372,7 +365,7 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
                     <tr className="text-xs text-[var(--text-dim)] text-left">
                       <th className="pb-1 pr-3 font-medium">Nom</th>
                       <th className="pb-1 pr-3 font-medium">Bras (mm)</th>
-                      <th className="pb-1 pr-3 font-medium">Poids max (kg)</th>
+                      <th className="pb-1 pr-3 font-medium">Type</th>
                       <th className="pb-1 font-medium"></th>
                     </tr>
                   </thead>
@@ -395,11 +388,14 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
                           />
                         </td>
                         <td className="py-1.5 pr-3">
-                          <input type="number"
-                            className="w-24 px-2 py-1 rounded text-xs font-mono text-[var(--text-1)] bg-[var(--bg-inset)] border border-[var(--border)] focus:outline-none focus:border-[var(--amber)]"
-                            value={s.maxWeight}
-                            onChange={e => updateStation(idx, 'maxWeight', Number(e.target.value))}
-                          />
+                          <select
+                            className="px-2 py-1 rounded text-xs text-[var(--text-1)] bg-[var(--bg-inset)] border border-[var(--border)] focus:outline-none focus:border-[var(--amber)]"
+                            value={s.kind}
+                            onChange={e => updateStation(idx, 'kind', e.target.value)}
+                          >
+                            <option value="dry">Sec (kg)</option>
+                            <option value="fuel">Carburant (L)</option>
+                          </select>
                         </td>
                         <td className="py-1.5">
                           <button
@@ -436,18 +432,6 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
         {/* Performances */}
         <Card padding="md">
           <SectionTitle>Performances</SectionTitle>
-
-          <p className="text-xs text-[var(--text-dim)] uppercase tracking-wider mb-2">Facteurs réglementaires</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-            <Input label="Réglementaire (×)" type="number" step="0.01" value={regulatory}
-              onChange={e => setRegulatory(Number(e.target.value))} />
-            <Input label="Herbe (×)" type="number" step="0.01" value={grass}
-              onChange={e => setGrass(Number(e.target.value))} />
-            <Input label="Vent de face (%/kt)" type="number" step="0.005" value={headwindPerKt}
-              onChange={e => setHeadwindPerKt(Number(e.target.value))} />
-            <Input label="Vent arrière (%/kt)" type="number" step="0.005" value={tailwindPerKt}
-              onChange={e => setTailwindPerKt(Number(e.target.value))} />
-          </div>
 
           <div className="flex flex-col gap-1 mb-6">
             <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">
