@@ -35,9 +35,14 @@ Les valeurs de `oats` sont toujours en °C. `oatAxis` indique leur signification
 
 ## Herbe
 
+Deux modes, priorité à `grassValues` :
+
 | Champ | Type | Description |
 |---|---|---|
-| `grassValues` | `number[][][]` | Table complète pour piste herbe (mêmes dimensions que `values`). Si absent, le facteur `grass` défini au niveau de l'avion (`factors.grass`) est appliqué à la place. |
+| `grassValues` | `number[][][]` | Table complète pour piste herbe (mêmes dimensions que `values`). Prioritaire. |
+| `grassFactor` | `number` | Facteur multiplicatif appliqué à `values` si `grassValues` absent. Ex. `1.20`. |
+
+> Si les deux sont présents : warning « grassFactor ignoré — grassValues est prioritaire ».
 
 ## Correction vent
 
@@ -87,11 +92,13 @@ La table est acceptée mais l'utilisateur est averti.
 
 ## Récapitulatif par avion
 
-| Avion | `weightCorrection` | `oatAxis` | `grassValues` | `windCorrections` |
-|---|---|---|---|---|
-| DR221 TO | `quadratic` | `absolute` | ✓ | — |
-| DR221 LDG | `interpolate` | `absolute` | — | — |
-| DR400 TO | `interpolate` | `isa_delta` | ✓ | ✓ |
-| DR400 LDG | `interpolate` | `isa_delta` | — | ✓ |
-| C172 TO | `interpolate` | `absolute` | — | — |
-| C172 LDG | `interpolate` | `absolute` | — | — |
+| Avion | `weightCorrection` | `oatAxis` | `grassValues` | `grassFactor` | `windCorrections` |
+|---|---|---|---|---|---|
+| DR221 TO | `quadratic` | `absolute` | ✓ | — | — |
+| DR221 LDG | `interpolate` | `absolute` | — | — | — |
+| DR400 TO | `interpolate` | `isa_delta` | ✓ | — | ✓ |
+| DR400 LDG | `interpolate` | `isa_delta` | — | — | ✓ |
+| C172 TO | `interpolate` | `absolute` | — | `1.20` | — |
+| C172 LDG | `interpolate` | `absolute` | — | — | — |
+
+> Le facteur réglementaire (×1.15 clubs Alcyons, etc.) n'est **pas** dans la table avion — il se configure dans le dossier de vol (`perfRegulatory`).

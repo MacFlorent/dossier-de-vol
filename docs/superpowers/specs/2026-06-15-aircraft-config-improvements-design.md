@@ -91,7 +91,8 @@ interface PerformanceTable {
 
   // Valeurs
   values: number[][][]           // [w][pa][oat] — piste dure, distances en mètres
-  grassValues?: number[][][]     // piste herbe, mêmes dimensions — NOUVEAU
+  grassValues?: number[][][]     // piste herbe, mêmes dimensions (prioritaire sur grassFactor)
+  grassFactor?: number           // fallback herbe si grassValues absent (ex. 1.20)
 
   // Correction de poids — NOUVEAU
   weightCorrection?: 'interpolate' | 'quadratic'  // défaut 'interpolate'
@@ -103,17 +104,14 @@ interface PerformanceTable {
   headwindFactor?: number        // réduction linéaire /kt (ignoré si windCorrections présent)
   tailwindFactor?: number        // majoration linéaire /kt (ignoré si windCorrections présent)
 
-  // Supprimés : slopeFactor, grassFactor (remplacé par grassValues ou factors.grass)
+  // Supprimé : slopeFactor
 }
 
+// AircraftPerformance — factors supprimé entièrement
 interface AircraftPerformance {
   toTable: PerformanceTable
   ldgTable: PerformanceTable
-  factors: {
-    regulatory: number   // multiplicateur réglementaire, appliqué en dernier
-    grass: number        // facteur herbe fallback, utilisé si table.grassValues absent
-    // Supprimés : headwindPerKt, tailwindPerKt (maintenant dans la table)
-  }
+  // factors retiré : regulatory → dossier de vol, grass → dans la table, vent → dans la table
 }
 ```
 
@@ -129,15 +127,16 @@ interface AircraftPerformance {
    `d *= (weight / div)²` où `div = weightCorrectionDivisor ?? referenceWeight ?? weights[0]`
    *(le tableau est lu au premier poids, la correction est appliquée après)*
 
-**`computePerf(table, cond, factors)`** :
+**`computePerf(table, cond, regulatoryFactor = 1)`** :
 
 1. Sélectionner `grassValues` si `cond.surfaceGrass && table.grassValues` présent,
-   sinon `values` × `factors.grass` si `cond.surfaceGrass`
+   sinon `values` × `table.grassFactor` si `cond.surfaceGrass && table.grassFactor` présent,
+   sinon `values` (aucune correction herbe)
 2. Appeler `interpolatePerf`
 3. Vent :
    - Si `windCorrections` présent → interpoler le facteur entre les points ; appliquer
    - Sinon → `headwindFactor` / `tailwindFactor` linéaire comme actuellement
-4. Appliquer `factors.regulatory` en dernier
+4. Appliquer `regulatoryFactor` en dernier (transmis depuis le dossier de vol)
 
 ### Validation (`src/lib/aviation/perfTableValidation.ts`) — nouveau fichier
 
@@ -168,6 +167,7 @@ export function validatePerformanceTable(table: unknown): PerfTableValidation
 
 | Condition | Message |
 |---|---|
+| `grassValues` et `grassFactor` tous deux présents | « grassFactor ignoré — grassValues est prioritaire » |
 | `windCorrections` et `headwindFactor` tous deux présents | « headwindFactor ignoré — windCorrections est prioritaire » |
 | `windCorrections` et `tailwindFactor` tous deux présents | « tailwindFactor ignoré — windCorrections est prioritaire » |
 | `referenceWeight` sans `weightCorrection: 'quadratic'` | « referenceWeight ignoré » |
@@ -181,6 +181,12 @@ export function validatePerformanceTable(table: unknown): PerfTableValidation
 - Erreurs → bandeau rouge sous le textarea + bouton Sauvegarder **désactivé**
 - Warnings → bandeau amber, sauvegarde autorisée
 - L'affichage `PerfTablePreview` existant reste inchangé
+
+### `FlightDossier` — facteur réglementaire
+
+`perfRegulatory: number` ajouté au dossier (défaut `1.0`).
+
+Affiché dans `PerfPanel` comme champ éditable « Marge réglementaire (×) » avec suggestion `1.15` pour les clubs Alcyons. Transmis à `computePerf` comme `regulatoryFactor`. Le dossier JSON embarque la valeur choisie, ce qui garantit la traçabilité.
 
 ### `PerfPanel` — alertes calcul
 
@@ -206,7 +212,8 @@ export function validatePerformanceTable(table: unknown): PerfTableValidation
 | `oatAxis: 'isa_delta'` | Conversion correcte à PA=4000 ft, OAT=7°C → delta=0 |
 | `weightCorrection: 'quadratic'` | Distance × (P/div)² appliquée |
 | `grassValues` présent | `computePerf` sélectionne `grassValues` quand `surfaceGrass: true` |
-| `grassValues` absent | `computePerf` applique `factors.grass` quand `surfaceGrass: true` |
+| `grassValues` absent, `grassFactor` présent | `computePerf` applique `table.grassFactor` quand `surfaceGrass: true` |
+| `regulatoryFactor` | Multiplié en dernier, transmis depuis le dossier |
 | `windCorrections` | Interpolation correcte entre deux points tabulés |
 | Fallback `headwindFactor` | Utilisé quand `windCorrections` absent |
 
