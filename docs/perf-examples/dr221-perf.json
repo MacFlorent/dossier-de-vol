@@ -1,0 +1,53 @@
+{
+  "_aircraft": "DR221 — exemple de config performance",
+  "_note": "Données illustratives extraites du manuel. Distances en mètres.",
+
+  "toTable": {
+    "_note": "Décollage — distance de passage des 15 m",
+    "weights": [840],
+    "pressureAltitudes": [0, 1640, 3281, 4922],
+    "_paUnit": "ft — conversion des valeurs en mètres du manuel (0/500/1000/1500 m)",
+    "oats": [0, 15, 30, 45],
+    "_oatAxis": "absolute (°C)",
+    "weightCorrection": "quadratic",
+    "referenceWeight": 840,
+    "weightCorrectionDivisor": 830,
+    "_weightFormula": "(P_effectif / 830)² × distance_table",
+
+    "values": [
+      [
+        [440, 470, 500, 540],
+        [490, 540, 580, 630],
+        [580, 640, 700, 750],
+        [680, 740, 800, 880]
+      ]
+    ],
+    "_valuesIndex": "values[poids][PA][OAT]",
+
+    "grassValues": [
+      [
+        [520, 560, 600, 660],
+        [600, 660, 730, 800],
+        [720, 800, 870, 960],
+        [880, 950, 1020, 1160]
+      ]
+    ]
+  },
+
+  "ldgTable": {
+    "_note": "Atterrissage — roulement manuel (210/250 m) + 300 m règle club = distance 15 m calculée",
+    "weights": [750, 840],
+    "pressureAltitudes": [0],
+    "oats": [15],
+    "values": [
+      [[510]],
+      [[550]]
+    ]
+  },
+
+  "factors": {
+    "regulatory": 1.15,
+    "headwindFactor": 0.025,
+    "tailwindFactor": 0.02
+  }
+}

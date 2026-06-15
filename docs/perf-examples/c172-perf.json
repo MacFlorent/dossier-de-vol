@@ -1,0 +1,81 @@
+{
+  "_aircraft": "Cessna 172S — exemple de config performance",
+  "_note": "Données illustratives. Distances en pieds (valeurs du POH) — à convertir en mètres pour l'app.",
+  "_weightNote": "Poids du POH en lbs convertis en kg : 2200 lbs → 998 kg, 2400 lbs → 1089 kg, 2550 lbs → 1157 kg",
+
+  "toTable": {
+    "_note": "Short Field Takeoff — 3 tables séparées dans le POH (une par poids), ici fusionnées sur l'axe weights",
+    "weights": [998, 1089, 1157],
+    "pressureAltitudes": [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000],
+    "_paUnit": "ft",
+    "oats": [0, 10, 20, 30, 40],
+    "_oatAxis": "absolute (°C)",
+
+    "values": [
+      [
+        [1055, 1130, 1205, 1290, 1380],
+        [1145, 1230, 1315, 1410, 1505],
+        [1250, 1340, 1435, 1540, 1650],
+        [1365, 1465, 1570, 1685, 1805],
+        [1490, 1605, 1725, 1855, 1975],
+        [1635, 1765, 1900, 2035, 2175],
+        [1800, 1940, 2090, 2240, 2395],
+        [1985, 2145, 2305, 2475, 2650],
+        [2195, 2375, 2555, 2745, 2950]
+      ],
+      [
+        [1160, 1245, 1330, 1425, 1520],
+        [1265, 1360, 1455, 1560, 1670],
+        [1385, 1490, 1600, 1720, 1845],
+        [1510, 1625, 1750, 1885, 2025],
+        [1655, 1785, 1925, 2075, 2235],
+        [1820, 1965, 2120, 2290, 2470],
+        [2005, 2165, 2340, 2530, 2735],
+        [2205, 2390, 2585, 2800, 3030],
+        [2430, 2640, 2865, 3110, 3375]
+      ],
+      [
+        [1290, 1380, 1470, 1570, 1680],
+        [1410, 1505, 1610, 1720, 1845],
+        [1540, 1650, 1770, 1900, 2040],
+        [1690, 1815, 1950, 2100, 2260],
+        [1855, 2000, 2155, 2325, 2510],
+        [2045, 2205, 2385, 2580, 2795],
+        [2255, 2440, 2645, 2870, 3120],
+        [2490, 2705, 2940, 3205, 3500],
+        [2760, 3010, 3285, 3595, 3940]
+      ]
+    ],
+    "_valuesIndex": "values[poids_idx][PA_idx][OAT_idx] — distance totale pour passer 50 ft",
+    "distanceKind": "total_50ft"
+  },
+
+  "ldgTable": {
+    "_note": "Short Field Landing — table unique au poids max (2550 lbs = 1157 kg) dans le POH",
+    "_note2": "Un seul poids → clamping conservateur si poids réel < max",
+    "weights": [1157],
+    "pressureAltitudes": [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000],
+    "oats": [0, 10, 20, 30, 40],
+
+    "values": [
+      [
+        [1290, 1320, 1350, 1380, 1415],
+        [1320, 1350, 1385, 1420, 1450],
+        [1355, 1385, 1420, 1455, 1490],
+        [1385, 1425, 1460, 1495, 1530],
+        [1425, 1460, 1495, 1535, 1570],
+        [1460, 1500, 1535, 1575, 1615],
+        [1500, 1540, 1580, 1620, 1660],
+        [1545, 1585, 1625, 1665, 1705],
+        [1585, 1630, 1670, 1715, 1755]
+      ]
+    ],
+
+    "distanceKind": "total_50ft"
+  },
+
+  "factors": {
+    "regulatory": 1.0,
+    "_note": "Le POH C172 donne des notes de correction vent (+/- 10% pour 9 kt) mais pas de facteur herbe ni vent tabulé"
+  }
+}

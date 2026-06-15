@@ -1,0 +1,84 @@
+{
+  "_aircraft": "DR400-120 (F-GBVP) — exemple de config performance",
+  "_note": "Données illustratives extraites du manuel. Distances en mètres.",
+
+  "toTable": {
+    "_note": "Décollage — distance totale passage 15 m (roulement entre parenthèses dans le manuel)",
+    "weights": [700, 900],
+    "pressureAltitudes": [0, 4000, 8000],
+    "_paUnit": "ft (altitude-pression en pieds)",
+    "oats": [-20, 0, 20],
+    "oatAxis": "isa_delta",
+    "_oatAxisNote": "Écart à l'ISA : -20 = Std-20, 0 = Standard, +20 = Std+20",
+
+    "values": [
+      [
+        [285, 315, 345],
+        [375, 415, 460],
+        [500, 560, 620]
+      ],
+      [
+        [480, 535, 590],
+        [645, 720, 800],
+        [890, 1000, 1125]
+      ]
+    ],
+    "_valuesIndex": "values[poids][PA][delta_ISA] — béton",
+
+    "grassValues": [
+      [
+        [320, 355, 395],
+        [430, 485, 540],
+        [595, 675, 760]
+      ],
+      [
+        [570, 640, 715],
+        [800, 905, 1025],
+        [1165, 1350, 1550]
+      ]
+    ],
+    "_grassValuesNote": "Table herbe complète — pas un simple facteur multiplicatif",
+
+    "windCorrections": [
+      { "speedKt": 0,  "factor": 1.00 },
+      { "speedKt": 10, "factor": 0.78 },
+      { "speedKt": 20, "factor": 0.63 },
+      { "speedKt": 30, "factor": 0.52 }
+    ],
+    "_windNote": "Facteur multiplicatif tabulé (vent de face uniquement dans ce manuel)"
+  },
+
+  "ldgTable": {
+    "_note": "Atterrissage — distance totale depuis 15 m jusqu'à l'arrêt (roulement entre parenthèses)",
+    "_note2": "'Freinage modéré piste dur ou herbe' = mêmes valeurs pour les deux surfaces",
+    "weights": [700, 900],
+    "pressureAltitudes": [0, 4000, 8000],
+    "oats": [-20, 0, 20],
+    "oatAxis": "isa_delta",
+
+    "values": [
+      [
+        [365, 385, 400],
+        [395, 420, 440],
+        [430, 460, 485]
+      ],
+      [
+        [435, 460, 485],
+        [475, 505, 535],
+        [525, 555, 590]
+      ]
+    ],
+
+    "windCorrections": [
+      { "speedKt": 0,  "factor": 1.00 },
+      { "speedKt": 10, "factor": 0.78 },
+      { "speedKt": 20, "factor": 0.63 },
+      { "speedKt": 30, "factor": 0.52 }
+    ]
+  },
+
+  "factors": {
+    "regulatory": 1.15,
+    "_grassNote": "Pas de facteur herbe global — le DR400 a des tables herbe complètes dans toTable"
+  }
+}
