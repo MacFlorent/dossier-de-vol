@@ -39,13 +39,11 @@ function EnvelopeSVG({
   const minW = Math.min(...weights)
   const maxW = Math.max(...weights)
 
-  // Add some margin so boundary points aren't clipped
   const cgRange = maxCg - minCg || 1
   const wRange = maxW - minW || 1
 
   const scaleX = (cg: number) =>
     pad + ((cg - minCg) / cgRange) * (width - 2 * pad)
-  // Y axis inverted: higher weight = higher on screen
   const scaleY = (w: number) =>
     height - pad - ((w - minW) / wRange) * (height - 2 * pad)
 
@@ -59,14 +57,12 @@ function EnvelopeSVG({
 
   return (
     <svg viewBox={`0 0 ${width} ${height}`} className="w-full max-w-xs">
-      {/* Envelope polygon */}
       <path
         d={pathD}
         fill="color-mix(in srgb, var(--amber) 12%, transparent)"
         stroke="var(--amber)"
         strokeWidth="1.5"
       />
-      {/* Departure point (blue) */}
       {departure && (
         <circle
           cx={scaleX(departure.cg).toFixed(1)}
@@ -76,7 +72,6 @@ function EnvelopeSVG({
           opacity="0.9"
         />
       )}
-      {/* Arrival point (green) */}
       {arrival && (
         <circle
           cx={scaleX(arrival.cg).toFixed(1)}
@@ -86,45 +81,39 @@ function EnvelopeSVG({
           opacity="0.9"
         />
       )}
-      {/* Legend */}
       <circle cx={pad} cy={height - 10} r="4" fill="var(--blue)" />
-      <text
-        x={pad + 8}
-        y={height - 7}
-        fontSize="9"
-        fill="var(--text-dim)"
-      >
-        Départ
-      </text>
+      <text x={pad + 8} y={height - 7} fontSize="9" fill="var(--text-dim)">Départ</text>
       <circle cx={pad + 55} cy={height - 10} r="4" fill="var(--green)" />
-      <text
-        x={pad + 63}
-        y={height - 7}
-        fontSize="9"
-        fill="var(--text-dim)"
-      >
-        Arrivée
-      </text>
+      <text x={pad + 63} y={height - 7} fontSize="9" fill="var(--text-dim)">Arrivée</text>
     </svg>
   )
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function fmtKg(v: number) {
-  return v.toFixed(1) + ' kg'
-}
-
-function fmtCg(v: number) {
-  return v.toFixed(0) + ' mm'
-}
+function fmtKg(v: number) { return v.toFixed(1) + ' kg' }
+function fmtCg(v: number) { return v.toFixed(0) + ' mm' }
 
 function wbStatus(dep: WBResult, arr: WBResult) {
   if (!dep.inEnvelope || !arr.inEnvelope)
     return { variant: 'error' as const, label: 'HORS LIMITE' }
-  // "Close to boundary" heuristic: weight > 95% max or CG near edge (not computed here,
-  // keep it simple — just OK vs HORS LIMITE unless we want ATTENTION for overweight)
   return { variant: 'success' as const, label: 'OK' }
+}
+
+// Distributes navlog fuel burn across fuel stations proportionally to departure load
+function arrivalFuelLoading(
+  fuelStationNames: string[],
+  loading: StationLoading,
+  navlogFuelL: number,
+): StationLoading {
+  const totalDepL = fuelStationNames.reduce((s, name) => s + (loading[name] ?? 0), 0)
+  const totalArrL = Math.max(0, totalDepL - navlogFuelL)
+  const ratio = totalDepL > 0 ? totalArrL / totalDepL : 0
+  const result: StationLoading = {}
+  for (const name of fuelStationNames) {
+    result[name] = (loading[name] ?? 0) * ratio
+  }
+  return result
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -133,20 +122,11 @@ export function WBPanel({ dossier, onUpdate }: Props) {
   const { aircraft, loading } = dossier
   const { massBalance, characteristics } = aircraft
   const { stations, emptyWeight, envelopePoints } = massBalance
-  const fuelCapacity = characteristics.fuelCapacity
 
-  // Identify fuel station name (matches "Carburant" in DR221)
-  const fuelStationName = stations.find(s =>
-    s.name.toLowerCase().includes('carburant')
-  )?.name ?? null
+  const fuelStations = stations.filter(s => s.kind === 'fuel')
+  const dryStations = stations.filter(s => s.kind === 'dry')
+  const fuelStationNames = fuelStations.map(s => s.name)
 
-  // Non-fuel stations = the ones users can edit
-  const editableStations = stations.filter(s => s.name !== fuelStationName)
-
-  // Full fuel mass (departure)
-  const fuelMassKg = fuelCapacity * FUEL_DENSITY_KGL
-
-  // Navlog fuel burn (for arrival estimate)
   const navlogFuelL = useMemo(() => {
     if (!dossier.route || dossier.route.waypoints.length < 2) return 0
     const regime = aircraft.characteristics.regimes[0]
@@ -155,41 +135,34 @@ export function WBPanel({ dossier, onUpdate }: Props) {
     return entries.at(-1)?.cumul_fuel_l ?? 0
   }, [dossier.route, dossier.weatherInputs, dossier.navOverrides, aircraft])
 
-  // Arrival fuel: max(0, full - burned)
-  const arrivalFuelKg = Math.max(
-    0,
-    fuelMassKg - navlogFuelL * FUEL_DENSITY_KGL
+  const arrLoading = useMemo(
+    () => arrivalFuelLoading(fuelStationNames, loading, navlogFuelL),
+    [fuelStationNames, loading, navlogFuelL],
   )
 
-  // Departure W&B: loading + full fuel
-  const depResult = useMemo(() => {
-    const depLoading: StationLoading = { ...loading }
-    if (fuelStationName !== null) depLoading[fuelStationName] = fuelMassKg
-    return computeWB(aircraft.massBalance, depLoading)
-  }, [aircraft, loading, fuelStationName, fuelMassKg])
+  const depResult = useMemo(
+    () => computeWB(massBalance, loading),
+    [massBalance, loading],
+  )
 
-  // Arrival W&B: loading + arrival fuel (or 0 if no fuel station)
   const arrResult = useMemo(() => {
-    const arrLoading: StationLoading = { ...loading }
-    if (fuelStationName !== null) arrLoading[fuelStationName] = arrivalFuelKg
-    else {
-      // No explicit fuel station — arrival = same loading (fuel not modelled)
-    }
-    return computeWB(aircraft.massBalance, arrLoading)
-  }, [aircraft, loading, fuelStationName, arrivalFuelKg])
+    const merged = { ...loading, ...arrLoading }
+    return computeWB(massBalance, merged)
+  }, [massBalance, loading, arrLoading])
 
   const status = wbStatus(depResult, arrResult)
 
-  const handleStationChange = (name: string, value: string) => {
-    const kg = value === '' ? 0 : Math.max(0, Number(value))
-    onUpdate({ ...loading, [name]: kg })
+  const handleChange = (name: string, value: string) => {
+    const v = value === '' ? 0 : Math.max(0, Number(value))
+    onUpdate({ ...loading, [name]: v })
   }
 
-  // Total pax + baggage shown at bottom of table
-  const stationTotal = editableStations.reduce(
-    (s, st) => s + (loading[st.name] ?? 0),
-    0
-  )
+  const dryTotal = dryStations.reduce((s, st) => s + (loading[st.name] ?? 0), 0)
+
+  const totalDepFuelL = fuelStationNames.reduce((s, n) => s + (loading[n] ?? 0), 0)
+  const totalDepFuelKg = totalDepFuelL * FUEL_DENSITY_KGL
+  const totalArrFuelL = fuelStationNames.reduce((s, n) => s + (arrLoading[n] ?? 0), 0)
+  const totalArrFuelKg = totalArrFuelL * FUEL_DENSITY_KGL
 
   return (
     <div className="p-4 max-w-4xl mx-auto">
@@ -200,118 +173,100 @@ export function WBPanel({ dossier, onUpdate }: Props) {
             Chargement
           </h2>
 
-          {/* Editable stations */}
           <Card padding="sm" inset>
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs text-[var(--text-dim)] uppercase">
                   <th className="text-left pb-2">Station</th>
-                  <th className="text-right pb-2">Masse (kg)</th>
-                  <th className="text-right pb-2 pl-2">Max</th>
+                  <th className="text-right pb-2">Masse</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border)]">
-                {/* Empty aircraft row */}
                 <tr>
-                  <td className="py-2 text-[var(--text-muted)]">
-                    Avion vide
-                  </td>
-                  <td className="py-2 text-right font-mono text-[var(--text-dim)]">
-                    {emptyWeight}
-                  </td>
-                  <td />
+                  <td className="py-2 text-[var(--text-muted)]">Avion vide</td>
+                  <td className="py-2 text-right font-mono text-[var(--text-dim)]">{emptyWeight} kg</td>
                 </tr>
 
-                {/* Editable stations */}
-                {editableStations.map(st => {
+                {/* Dry stations */}
+                {dryStations.map(st => {
                   const val = loading[st.name] ?? 0
-                  const overMax = val > st.maxWeight
                   return (
                     <tr key={st.name}>
-                      <td className="py-1.5 text-[var(--text-2)]">
-                        {st.name}
-                      </td>
-                      <td className="py-1.5 pl-2">
-                        <input
-                          type="number"
-                          min={0}
-                          max={st.maxWeight}
-                          value={val === 0 ? '' : val}
-                          placeholder="0"
-                          onChange={e =>
-                            handleStationChange(st.name, e.target.value)
-                          }
-                          className={`
-                            w-20 text-right font-mono text-sm
-                            bg-[var(--bg-card)] border rounded px-2 py-1
-                            text-[var(--text-1)]
-                            focus:outline-none focus:border-[var(--amber)] focus:ring-1 focus:ring-[var(--amber)]
-                            ${overMax ? 'border-[var(--red)]' : 'border-[var(--border)]'}
-                          `}
-                        />
-                      </td>
-                      <td className="py-1.5 pl-2 text-right text-xs text-[var(--text-dim)] font-mono">
-                        {st.maxWeight}
+                      <td className="py-1.5 text-[var(--text-2)]">{st.name}</td>
+                      <td className="py-1.5 pl-2 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <input
+                            type="number"
+                            min={0}
+                            value={val === 0 ? '' : val}
+                            placeholder="0"
+                            onChange={e => handleChange(st.name, e.target.value)}
+                            className="w-20 text-right font-mono text-sm bg-[var(--bg-card)] border border-[var(--border)] rounded px-2 py-1 text-[var(--text-1)] focus:outline-none focus:border-[var(--amber)] focus:ring-1 focus:ring-[var(--amber)]"
+                          />
+                          <span className="text-xs text-[var(--text-dim)]">kg</span>
+                        </div>
                       </td>
                     </tr>
                   )
                 })}
 
-                {/* Fuel rows (read-only) */}
-                {fuelStationName && (
-                  <>
-                    <tr>
-                      <td
-                        className="py-1.5 text-[var(--text-muted)] italic"
-                        colSpan={3}
-                      >
-                        <span className="text-xs">
-                          {fuelStationName} départ
-                        </span>
-                        <span className="ml-2 font-mono text-[var(--text-2)]">
-                          {fuelMassKg.toFixed(1)} kg
-                        </span>
-                        <span className="ml-1 text-[var(--text-dim)] text-xs">
-                          ({fuelCapacity} L plein)
-                        </span>
+                {/* Fuel stations */}
+                {fuelStations.map(st => {
+                  const depL = loading[st.name] ?? 0
+                  const depKg = depL * FUEL_DENSITY_KGL
+                  const arrL = arrLoading[st.name] ?? 0
+                  const arrKg = arrL * FUEL_DENSITY_KGL
+                  return (
+                    <tr key={st.name}>
+                      <td className="py-1.5">
+                        <div className="text-[var(--text-2)]">{st.name}</div>
+                        <div className="text-xs text-[var(--text-dim)] mt-0.5">
+                          Cap. {characteristics.fuelCapacity} L
+                        </div>
+                      </td>
+                      <td className="py-1.5 pl-2">
+                        <div className="flex items-center justify-end gap-1 mb-1">
+                          <input
+                            type="number"
+                            min={0}
+                            max={characteristics.fuelCapacity}
+                            value={depL === 0 ? '' : depL}
+                            placeholder="0"
+                            onChange={e => handleChange(st.name, e.target.value)}
+                            className="w-20 text-right font-mono text-sm bg-[var(--bg-card)] border border-[var(--border)] rounded px-2 py-1 text-[var(--text-1)] focus:outline-none focus:border-[var(--amber)] focus:ring-1 focus:ring-[var(--amber)]"
+                          />
+                          <span className="text-xs text-[var(--text-dim)]">L dep</span>
+                        </div>
+                        <div className="text-right text-xs text-[var(--text-dim)] font-mono">
+                          {depKg.toFixed(1)} kg → {arrKg.toFixed(1)} kg arr
+                        </div>
                       </td>
                     </tr>
-                    <tr>
-                      <td
-                        className="py-1.5 text-[var(--text-muted)] italic"
-                        colSpan={3}
-                      >
-                        <span className="text-xs">
-                          {fuelStationName} arrivée
-                        </span>
-                        <span className="ml-2 font-mono text-[var(--text-2)]">
-                          {arrivalFuelKg.toFixed(1)} kg
-                        </span>
-                        {navlogFuelL > 0 && (
-                          <span className="ml-1 text-[var(--text-dim)] text-xs">
-                            (−{(navlogFuelL * FUEL_DENSITY_KGL).toFixed(1)} kg navlog)
-                          </span>
-                        )}
-                        {navlogFuelL === 0 && (
-                          <span className="ml-1 text-[var(--text-dim)] text-xs">
-                            (route non calculée)
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  </>
+                  )
+                })}
+
+                {/* Dry total */}
+                <tr className="font-medium">
+                  <td className="pt-2 text-[var(--text-muted)]">Sous-total charges sèches</td>
+                  <td className="pt-2 text-right font-mono text-[var(--text-1)]">{dryTotal.toFixed(1)} kg</td>
+                </tr>
+
+                {fuelStationNames.length > 0 && (
+                  <tr className="font-medium">
+                    <td className="pt-1 text-[var(--text-muted)]">Carburant départ / arrivée</td>
+                    <td className="pt-1 text-right font-mono text-[var(--text-1)] text-xs">
+                      {totalDepFuelKg.toFixed(1)} / {totalArrFuelKg.toFixed(1)} kg
+                    </td>
+                  </tr>
                 )}
 
-                {/* Total pax+baggage */}
-                <tr className="font-medium">
-                  <td className="pt-2 text-[var(--text-muted)]">
-                    Sous-total charges
-                  </td>
-                  <td className="pt-2 text-right font-mono text-[var(--text-1)]">
-                    {stationTotal.toFixed(1)}
-                  </td>
-                  <td />
-                </tr>
+                {fuelStationNames.length === 0 && (
+                  <tr>
+                    <td colSpan={2} className="pt-2 text-xs text-[var(--amber)]">
+                      Aucune station carburant — centrage arrivée = centrage départ
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </Card>
@@ -326,7 +281,6 @@ export function WBPanel({ dossier, onUpdate }: Props) {
             <Badge variant={status.variant}>{status.label}</Badge>
           </div>
 
-          {/* Results table */}
           <Card padding="sm" inset>
             <table className="w-full text-sm">
               <thead>
@@ -340,55 +294,30 @@ export function WBPanel({ dossier, onUpdate }: Props) {
               <tbody className="divide-y divide-[var(--border)]">
                 <tr>
                   <td className="py-2 flex items-center gap-1.5">
-                    <span
-                      className="inline-block w-2.5 h-2.5 rounded-full"
-                      style={{ background: 'var(--blue)' }}
-                    />
+                    <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: 'var(--blue)' }} />
                     <span className="text-[var(--text-2)]">Départ</span>
                   </td>
-                  <td className="py-2 text-right font-mono text-[var(--text-1)]">
-                    {fmtKg(depResult.totalWeight)}
-                  </td>
-                  <td className="py-2 text-right font-mono text-[var(--text-1)] pl-3">
-                    {fmtCg(depResult.cg)}
-                  </td>
+                  <td className="py-2 text-right font-mono text-[var(--text-1)]">{fmtKg(depResult.totalWeight)}</td>
+                  <td className="py-2 text-right font-mono text-[var(--text-1)] pl-3">{fmtCg(depResult.cg)}</td>
                   <td className="py-2 text-right pl-3">
-                    {depResult.inEnvelope ? (
-                      <Badge variant="success">OK</Badge>
-                    ) : (
-                      <Badge variant="error">HORS</Badge>
-                    )}
+                    {depResult.inEnvelope ? <Badge variant="success">OK</Badge> : <Badge variant="error">HORS</Badge>}
                   </td>
                 </tr>
                 <tr>
                   <td className="py-2 flex items-center gap-1.5">
-                    <span
-                      className="inline-block w-2.5 h-2.5 rounded-full"
-                      style={{ background: 'var(--green)' }}
-                    />
+                    <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: 'var(--green)' }} />
                     <span className="text-[var(--text-2)]">Arrivée</span>
                   </td>
-                  <td className="py-2 text-right font-mono text-[var(--text-1)]">
-                    {fmtKg(arrResult.totalWeight)}
-                  </td>
-                  <td className="py-2 text-right font-mono text-[var(--text-1)] pl-3">
-                    {fmtCg(arrResult.cg)}
-                  </td>
+                  <td className="py-2 text-right font-mono text-[var(--text-1)]">{fmtKg(arrResult.totalWeight)}</td>
+                  <td className="py-2 text-right font-mono text-[var(--text-1)] pl-3">{fmtCg(arrResult.cg)}</td>
                   <td className="py-2 text-right pl-3">
-                    {arrResult.inEnvelope ? (
-                      <Badge variant="success">OK</Badge>
-                    ) : (
-                      <Badge variant="error">HORS</Badge>
-                    )}
+                    {arrResult.inEnvelope ? <Badge variant="success">OK</Badge> : <Badge variant="error">HORS</Badge>}
                   </td>
                 </tr>
               </tbody>
               <tfoot>
                 <tr>
-                  <td
-                    colSpan={4}
-                    className="pt-3 text-xs text-[var(--text-dim)]"
-                  >
+                  <td colSpan={4} className="pt-3 text-xs text-[var(--text-dim)]">
                     MTOW : {aircraft.massBalance.maxWeight} kg
                   </td>
                 </tr>
@@ -396,11 +325,8 @@ export function WBPanel({ dossier, onUpdate }: Props) {
             </table>
           </Card>
 
-          {/* SVG envelope */}
           <Card padding="sm">
-            <p className="text-xs text-[var(--text-dim)] uppercase tracking-wider mb-2">
-              Enveloppe de centrage
-            </p>
+            <p className="text-xs text-[var(--text-dim)] uppercase tracking-wider mb-2">Enveloppe de centrage</p>
             <EnvelopeSVG
               points={envelopePoints}
               departure={{ weight: depResult.totalWeight, cg: depResult.cg }}
@@ -408,28 +334,24 @@ export function WBPanel({ dossier, onUpdate }: Props) {
             />
           </Card>
 
-          {/* Warnings */}
           {depResult.totalWeight > aircraft.massBalance.maxWeight && (
             <Card padding="sm">
               <p className="text-[var(--red)] text-sm font-medium">
-                Masse départ ({fmtKg(depResult.totalWeight)}) dépasse le MTOW
-                ({aircraft.massBalance.maxWeight} kg)
+                Masse départ ({fmtKg(depResult.totalWeight)}) dépasse le MTOW ({aircraft.massBalance.maxWeight} kg)
               </p>
             </Card>
           )}
           {arrResult.totalWeight > aircraft.massBalance.maxWeight && (
             <Card padding="sm">
               <p className="text-[var(--red)] text-sm font-medium">
-                Masse arrivée ({fmtKg(arrResult.totalWeight)}) dépasse le MTOW
-                ({aircraft.massBalance.maxWeight} kg)
+                Masse arrivée ({fmtKg(arrResult.totalWeight)}) dépasse le MTOW ({aircraft.massBalance.maxWeight} kg)
               </p>
             </Card>
           )}
           {(!depResult.inEnvelope || !arrResult.inEnvelope) && (
             <Card padding="sm">
               <p className="text-[var(--red)] text-sm font-medium">
-                Centrage hors de l&apos;enveloppe — revoir la répartition des
-                charges.
+                Centrage hors de l&apos;enveloppe — revoir la répartition des charges.
               </p>
             </Card>
           )}
