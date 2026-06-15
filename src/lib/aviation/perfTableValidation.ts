@@ -112,9 +112,6 @@ export function validatePerformanceTable(table: unknown): PerfTableValidation {
       warnings.push('tailwindFactor ignoré — windCorrections est prioritaire')
     }
     const wc = t.windCorrections as Array<{ speedKt: number; factor: number }>
-    if (wc.length > 0 && wc[0].speedKt !== 0) {
-      warnings.push('windCorrections : premier point devrait être speedKt=0, factor=1.0')
-    }
     for (const pt of wc) {
       if (pt.factor > 1.0) {
         warnings.push(

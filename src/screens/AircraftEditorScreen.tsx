@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import type { Aircraft, WeightStation, PerformanceTable, CruiseRegime } from '../types'
 import { getAircraft, saveAircraft } from '../lib/storage'
 import { TEMPLATES, createFromTemplate } from '../lib/templates'
@@ -129,9 +129,15 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
 
   const [emptyWeight, setEmptyWeight] = useState(615)
   const [emptyArm, setEmptyArm] = useState(345)
-  const [maxWeight, setMaxWeight] = useState(1000)
   const [stations, setStations] = useState<WeightStation[]>([])
   const [envelopeJson, setEnvelopeJson] = useState('[]')
+
+  const derivedMtom = useMemo(() => {
+    try {
+      const pts: [number, number][] = JSON.parse(envelopeJson)
+      return pts.length > 0 ? Math.max(...pts.map(p => p[0])) : null
+    } catch { return null }
+  }, [envelopeJson])
 
   const [toTableJson, setToTableJson] = useState('{}')
   const [ldgTableJson, setLdgTableJson] = useState('{}')
@@ -152,7 +158,6 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
     setFuelCapacity(ac.characteristics.fuelCapacity)
     setEmptyWeight(ac.massBalance.emptyWeight)
     setEmptyArm(ac.massBalance.emptyArm)
-    setMaxWeight(ac.massBalance.maxWeight)
     setStations(ac.massBalance.stations.map(s => ({ ...s })))
     setEnvelopeJson(JSON.stringify(ac.massBalance.envelopePoints, null, 2))
     const toJson = JSON.stringify(ac.performance.toTable, null, 2)
@@ -187,6 +192,10 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
       return
     }
 
+    const maxWeight = envelopePoints.length > 0
+      ? Math.max(...envelopePoints.map(p => p[0]))
+      : 0
+
     const aircraft: Aircraft = {
       id: editingAircraftId ?? crypto.randomUUID(),
       name,
@@ -202,7 +211,7 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
     editingAircraftId,
     name, registration, sdReference,
     regimes, fuelCapacity,
-    emptyWeight, emptyArm, maxWeight, stations, envelopeJson,
+    emptyWeight, emptyArm, stations, envelopeJson,
     toTableJson, ldgTableJson,
     onSave,
   ])
@@ -359,8 +368,15 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
               onChange={e => setEmptyWeight(Number(e.target.value))} />
             <Input label="Bras à vide (mm)" type="number" value={emptyArm}
               onChange={e => setEmptyArm(Number(e.target.value))} />
-            <Input label="MTOM (kg)" type="number" value={maxWeight}
-              onChange={e => setMaxWeight(Number(e.target.value))} />
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">
+                MTOM (kg)
+              </label>
+              <div className="px-3 py-2 rounded text-sm font-mono text-[var(--text-muted)] bg-[var(--bg-inset)] border border-[var(--border)]">
+                {derivedMtom ?? '—'}
+              </div>
+              <p className="text-xs text-[var(--text-dim)]">Déduit de l'enveloppe</p>
+            </div>
           </div>
 
           <div className="mb-4">

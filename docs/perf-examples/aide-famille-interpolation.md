@@ -69,7 +69,6 @@ Quand le manuel donne des facteurs de correction vent discrets (ex. DR400 : 10 k
 
 ```json
 "windCorrections": [
-  { "speedKt": 0,  "factor": 1.00 },
   { "speedKt": 10, "factor": 0.78 },
   { "speedKt": 20, "factor": 0.63 },
   { "speedKt": 30, "factor": 0.52 }

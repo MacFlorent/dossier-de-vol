@@ -15,7 +15,11 @@ function interpolateWindFactor(
   windKt: number,
 ): number {
   if (windKt <= 0) return 1
-  const pts = corrections
+  // Prepend implicit {speedKt:0, factor:1} anchor so tables don't need to include it
+  const pts =
+    corrections.length > 0 && corrections[0].speedKt !== 0
+      ? [{ speedKt: 0, factor: 1 }, ...corrections]
+      : corrections
   if (pts.length === 0) return 1
   if (windKt <= pts[0].speedKt) return pts[0].factor
   if (windKt >= pts[pts.length - 1].speedKt) return pts[pts.length - 1].factor

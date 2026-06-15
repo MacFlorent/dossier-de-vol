@@ -85,7 +85,6 @@ La table est acceptée mais l'utilisateur est averti.
 | `windCorrections` et `tailwindFactor` tous les deux présents | « tailwindFactor ignoré — windCorrections est prioritaire » |
 | `referenceWeight` présent sans `weightCorrection: "quadratic"` | « referenceWeight ignoré — weightCorrection n'est pas quadratic » |
 | `weightCorrectionDivisor` présent sans `weightCorrection: "quadratic"` | « weightCorrectionDivisor ignoré — weightCorrection n'est pas quadratic » |
-| `windCorrections[0].speedKt !== 0` | « windCorrections : premier point devrait être speedKt=0, factor=1.0 » |
 | `windCorrections` contient un `factor > 1.0` | « windCorrections : facteur > 1.0 à speedKt=[x] — vent de face devrait réduire la distance » |
 
 ---

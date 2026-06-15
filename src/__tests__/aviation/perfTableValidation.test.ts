@@ -132,7 +132,7 @@ describe('validatePerformanceTable — warnings', () => {
   it('warns when both windCorrections and headwindFactor are present', () => {
     const { warnings } = validatePerformanceTable({
       ...validTable,
-      windCorrections: [{ speedKt: 0, factor: 1.0 }, { speedKt: 10, factor: 0.75 }],
+      windCorrections: [{ speedKt: 10, factor: 0.75 }],
       headwindFactor: 0.025,
     })
     expect(warnings.some(w => w.includes('headwindFactor ignoré'))).toBe(true)
@@ -141,7 +141,7 @@ describe('validatePerformanceTable — warnings', () => {
   it('warns when both windCorrections and tailwindFactor are present', () => {
     const { warnings } = validatePerformanceTable({
       ...validTable,
-      windCorrections: [{ speedKt: 0, factor: 1.0 }, { speedKt: 10, factor: 0.75 }],
+      windCorrections: [{ speedKt: 10, factor: 0.75 }],
       tailwindFactor: 0.02,
     })
     expect(warnings.some(w => w.includes('tailwindFactor ignoré'))).toBe(true)
@@ -161,14 +161,6 @@ describe('validatePerformanceTable — warnings', () => {
       weightCorrectionDivisor: 830,
     })
     expect(warnings.some(w => w.includes('weightCorrectionDivisor ignoré'))).toBe(true)
-  })
-
-  it('warns when windCorrections first point speedKt is not 0', () => {
-    const { warnings } = validatePerformanceTable({
-      ...validTable,
-      windCorrections: [{ speedKt: 5, factor: 0.9 }, { speedKt: 10, factor: 0.75 }],
-    })
-    expect(warnings.some(w => w.includes('premier point'))).toBe(true)
   })
 
   it('warns when windCorrections contains factor > 1.0', () => {

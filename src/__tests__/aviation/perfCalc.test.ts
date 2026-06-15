@@ -181,7 +181,6 @@ describe('computePerf — windCorrections', () => {
     oats: [0],
     values: [[[200]]],
     windCorrections: [
-      { speedKt: 0, factor: 1.0 },
       { speedKt: 10, factor: 0.75 },
       { speedKt: 20, factor: 0.50 },
     ],

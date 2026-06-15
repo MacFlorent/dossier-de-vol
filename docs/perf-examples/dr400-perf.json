@@ -40,7 +40,6 @@
     "_grassValuesNote": "Table herbe complète — pas un simple facteur multiplicatif",
 
     "windCorrections": [
-      { "speedKt": 0,  "factor": 1.00 },
       { "speedKt": 10, "factor": 0.78 },
       { "speedKt": 20, "factor": 0.63 },
       { "speedKt": 30, "factor": 0.52 }
@@ -70,7 +69,6 @@
     ],
 
     "windCorrections": [
-      { "speedKt": 0,  "factor": 1.00 },
       { "speedKt": 10, "factor": 0.78 },
       { "speedKt": 20, "factor": 0.63 },
       { "speedKt": 30, "factor": 0.52 }

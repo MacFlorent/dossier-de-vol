@@ -1,0 +1,14 @@
+{
+  "weights": [750, 840],
+  "pressureAltitudes": [0],
+  "oats": [15],
+  "values": [
+    [[510]],
+    [[550]]
+  ],
+  "windCorrections": [
+    { "speedKt": 10,  "factor": 0.85 },
+    { "speedKt": 20,  "factor": 0.67 },
+    { "speedKt": 30,  "factor": 0.56 }
+  ]
+}
