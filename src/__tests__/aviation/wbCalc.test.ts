@@ -6,9 +6,9 @@ const massBalance: AircraftMassBalance = {
   emptyArm: 345,
   maxWeight: 1000,
   stations: [
-    { name: 'Pilote', arm: 375, maxWeight: 120 },
-    { name: 'Passager', arm: 505, maxWeight: 100 },
-    { name: 'Carburant', arm: 350, maxWeight: 84 },
+    { name: 'Pilote', arm: 375, kind: 'dry' as const },
+    { name: 'Passager', arm: 505, kind: 'dry' as const },
+    { name: 'Carburant', arm: 350, kind: 'fuel' as const },
   ],
   envelopePoints: [
     [615, 295], [615, 430], [880, 430], [1000, 425], [1000, 360], [880, 295],
@@ -43,10 +43,11 @@ describe('computeWB', () => {
   })
 
   it('accumulates multiple station weights', () => {
+    // Carburant is fuel: 60 L × 0.72 kg/L = 43.2 kg
     const result = computeWB(massBalance, { Pilote: 75, Passager: 80, Carburant: 60 })
-    const expectedWeight = 615 + 75 + 80 + 60
-    const expectedMoment = 615 * 345 + 75 * 375 + 80 * 505 + 60 * 350
-    expect(result.totalWeight).toBe(expectedWeight)
+    const expectedWeight = 615 + 75 + 80 + 43.2
+    const expectedMoment = 615 * 345 + 75 * 375 + 80 * 505 + 43.2 * 350
+    expect(result.totalWeight).toBeCloseTo(expectedWeight, 1)
     expect(result.totalMoment).toBeCloseTo(expectedMoment, 0)
     expect(result.cg).toBeCloseTo(expectedMoment / expectedWeight, 1)
   })
@@ -56,5 +57,25 @@ describe('computeWB', () => {
     // Unknown station is not in massBalance.stations so it gets no arm — totalWeight should still be correct
     // Actually computeWB only iterates massBalance.stations, so unknown keys are ignored
     expect(result.totalWeight).toBe(615)
+  })
+
+  it('fuel station: converts litres to kg using default density (0.72)', () => {
+    // 50 L × 0.72 = 36 kg
+    const result = computeWB(massBalance, { Carburant: 50 })
+    const expectedWeight = 615 + 36
+    const expectedMoment = 615 * 345 + 36 * 350
+    expect(result.totalWeight).toBeCloseTo(expectedWeight, 1)
+    expect(result.totalMoment).toBeCloseTo(expectedMoment, 0)
+  })
+
+  it('dry station: uses kg directly', () => {
+    const result = computeWB(massBalance, { Pilote: 80 })
+    expect(result.totalWeight).toBeCloseTo(615 + 80, 1)
+  })
+
+  it('custom fuelDensity is applied to fuel stations', () => {
+    // density 0.80 kg/L: 50 L → 40 kg
+    const result = computeWB(massBalance, { Carburant: 50 }, 0.80)
+    expect(result.totalWeight).toBeCloseTo(615 + 40, 1)
   })
 })

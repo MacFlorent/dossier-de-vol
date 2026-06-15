@@ -1,11 +1,17 @@
 import type { AircraftMassBalance, StationLoading, WBResult } from '../../types'
+import { FUEL_DENSITY_KGL } from './constants'
 
-export function computeWB(massBalance: AircraftMassBalance, loading: StationLoading): WBResult {
+export function computeWB(
+  massBalance: AircraftMassBalance,
+  loading: StationLoading,
+  fuelDensity = FUEL_DENSITY_KGL,
+): WBResult {
   let totalWeight = massBalance.emptyWeight
   let totalMoment = massBalance.emptyWeight * massBalance.emptyArm
 
   for (const station of massBalance.stations) {
-    const w = loading[station.name] ?? 0
+    const raw = loading[station.name] ?? 0
+    const w = station.kind === 'fuel' ? raw * fuelDensity : raw
     totalWeight += w
     totalMoment += w * station.arm
   }
