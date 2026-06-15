@@ -2,12 +2,10 @@ import { useState, useMemo } from 'react'
 import type { FlightDossier, TerrainPerfInputs, PerfConditions, AircraftSnapshot } from '../../types'
 import { computePerf } from '../../lib/aviation/perfCalc'
 import { computeWB } from '../../lib/aviation/wbCalc'
-import { FUEL_DENSITY_KGL } from '../../lib/aviation/constants'
+import { validatePerformanceTable } from '../../lib/aviation/perfTableValidation'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { Badge } from '../../components/ui/Badge'
-
-// ── Types ────────────────────────────────────────────────────────────────────
 
 const TERRAINS = [
   { key: 'DEP', label: 'Départ', tableKey: 'to' as const },
@@ -17,13 +15,10 @@ const TERRAINS = [
 
 const DEFAULT_PERF: TerrainPerfInputs = {
   surface: 'hard',
-  slope: 0,
   windKt: 0,
   toda: undefined,
   lda: undefined,
 }
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
 
 function pressureAlt(elevation: number, qnh: number): number {
   return elevation + (1013 - qnh) * 30
@@ -34,8 +29,6 @@ function densityAlt(pa: number, oat: number): number {
   return pa + (oat - isa) * 120
 }
 
-// ── TerrainCard sub-component ─────────────────────────────────────────────────
-
 interface TerrainCardProps {
   terrainKey: string
   label: string
@@ -45,6 +38,7 @@ interface TerrainCardProps {
   defaultQnh: number
   defaultTemp: number
   perfInputs: TerrainPerfInputs
+  perfRegulatory: number
   onUpdate: (inputs: TerrainPerfInputs) => void
 }
 
@@ -57,6 +51,7 @@ function TerrainCard({
   defaultQnh,
   defaultTemp,
   perfInputs,
+  perfRegulatory,
   onUpdate,
 }: TerrainCardProps) {
   const [elevation, setElevation] = useState(0)
@@ -70,17 +65,19 @@ function TerrainCard({
 
   const table = tableKey === 'to' ? aircraft.performance.toTable : aircraft.performance.ldgTable
 
+  const tableValidation = useMemo(() => validatePerformanceTable(table), [table])
+
   const cond: PerfConditions = {
     weight,
-    pa: da,
+    pa,          // pressure altitude — NOT density altitude
     oat: temp,
     surfaceGrass: inputs.surface === 'grass',
     windKt: inputs.windKt,
-    slopePercent: inputs.slope,
   }
 
-  const distBase = computePerf(table, cond)
-  const distRegulatory = Math.round(distBase * aircraft.performance.factors.regulatory)
+  const canCompute = tableValidation.errors.length === 0
+  const distBase = canCompute ? computePerf(table, cond) : 0
+  const distRegulatory = canCompute ? Math.round(distBase * perfRegulatory) : 0
 
   const todaOk = inputs.toda === undefined || distRegulatory <= inputs.toda
   const ldaOk = inputs.lda === undefined || distRegulatory <= inputs.lda
@@ -95,13 +92,19 @@ function TerrainCard({
         <h2 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wider">
           {label}
         </h2>
-        <div className="flex gap-2">
-          {inputs.toda !== undefined && (
+        <div className="flex gap-2 flex-wrap justify-end">
+          {tableValidation.errors.length > 0 && (
+            <Badge variant="error">Config invalide</Badge>
+          )}
+          {tableValidation.errors.length === 0 && tableValidation.warnings.length > 0 && (
+            <Badge variant="warning">⚠ config partielle</Badge>
+          )}
+          {inputs.toda !== undefined && canCompute && (
             <Badge variant={todaOk ? 'success' : 'error'}>
               {todaOk ? 'TODA OK' : 'TODA INSUFFISANT'}
             </Badge>
           )}
-          {inputs.lda !== undefined && (
+          {inputs.lda !== undefined && canCompute && (
             <Badge variant={ldaOk ? 'success' : 'error'}>
               {ldaOk ? 'LDA OK' : 'LDA INSUFFISANT'}
             </Badge>
@@ -109,8 +112,19 @@ function TerrainCard({
         </div>
       </div>
 
+      {tableValidation.errors.length > 0 && (
+        <div className="mb-4 p-3 rounded border border-[var(--red)] bg-[var(--red)]/10 text-[var(--red)] text-xs space-y-1">
+          {tableValidation.errors.map((e, i) => <p key={i}>{e}</p>)}
+        </div>
+      )}
+
+      {tableValidation.warnings.length > 0 && (
+        <div className="mb-4 p-3 rounded border border-[var(--amber)] bg-[var(--amber)]/10 text-[var(--amber)] text-xs space-y-1">
+          {tableValidation.warnings.map((w, i) => <p key={i}>{w}</p>)}
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2">
-        {/* Inputs */}
         <div className="space-y-3">
           <p className="text-xs text-[var(--text-dim)] uppercase tracking-wider">Conditions</p>
           <div className="grid grid-cols-2 gap-2">
@@ -140,14 +154,6 @@ function TerrainCard({
               placeholder="0"
               hint="+face / −arrière"
               onChange={(e) => update({ windKt: e.target.value === '' ? 0 : Number(e.target.value) })}
-            />
-            <Input
-              label="Pente (%)"
-              type="number"
-              value={inputs.slope === 0 ? '' : inputs.slope}
-              placeholder="0"
-              hint="+montée / −descente"
-              onChange={(e) => update({ slope: e.target.value === '' ? 0 : Number(e.target.value) })}
             />
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">
@@ -191,62 +197,66 @@ function TerrainCard({
           </div>
         </div>
 
-        {/* Results */}
         <div>
           <p className="text-xs text-[var(--text-dim)] uppercase tracking-wider mb-3">Résultats</p>
-          <dl className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <dt className="text-[var(--text-muted)]">Altitude terrain</dt>
-              <dd className="font-mono text-[var(--text-1)]">{elevation} ft</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-[var(--text-muted)]">Alt pression</dt>
-              <dd className="font-mono text-[var(--text-1)]">{Math.round(pa)} ft</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-[var(--text-muted)]">Alt densité</dt>
-              <dd className="font-mono text-[var(--text-1)]">{Math.round(da)} ft</dd>
-            </div>
-            <div className="border-t border-[var(--border)] pt-2" />
-            <div className="flex justify-between">
-              <dt className="text-[var(--text-muted)]">Distance calculée</dt>
-              <dd className="font-mono text-[var(--text-1)]">{distBase} m</dd>
-            </div>
-            <div className="flex justify-between font-semibold">
-              <dt className="text-[var(--text-muted)]">
-                Dist. réglementaire (×{aircraft.performance.factors.regulatory})
-              </dt>
-              <dd className="font-mono text-[var(--text-1)]">{distRegulatory} m</dd>
-            </div>
-            {inputs.toda !== undefined && (
-              <div className="flex justify-between text-xs">
-                <dt className="text-[var(--text-dim)]">TODA disponible</dt>
-                <dd className={`font-mono ${todaOk ? 'text-[var(--green)]' : 'text-[var(--red)]'}`}>
-                  {inputs.toda} m
-                </dd>
+          {canCompute ? (
+            <dl className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <dt className="text-[var(--text-muted)]">Altitude terrain</dt>
+                <dd className="font-mono text-[var(--text-1)]">{elevation} ft</dd>
               </div>
-            )}
-            {inputs.lda !== undefined && (
-              <div className="flex justify-between text-xs">
-                <dt className="text-[var(--text-dim)]">LDA disponible</dt>
-                <dd className={`font-mono ${ldaOk ? 'text-[var(--green)]' : 'text-[var(--red)]'}`}>
-                  {inputs.lda} m
-                </dd>
+              <div className="flex justify-between">
+                <dt className="text-[var(--text-muted)]">Alt pression</dt>
+                <dd className="font-mono text-[var(--text-1)]">{Math.round(pa)} ft</dd>
               </div>
-            )}
-            <div className="flex justify-between text-xs text-[var(--text-dim)] border-t border-[var(--border)] pt-2">
-              <dt>Masse utilisée</dt>
-              <dd className="font-mono">{Math.round(weight)} kg</dd>
-            </div>
-            <div className="flex justify-between text-xs text-[var(--text-dim)]">
-              <dt>Type</dt>
-              <dd className="font-mono">{tableKey === 'to' ? 'Décollage' : 'Atterrissage'}</dd>
-            </div>
-          </dl>
+              <div className="flex justify-between">
+                <dt className="text-[var(--text-muted)]">Alt densité</dt>
+                <dd className="font-mono text-[var(--text-1)]">{Math.round(da)} ft</dd>
+              </div>
+              <div className="border-t border-[var(--border)] pt-2" />
+              <div className="flex justify-between">
+                <dt className="text-[var(--text-muted)]">Distance calculée</dt>
+                <dd className="font-mono text-[var(--text-1)]">{distBase} m</dd>
+              </div>
+              <div className="flex justify-between font-semibold">
+                <dt className="text-[var(--text-muted)]">
+                  Dist. réglementaire (×{perfRegulatory.toFixed(2)})
+                </dt>
+                <dd className="font-mono text-[var(--text-1)]">{distRegulatory} m</dd>
+              </div>
+              {inputs.toda !== undefined && (
+                <div className="flex justify-between text-xs">
+                  <dt className="text-[var(--text-dim)]">TODA disponible</dt>
+                  <dd className={`font-mono ${todaOk ? 'text-[var(--green)]' : 'text-[var(--red)]'}`}>
+                    {inputs.toda} m
+                  </dd>
+                </div>
+              )}
+              {inputs.lda !== undefined && (
+                <div className="flex justify-between text-xs">
+                  <dt className="text-[var(--text-dim)]">LDA disponible</dt>
+                  <dd className={`font-mono ${ldaOk ? 'text-[var(--green)]' : 'text-[var(--red)]'}`}>
+                    {inputs.lda} m
+                  </dd>
+                </div>
+              )}
+              <div className="flex justify-between text-xs text-[var(--text-dim)] border-t border-[var(--border)] pt-2">
+                <dt>Masse utilisée</dt>
+                <dd className="font-mono">{Math.round(weight)} kg</dd>
+              </div>
+              <div className="flex justify-between text-xs text-[var(--text-dim)]">
+                <dt>Type</dt>
+                <dd className="font-mono">{tableKey === 'to' ? 'Décollage' : 'Atterrissage'}</dd>
+              </div>
+            </dl>
+          ) : (
+            <p className="text-xs text-[var(--text-dim)] italic">
+              Calcul indisponible — corriger la configuration de la table.
+            </p>
+          )}
         </div>
       </div>
 
-      {/* Inline key for terrain */}
       <div className="mt-3 pt-2 border-t border-[var(--border)]">
         <p className="text-xs text-[var(--text-dim)]">Terrain : {terrainKey}</p>
       </div>
@@ -254,33 +264,23 @@ function TerrainCard({
   )
 }
 
-// ── Main PerfPanel component ───────────────────────────────────────────────────
-
 interface Props {
   dossier: FlightDossier
   onUpdate: (perfInputs: Record<string, TerrainPerfInputs>) => void
+  onUpdateRegulatory: (regulatory: number) => void
 }
 
-export function PerfPanel({ dossier, onUpdate }: Props) {
-  const { aircraft, loading, weatherInputs, perfInputs, route } = dossier
+export function PerfPanel({ dossier, onUpdate, onUpdateRegulatory }: Props) {
+  const { aircraft, loading, weatherInputs, perfInputs, route, perfRegulatory } = dossier
 
-  // Get dep/arr ICAO from route
   const depIcao = route?.waypoints[0]?.name ?? ''
   const arrIcao = route?.waypoints[route.waypoints.length - 1]?.name ?? ''
 
-  // Compute departure weight (W&B with full fuel as in WBPanel)
   const depWeight = useMemo(() => {
-    const fuelStationName = aircraft.massBalance.stations.find(s =>
-      s.name.toLowerCase().includes('carburant')
-    )?.name
-    const fuelMassKg = aircraft.characteristics.fuelCapacity * FUEL_DENSITY_KGL
-    const depLoading = { ...loading }
-    if (fuelStationName) depLoading[fuelStationName] = fuelMassKg
-    const wb = computeWB(aircraft.massBalance, depLoading)
+    const wb = computeWB(aircraft.massBalance, loading)
     return Math.min(wb.totalWeight, aircraft.massBalance.maxWeight)
   }, [aircraft, loading])
 
-  // Helper to get pre-filled qnh/temp for a terrain from weatherInputs
   const getWeatherFor = (terrainKey: string) => {
     const icao = terrainKey === 'DEP' ? depIcao : terrainKey === 'ARR' ? arrIcao : ''
     const field = weatherInputs.fields[icao]
@@ -293,6 +293,23 @@ export function PerfPanel({ dossier, onUpdate }: Props) {
 
   return (
     <div className="p-4 max-w-4xl mx-auto space-y-6">
+      <Card padding="sm">
+        <div className="flex items-center gap-4">
+          <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide whitespace-nowrap">
+            Marge réglementaire (×)
+          </label>
+          <input
+            type="number"
+            min={1}
+            step={0.01}
+            value={perfRegulatory ?? 1.0}
+            onChange={e => onUpdateRegulatory(Number(e.target.value) || 1.0)}
+            className="w-24 text-right font-mono text-sm bg-[var(--bg-card)] border border-[var(--border)] rounded px-2 py-1 text-[var(--text-1)] focus:outline-none focus:border-[var(--amber)] focus:ring-1 focus:ring-[var(--amber)]"
+          />
+          <span className="text-xs text-[var(--text-dim)]">1.15 pour clubs Alcyons</span>
+        </div>
+      </Card>
+
       {TERRAINS.map(({ key, label, tableKey }) => {
         const weather = getWeatherFor(key)
         return (
@@ -306,6 +323,7 @@ export function PerfPanel({ dossier, onUpdate }: Props) {
             defaultQnh={weather.qnh}
             defaultTemp={weather.temp}
             perfInputs={perfInputs[key] ?? DEFAULT_PERF}
+            perfRegulatory={perfRegulatory ?? 1.0}
             onUpdate={(inputs) => handleUpdate(key, inputs)}
           />
         )

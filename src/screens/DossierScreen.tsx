@@ -61,6 +61,7 @@ export function DossierScreen({ dossier, activeTab, onUpdate }: DossierScreenPro
         <PerfPanel
           dossier={dossier}
           onUpdate={(perfInputs) => update({ perfInputs })}
+          onUpdateRegulatory={(perfRegulatory) => update({ perfRegulatory })}
         />
       )}
       {activeTab === 'dossier' && <DossierPanel dossier={dossier} />}
