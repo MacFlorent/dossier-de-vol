@@ -5,6 +5,8 @@ import { TEMPLATES, createFromTemplate } from '../lib/templates'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Card } from '../components/ui/Card'
+import { validatePerformanceTable } from '../lib/aviation/perfTableValidation'
+import type { PerfTableValidation } from '../lib/aviation/perfTableValidation'
 
 interface Props {
   editingAircraftId: string | null
@@ -133,7 +135,14 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
 
   const [toTableJson, setToTableJson] = useState('{}')
   const [ldgTableJson, setLdgTableJson] = useState('{}')
-  const [jsonError, setJsonError] = useState<string | null>(null)
+  const [toTableValidation, setToTableValidation] = useState<PerfTableValidation>({ errors: [], warnings: [] })
+  const [ldgTableValidation, setLdgTableValidation] = useState<PerfTableValidation>({ errors: [], warnings: [] })
+
+  const runValidation = (json: string): PerfTableValidation => {
+    let parsed: unknown = null
+    try { parsed = JSON.parse(json) } catch { /* invalid JSON */ }
+    return validatePerformanceTable(parsed)
+  }
 
   const applyAircraft = useCallback((ac: Aircraft) => {
     setName(ac.name)
@@ -146,8 +155,12 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
     setMaxWeight(ac.massBalance.maxWeight)
     setStations(ac.massBalance.stations.map(s => ({ ...s })))
     setEnvelopeJson(JSON.stringify(ac.massBalance.envelopePoints, null, 2))
-    setToTableJson(JSON.stringify(ac.performance.toTable, null, 2))
-    setLdgTableJson(JSON.stringify(ac.performance.ldgTable, null, 2))
+    const toJson = JSON.stringify(ac.performance.toTable, null, 2)
+    const ldgJson = JSON.stringify(ac.performance.ldgTable, null, 2)
+    setToTableJson(toJson)
+    setLdgTableJson(ldgJson)
+    setToTableValidation(validatePerformanceTable(ac.performance.toTable))
+    setLdgTableValidation(validatePerformanceTable(ac.performance.ldgTable))
   }, [])
 
   useEffect(() => {
@@ -163,7 +176,6 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
   }, [applyAircraft])
 
   const handleSave = useCallback(() => {
-    setJsonError(null)
     let envelopePoints: [number, number][]
     let toTable: PerformanceTable
     let ldgTable: PerformanceTable
@@ -172,7 +184,6 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
       toTable = JSON.parse(toTableJson)
       ldgTable = JSON.parse(ldgTableJson)
     } catch {
-      setJsonError('JSON invalide dans les champs avancés')
       return
     }
 
@@ -441,10 +452,23 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
               className="w-full px-3 py-2 rounded text-xs text-[var(--text-1)] font-mono bg-[var(--bg-inset)] border border-[var(--border)] focus:outline-none focus:border-[var(--amber)] resize-y"
               rows={6}
               value={toTableJson}
-              onChange={e => setToTableJson(e.target.value)}
+              onChange={e => {
+                setToTableJson(e.target.value)
+                setToTableValidation(runValidation(e.target.value))
+              }}
               spellCheck={false}
             />
             <PerfTablePreview json={toTableJson} />
+            {toTableValidation.errors.length > 0 && (
+              <div className="mt-1 p-2 rounded border border-[var(--red)] bg-[var(--red)]/10 text-[var(--red)] text-xs space-y-0.5">
+                {toTableValidation.errors.map((e, i) => <div key={i}>✕ {e}</div>)}
+              </div>
+            )}
+            {toTableValidation.warnings.length > 0 && (
+              <div className="mt-1 p-2 rounded border border-[var(--amber)] bg-[var(--amber)]/10 text-[var(--amber)] text-xs space-y-0.5">
+                {toTableValidation.warnings.map((w, i) => <div key={i}>⚠ {w}</div>)}
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col gap-1">
@@ -455,22 +479,35 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
               className="w-full px-3 py-2 rounded text-xs text-[var(--text-1)] font-mono bg-[var(--bg-inset)] border border-[var(--border)] focus:outline-none focus:border-[var(--amber)] resize-y"
               rows={6}
               value={ldgTableJson}
-              onChange={e => setLdgTableJson(e.target.value)}
+              onChange={e => {
+                setLdgTableJson(e.target.value)
+                setLdgTableValidation(runValidation(e.target.value))
+              }}
               spellCheck={false}
             />
             <PerfTablePreview json={ldgTableJson} />
+            {ldgTableValidation.errors.length > 0 && (
+              <div className="mt-1 p-2 rounded border border-[var(--red)] bg-[var(--red)]/10 text-[var(--red)] text-xs space-y-0.5">
+                {ldgTableValidation.errors.map((e, i) => <div key={i}>✕ {e}</div>)}
+              </div>
+            )}
+            {ldgTableValidation.warnings.length > 0 && (
+              <div className="mt-1 p-2 rounded border border-[var(--amber)] bg-[var(--amber)]/10 text-[var(--amber)] text-xs space-y-0.5">
+                {ldgTableValidation.warnings.map((w, i) => <div key={i}>⚠ {w}</div>)}
+              </div>
+            )}
           </div>
-
-          {jsonError && (
-            <div className="mt-4 p-3 rounded border border-[var(--red)] bg-[var(--red)]/10 text-[var(--red)] text-xs">
-              {jsonError}
-            </div>
-          )}
         </Card>
 
         <div className="flex gap-3 justify-end pb-8">
           <Button variant="ghost" onClick={onCancel}>Annuler</Button>
-          <Button variant="primary" onClick={handleSave}>Sauvegarder</Button>
+          <Button
+            variant="primary"
+            onClick={handleSave}
+            disabled={toTableValidation.errors.length > 0 || ldgTableValidation.errors.length > 0}
+          >
+            Sauvegarder
+          </Button>
         </div>
       </div>
     </div>
