@@ -1,13 +1,5 @@
 import type { Aircraft, PerformanceTable } from '../../types'
 
-function computeDA(pa: number, oat: number): number {
-  return pa + 120 * (oat - (15 - 2 * pa / 1000))
-}
-
-function weightFactor(w: number): number {
-  return 1 + 0.02 * (w - 800) / 50
-}
-
 function buildTable(baseDist: number): PerformanceTable {
   const weights = [800, 900, 1000]
   const pressureAltitudes = [0, 1000, 2000, 3000, 4000, 6000]
@@ -16,9 +8,11 @@ function buildTable(baseDist: number): PerformanceTable {
   const values = weights.map(w =>
     pressureAltitudes.map(pa =>
       oats.map(oat => {
-        const da = computeDA(pa, oat)
+        const isa = 15 - 2 * pa / 1000
+        const da = pa + (oat - isa) * 120
         const daFactor = 1 + 0.12 * Math.max(0, da) / 1000
-        return Math.round(baseDist * daFactor * weightFactor(w))
+        const wFactor = 1 + 0.02 * (w - 800) / 50
+        return Math.round(baseDist * daFactor * wFactor)
       })
     )
   )
@@ -31,7 +25,6 @@ function buildTable(baseDist: number): PerformanceTable {
     grassFactor: 1.20,
     headwindFactor: 0.025,
     tailwindFactor: 0.02,
-    slopeFactor: 0.07,
   }
 }
 
@@ -54,10 +47,10 @@ export const DR221_TEMPLATE: Aircraft = {
     emptyArm: 345,
     maxWeight: 1000,
     stations: [
-      { name: 'Pilote', arm: 375, maxWeight: 120 },
-      { name: 'Passager', arm: 505, maxWeight: 100 },
-      { name: 'Bagages', arm: 545, maxWeight: 30 },
-      { name: 'Carburant', arm: 350, maxWeight: 84 },
+      { name: 'Pilote', arm: 375, kind: 'dry' },
+      { name: 'Passager', arm: 505, kind: 'dry' },
+      { name: 'Bagages', arm: 545, kind: 'dry' },
+      { name: 'Carburant', arm: 350, kind: 'fuel' },
     ],
     envelopePoints: [
       [615, 295],
@@ -72,11 +65,5 @@ export const DR221_TEMPLATE: Aircraft = {
   performance: {
     toTable: buildTable(290),
     ldgTable: buildTable(480),
-    factors: {
-      regulatory: 1.15,
-      grass: 1.20,
-      headwindPerKt: 0.025,
-      tailwindPerKt: 0.02,
-    },
   },
 }
