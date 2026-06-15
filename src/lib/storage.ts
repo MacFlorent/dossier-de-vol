@@ -18,7 +18,15 @@ export function listAircraft(): Aircraft[] {
 export function getAircraft(id: string): Aircraft | null {
   const raw = localStorage.getItem(AIRCRAFT_KEY_PREFIX + id)
   if (!raw) return null
-  return JSON.parse(raw) as Aircraft
+  const ac = JSON.parse(raw) as Aircraft
+  // Migrate pre-kind schema: stations had maxWeight instead of kind
+  if (ac.massBalance?.stations) {
+    ac.massBalance.stations = ac.massBalance.stations.map(s => ({
+      ...s,
+      kind: s.kind ?? 'dry',
+    }))
+  }
+  return ac
 }
 
 export function saveAircraft(aircraft: Aircraft): void {

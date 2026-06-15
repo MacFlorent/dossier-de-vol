@@ -22,13 +22,8 @@ export function DossierPanel({ dossier }: Props) {
       )
     : []
 
-  // Compute W&B departure
-  const fuelMassKg = aircraft.characteristics.fuelCapacity * FUEL_DENSITY_KGL
-  const depLoading = { ...loading }
-  // Set fuel station weight for departure
-  const fuelStation = aircraft.massBalance.stations.find(s => s.name.toLowerCase().includes('carburant'))
-  if (fuelStation) depLoading[fuelStation.name] = fuelMassKg
-  const wbDep = computeWB(aircraft.massBalance, depLoading)
+  // Compute W&B departure — loading stores L for fuel stations, kg for dry
+  const wbDep = computeWB(aircraft.massBalance, loading)
 
   const totalDist = navlog.reduce((s, e) => s + e.dist_nm, 0)
   const totalTime = navlog.at(-1)?.cumul_time_min ?? 0
@@ -172,7 +167,11 @@ export function DossierPanel({ dossier }: Props) {
                   <tr key={st.name} className="border-b border-[var(--border)]/30">
                     <td className="py-1 text-[var(--text-2)]">{st.name}</td>
                     <td className="text-right py-1 font-mono">{st.arm}</td>
-                    <td className="text-right py-1 font-mono">{depLoading[st.name]?.toFixed(1) ?? '0'}</td>
+                    <td className="text-right py-1 font-mono">
+                      {st.kind === 'fuel'
+                        ? ((loading[st.name] ?? 0) * FUEL_DENSITY_KGL).toFixed(1)
+                        : (loading[st.name] ?? 0).toFixed(1)}
+                    </td>
                   </tr>
                 ))}
                 <tr className="border-t border-[var(--border)] font-semibold">
