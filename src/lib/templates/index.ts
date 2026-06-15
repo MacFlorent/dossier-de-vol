@@ -10,7 +10,8 @@ const modules = import.meta.glob('../../../resources/*.json', { eager: true })
 
 export const TEMPLATES: TemplateEntry[] = Object.entries(modules).map(([path, mod]) => {
   const aircraft = (mod as { default: Aircraft }).default
-  const key = path.split('/').pop()!.replace('.json', '')
+  if (!aircraft?.name) throw new Error(`Template at ${path} is missing a name field`)
+  const key = path.split('/').pop()!.replace(/\.json$/, '')
   return { key, label: aircraft.name, template: aircraft }
 })
 
