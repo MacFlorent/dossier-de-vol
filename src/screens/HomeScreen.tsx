@@ -1,20 +1,24 @@
-import { useState, useCallback } from 'react'
-import { listAircraft, deleteAircraft, loadDossierFromFile } from '../lib/storage'
+import { useState, useCallback, useRef } from 'react'
+import { listAircraft, deleteAircraft, loadDossierFromFile, downloadFleet } from '../lib/storage'
 import { TEMPLATES } from '../lib/templates'
-import type { FlightDossier } from '../types'
+import type { FlightDossier, Aircraft } from '../types'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
+import { FleetImportModal } from '../features/fleet/FleetImportModal'
 
 interface HomeScreenProps {
   onNewAircraft: () => void
   onEditAircraft: (id: string) => void
+  onDuplicateAircraft: (ac: Aircraft) => void
   onNewDossier: (aircraftId: string) => void
   onOpenDossier: (dossier: FlightDossier) => void
 }
 
-export function HomeScreen({ onNewAircraft, onEditAircraft, onNewDossier, onOpenDossier }: HomeScreenProps) {
+export function HomeScreen({ onNewAircraft, onEditAircraft, onDuplicateAircraft, onNewDossier, onOpenDossier }: HomeScreenProps) {
   const [aircraft, setAircraft] = useState(() => listAircraft())
   const [error, setError] = useState<string | null>(null)
+  const [importModal, setImportModal] = useState<Aircraft[] | null>(null)
+  const fleetFileInputRef = useRef<HTMLInputElement>(null)
 
   const handleDelete = useCallback((id: string) => {
     if (confirm('Supprimer cet avion ?')) {
@@ -31,6 +35,23 @@ export function HomeScreen({ onNewAircraft, onEditAircraft, onNewDossier, onOpen
       setError(e instanceof Error ? e.message : 'Fichier invalide')
     }
   }, [onOpenDossier])
+
+  const handleFleetFile = useCallback((file: File) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target?.result as string)
+        if (data.version !== 1 || !Array.isArray(data.aircraft) || data.aircraft.length === 0) {
+          setError('Fichier de flotte invalide (version manquante ou liste vide)')
+          return
+        }
+        setImportModal(data.aircraft as Aircraft[])
+      } catch {
+        setError('Fichier invalide — JSON malformé')
+      }
+    }
+    reader.readAsText(file)
+  }, [])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -59,13 +80,32 @@ export function HomeScreen({ onNewAircraft, onEditAircraft, onNewDossier, onOpen
 
       {/* Fleet section */}
       <section className="mb-8">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
           <h2 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wider">
             Flotte ({aircraft.length})
           </h2>
-          <Button variant="secondary" size="sm" onClick={onNewAircraft}>
-            + Nouvel avion
-          </Button>
+          <div className="flex gap-2 flex-wrap">
+            <Button variant="ghost" size="sm" onClick={downloadFleet} disabled={aircraft.length === 0}>
+              ↓ Exporter
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => fleetFileInputRef.current?.click()}>
+              ↑ Importer
+            </Button>
+            <input
+              ref={fleetFileInputRef}
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) handleFleetFile(file)
+                e.target.value = ''
+              }}
+            />
+            <Button variant="secondary" size="sm" onClick={onNewAircraft}>
+              + Nouvel avion
+            </Button>
+          </div>
         </div>
 
         {aircraft.length === 0 ? (
@@ -92,6 +132,9 @@ export function HomeScreen({ onNewAircraft, onEditAircraft, onNewDossier, onOpen
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => onEditAircraft(ac.id)}>
                     Modifier
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => onDuplicateAircraft(ac)}>
+                    Dupliquer
                   </Button>
                   <Button variant="danger" size="sm" onClick={() => handleDelete(ac.id)}>
                     ✕
@@ -126,6 +169,17 @@ export function HomeScreen({ onNewAircraft, onEditAircraft, onNewDossier, onOpen
           <p className="text-[var(--text-dim)] text-xs">ou cliquer pour parcourir</p>
         </Card>
       </section>
+
+      {importModal && (
+        <FleetImportModal
+          aircraft={importModal}
+          onComplete={() => {
+            setImportModal(null)
+            setAircraft(listAircraft())
+          }}
+          onCancel={() => setImportModal(null)}
+        />
+      )}
     </div>
   )
 }
