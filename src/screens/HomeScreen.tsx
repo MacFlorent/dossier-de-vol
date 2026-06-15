@@ -56,8 +56,28 @@ export function HomeScreen({ onNewAircraft, onEditAircraft, onDuplicateAircraft,
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     const file = e.dataTransfer.files[0]
-    if (file) handleOpenFile(file)
-  }, [handleOpenFile])
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target?.result as string)
+        if (data.version === 1 && Array.isArray(data.aircraft)) {
+          if (data.aircraft.length === 0) {
+            setError('Fichier de flotte invalide (liste vide)')
+            return
+          }
+          setImportModal(data.aircraft as Aircraft[])
+        } else if (data.id && data.name) {
+          onOpenDossier(data as FlightDossier)
+        } else {
+          setError('Format de fichier non reconnu')
+        }
+      } catch {
+        setError('Fichier invalide — JSON malformé')
+      }
+    }
+    reader.readAsText(file)
+  }, [onOpenDossier])
 
   return (
     <div

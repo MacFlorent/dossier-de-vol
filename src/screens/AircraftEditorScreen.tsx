@@ -120,6 +120,7 @@ function PerfTablePreview({ json }: { json: string }) {
 
 export function AircraftEditorScreen({ editingAircraftId, prefillAircraft, onSave, onCancel }: Props) {
   const isNew = editingAircraftId === null
+  const isDuplicate = prefillAircraft !== undefined && editingAircraftId === null
 
   const [name, setName] = useState('')
   const [registration, setRegistration] = useState('')
@@ -254,15 +255,23 @@ export function AircraftEditorScreen({ editingAircraftId, prefillAircraft, onSav
     <div className="min-h-full p-6 max-w-3xl mx-auto">
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-[var(--text-1)]">
-          {isNew ? 'Nouvel avion' : 'Modifier l\'avion'}
+          {isDuplicate
+            ? `Dupliquer : ${prefillAircraft!.name.replace(' (copie)', '')}`
+            : isNew
+              ? 'Nouvel avion'
+              : 'Modifier l\'avion'}
         </h1>
         <p className="text-[var(--text-muted)] text-sm mt-1">
-          {isNew ? 'Configurez un nouvel avion' : `Édition : ${name || registration || editingAircraftId}`}
+          {isDuplicate
+            ? 'Modifiez l\'immatriculation et le nom avant de sauvegarder'
+            : isNew
+              ? 'Configurez un nouvel avion'
+              : `Édition : ${name || registration || editingAircraftId}`}
         </p>
       </div>
 
       <div className="flex flex-col gap-6">
-        {isNew && (
+        {isNew && !isDuplicate && (
           <Card padding="md">
             <SectionTitle>Modèle de départ</SectionTitle>
             <div className="flex flex-wrap gap-2">

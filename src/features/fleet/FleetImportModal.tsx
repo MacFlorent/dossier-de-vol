@@ -15,23 +15,23 @@ export function FleetImportModal({ aircraft, onComplete, onCancel }: Props) {
   const existingRegistrations = new Set(listAircraft().map(ac => ac.registration))
 
   const [selected, setSelected] = useState<Set<string>>(() =>
-    new Set(aircraft.filter(ac => !existingRegistrations.has(ac.registration)).map(ac => ac.registration))
+    new Set(aircraft.filter(ac => !existingRegistrations.has(ac.registration)).map(ac => ac.id))
   )
 
-  const toggle = (registration: string) => {
+  const toggle = (id: string) => {
     setSelected(prev => {
       const next = new Set(prev)
-      if (next.has(registration)) {
-        next.delete(registration)
+      if (next.has(id)) {
+        next.delete(id)
       } else {
-        next.add(registration)
+        next.add(id)
       }
       return next
     })
   }
 
   const handleImport = () => {
-    const toImport = aircraft.filter(ac => selected.has(ac.registration))
+    const toImport = aircraft.filter(ac => selected.has(ac.id))
     importFleet(toImport)
     onComplete()
   }
@@ -57,18 +57,18 @@ export function FleetImportModal({ aircraft, onComplete, onCancel }: Props) {
         <tbody>
           {aircraft.map(ac => {
             const isExisting = existingRegistrations.has(ac.registration)
-            const checked = selected.has(ac.registration)
+            const checked = selected.has(ac.id)
             return (
               <tr
-                key={ac.registration || ac.id}
+                key={ac.id}
                 className="border-b border-[var(--border)] cursor-pointer hover:bg-[var(--bg-row-hover,var(--bg-card))]"
-                onClick={() => toggle(ac.registration)}
+                onClick={() => toggle(ac.id)}
               >
                 <td className="py-2 pr-2">
                   <input
                     type="checkbox"
                     checked={checked}
-                    onChange={() => toggle(ac.registration)}
+                    onChange={() => toggle(ac.id)}
                     onClick={e => e.stopPropagation()}
                     className="accent-[var(--amber)]"
                   />
