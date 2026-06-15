@@ -2,19 +2,24 @@
 
 export interface WeightStation {
   name: string
-  arm: number        // mm depuis le datum
-  maxWeight: number  // kg max pour cette station
+  arm: number   // mm depuis le datum
+  kind: 'dry' | 'fuel'
 }
 
 export interface PerformanceTable {
   weights: number[]           // kg, triés croissant
   pressureAltitudes: number[] // ft, triés croissant
-  oats: number[]              // °C, triés croissant
+  oats: number[]              // °C absolus ou écart ISA, triés croissant
+  oatAxis?: 'absolute' | 'isa_delta'  // défaut 'absolute'
   values: number[][][]        // [weight_idx][pa_idx][oat_idx] = distance en mètres
+  grassValues?: number[][][]  // table herbe (mêmes dimensions) — prioritaire sur grassFactor
   grassFactor?: number
+  weightCorrection?: 'interpolate' | 'quadratic'  // défaut 'interpolate'
+  referenceWeight?: number    // requis si quadratic
+  weightCorrectionDivisor?: number  // défaut = referenceWeight
+  windCorrections?: Array<{ speedKt: number; factor: number }>
   headwindFactor?: number
   tailwindFactor?: number
-  slopeFactor?: number
 }
 
 export interface CruiseRegime {
@@ -39,12 +44,6 @@ export interface AircraftMassBalance {
 export interface AircraftPerformance {
   toTable: PerformanceTable
   ldgTable: PerformanceTable
-  factors: {
-    regulatory: number
-    grass: number
-    headwindPerKt: number
-    tailwindPerKt: number
-  }
 }
 
 export interface Aircraft {
@@ -136,16 +135,16 @@ export interface FuelInputs {
 
 // ── Masse & centrage ──────────────────────────────────────────────────────────
 
-export type StationLoading = Record<string, number>  // stationName → kg
+// stationName → kg (dry stations) ou L (fuel stations, converti en kg par computeWB)
+export type StationLoading = Record<string, number>
 
 // ── Performances ─────────────────────────────────────────────────────────────
 
 export interface TerrainPerfInputs {
   surface: 'hard' | 'grass'
-  slope: number      // % positif = montée (pour TO) / descente (pour LDG)
-  windKt: number     // kt positif = vent de face
-  toda?: number      // m TODA disponible (optionnel, pour validation)
-  lda?: number       // m LDA disponible (optionnel, pour validation)
+  windKt: number    // kt positif = face, négatif = arrière
+  toda?: number     // m disponible (optionnel, pour validation)
+  lda?: number      // m disponible (optionnel, pour validation)
 }
 
 // ── Dossier de vol ────────────────────────────────────────────────────────────
@@ -165,6 +164,7 @@ export interface FlightDossier {
 
   fuelInputs: FuelInputs
   loading: StationLoading         // masses par station
+  perfRegulatory: number          // facteur marge réglementaire (ex. 1.15 clubs Alcyons)
   perfInputs: Record<string, TerrainPerfInputs>  // clé = ICAO terrain
 
   notes: string                   // NOTAM, SUPAIP, remarques libres
@@ -188,10 +188,9 @@ export interface WBResult {
 }
 
 export interface PerfConditions {
-  weight: number       // kg
-  pa: number           // ft
-  oat: number          // °C
+  weight: number    // kg
+  pa: number        // ft pression
+  oat: number       // °C
   surfaceGrass: boolean
-  windKt: number       // positif = face, négatif = arrière
-  slopePercent: number // positif = montante (TO) ou descendante (LDG)
+  windKt: number    // positif = face, négatif = arrière
 }
