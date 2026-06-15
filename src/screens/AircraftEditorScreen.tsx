@@ -10,6 +10,7 @@ import type { PerfTableValidation } from '../lib/aviation/perfTableValidation'
 
 interface Props {
   editingAircraftId: string | null
+  prefillAircraft?: Aircraft
   onSave: () => void
   onCancel: () => void
 }
@@ -117,7 +118,7 @@ function PerfTablePreview({ json }: { json: string }) {
 
 // ── AircraftEditorScreen ──────────────────────────────────────────────────────
 
-export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Props) {
+export function AircraftEditorScreen({ editingAircraftId, prefillAircraft, onSave, onCancel }: Props) {
   const isNew = editingAircraftId === null
 
   const [name, setName] = useState('')
@@ -174,6 +175,10 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
       if (ac) applyAircraft(ac)
     }
   }, [editingAircraftId, applyAircraft])
+
+  useEffect(() => {
+    if (prefillAircraft) applyAircraft(prefillAircraft)
+  }, [prefillAircraft, applyAircraft])
 
   const handleTemplateSelect = useCallback((key: string) => {
     const ac = createFromTemplate(key, crypto.randomUUID())

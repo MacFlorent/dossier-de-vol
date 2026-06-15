@@ -1,5 +1,6 @@
 import { useReducer } from 'react'
-import type { FlightDossier, DossierTab, Screen } from './types'
+import type { Aircraft, FlightDossier, DossierTab, Screen } from './types'
+import { duplicateAircraft } from './lib/storage'
 import { HomeScreen } from './screens/HomeScreen'
 import { AircraftEditorScreen } from './screens/AircraftEditorScreen'
 import { DossierScreen } from './screens/DossierScreen'
@@ -8,6 +9,7 @@ import { AppChrome } from './components/AppChrome'
 interface AppState {
   screen: Screen
   editingAircraftId: string | null
+  prefillAircraft: Aircraft | null
   dossier: FlightDossier | null
   dossierTab: DossierTab
 }
@@ -16,6 +18,7 @@ type AppAction =
   | { type: 'GO_HOME' }
   | { type: 'NEW_AIRCRAFT' }
   | { type: 'EDIT_AIRCRAFT'; id: string }
+  | { type: 'PREFILL_AIRCRAFT'; aircraft: Aircraft }
   | { type: 'OPEN_DOSSIER'; dossier: FlightDossier }
   | { type: 'SET_TAB'; tab: DossierTab }
   | { type: 'UPDATE_DOSSIER'; dossier: FlightDossier }
@@ -24,11 +27,13 @@ type AppAction =
 function reducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case 'GO_HOME':
-      return { ...state, screen: 'home', dossier: null, editingAircraftId: null }
+      return { ...state, screen: 'home', dossier: null, editingAircraftId: null, prefillAircraft: null }
     case 'NEW_AIRCRAFT':
-      return { ...state, screen: 'aircraft-editor', editingAircraftId: null }
+      return { ...state, screen: 'aircraft-editor', editingAircraftId: null, prefillAircraft: null }
     case 'EDIT_AIRCRAFT':
-      return { ...state, screen: 'aircraft-editor', editingAircraftId: action.id }
+      return { ...state, screen: 'aircraft-editor', editingAircraftId: action.id, prefillAircraft: null }
+    case 'PREFILL_AIRCRAFT':
+      return { ...state, screen: 'aircraft-editor', editingAircraftId: null, prefillAircraft: action.aircraft }
     case 'OPEN_DOSSIER':
     case 'UPDATE_DOSSIER':
       return { ...state, screen: 'dossier', dossier: action.dossier }
@@ -44,6 +49,7 @@ function reducer(state: AppState, action: AppAction): AppState {
 const initialState: AppState = {
   screen: 'home',
   editingAircraftId: null,
+  prefillAircraft: null,
   dossier: null,
   dossierTab: 'route',
 }
@@ -68,6 +74,7 @@ export function App() {
           <HomeScreen
             onNewAircraft={() => dispatch({ type: 'NEW_AIRCRAFT' })}
             onEditAircraft={(id) => dispatch({ type: 'EDIT_AIRCRAFT', id })}
+            onDuplicateAircraft={(ac) => dispatch({ type: 'PREFILL_AIRCRAFT', aircraft: duplicateAircraft(ac) })}
             onNewDossier={(aircraftId) => {
               import('./lib/storage').then(({ getAircraft }) => {
                 const aircraft = getAircraft(aircraftId)
@@ -109,6 +116,7 @@ export function App() {
         {state.screen === 'aircraft-editor' && (
           <AircraftEditorScreen
             editingAircraftId={state.editingAircraftId}
+            prefillAircraft={state.prefillAircraft ?? undefined}
             onSave={() => dispatch({ type: 'GO_HOME' })}
             onCancel={() => dispatch({ type: 'GO_HOME' })}
           />
