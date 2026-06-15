@@ -135,8 +135,8 @@ export function AircraftEditorScreen({ editingAircraftId, onSave, onCancel }: Pr
 
   const [toTableJson, setToTableJson] = useState('{}')
   const [ldgTableJson, setLdgTableJson] = useState('{}')
-  const [toTableValidation, setToTableValidation] = useState<PerfTableValidation>({ errors: [], warnings: [] })
-  const [ldgTableValidation, setLdgTableValidation] = useState<PerfTableValidation>({ errors: [], warnings: [] })
+  const [toTableValidation, setToTableValidation] = useState<PerfTableValidation>(() => validatePerformanceTable({}))
+  const [ldgTableValidation, setLdgTableValidation] = useState<PerfTableValidation>(() => validatePerformanceTable({}))
 
   const runValidation = (json: string): PerfTableValidation => {
     let parsed: unknown = null
