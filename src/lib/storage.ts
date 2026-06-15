@@ -47,6 +47,41 @@ export function deleteAircraft(id: string): void {
   localStorage.setItem(AIRCRAFT_INDEX_KEY, JSON.stringify(ids.filter(i => i !== id)))
 }
 
+export function downloadFleet(): void {
+  const fleet = listAircraft()
+  const payload = JSON.stringify({ version: 1, aircraft: fleet }, null, 2)
+  const blob = new Blob([payload], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `flotte-dossier-de-vol-${new Date().toISOString().slice(0, 10)}.json`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
+export function importFleet(selected: Aircraft[]): { added: number; updated: number } {
+  const existing = listAircraft()
+  let added = 0
+  let updated = 0
+  for (const imported of selected) {
+    const match = existing.find(ac => ac.registration === imported.registration)
+    if (match) {
+      saveAircraft({ ...imported, id: match.id })
+      updated++
+    } else {
+      saveAircraft({ ...imported, id: crypto.randomUUID() })
+      added++
+    }
+  }
+  return { added, updated }
+}
+
+export function duplicateAircraft(ac: Aircraft): Aircraft {
+  return { ...ac, id: crypto.randomUUID(), registration: '', name: `${ac.name} (copie)` }
+}
+
 // ── Dossier (JSON file) ──────────────────────────────────────────────────────
 
 export function downloadDossier(dossier: FlightDossier): void {
