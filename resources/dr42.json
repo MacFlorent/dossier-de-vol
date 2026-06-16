@@ -1,0 +1,245 @@
+{
+  "id": "template-dr42",
+  "name": "DR42",
+  "registration": "FGBVP",
+  "characteristics": {
+    "regimes": [
+      {
+        "label": "75% puissance",
+        "ias": 108,
+        "fuelBurn": 25
+      }
+    ],
+    "fuelCapacity": 110
+  },
+  "massBalance": {
+    "emptyWeight": 569,
+    "emptyArm": 340,
+    "stations": [
+      {
+        "name": "Pilote",
+        "arm": 410,
+        "kind": "dry"
+      },
+      {
+        "name": "Copilote",
+        "arm": 410,
+        "kind": "dry"
+      },
+      {
+        "name": "Passager 1",
+        "arm": 1190,
+        "kind": "dry"
+      },
+      {
+        "name": "Passager 2",
+        "arm": 1190,
+        "kind": "dry"
+      },
+      {
+        "name": "Soute (40kg max)",
+        "arm": 1900,
+        "kind": "dry"
+      },
+      {
+        "name": "Essence",
+        "arm": 1120,
+        "kind": "fuel"
+      }
+    ],
+    "envelopePoints": [
+      [
+        500,
+        205
+      ],
+      [
+        750,
+        205
+      ],
+      [
+        900,
+        428
+      ],
+      [
+        900,
+        564
+      ],
+      [
+        500,
+        564
+      ]
+    ]
+  },
+  "performance": {
+    "toTable": {
+      "weights": [
+        700,
+        900
+      ],
+      "pressureAltitudes": [
+        0,
+        4000,
+        8000
+      ],
+      "oats": [
+        -20,
+        0,
+        20
+      ],
+      "oatAxis": "isa_delta",
+      "values": [
+        [
+          [
+            285,
+            315,
+            345
+          ],
+          [
+            375,
+            415,
+            460
+          ],
+          [
+            500,
+            560,
+            620
+          ]
+        ],
+        [
+          [
+            480,
+            535,
+            590
+          ],
+          [
+            645,
+            720,
+            800
+          ],
+          [
+            890,
+            1000,
+            1125
+          ]
+        ]
+      ],
+      "grassValues": [
+        [
+          [
+            320,
+            355,
+            395
+          ],
+          [
+            430,
+            485,
+            540
+          ],
+          [
+            595,
+            675,
+            760
+          ]
+        ],
+        [
+          [
+            570,
+            640,
+            715
+          ],
+          [
+            800,
+            905,
+            1025
+          ],
+          [
+            1165,
+            1350,
+            1550
+          ]
+        ]
+      ],
+      "windCorrections": [
+        {
+          "speedKt": 10,
+          "factor": 0.78
+        },
+        {
+          "speedKt": 20,
+          "factor": 0.63
+        },
+        {
+          "speedKt": 30,
+          "factor": 0.52
+        }
+      ]
+    },
+    "ldgTable": {
+      "weights": [
+        700,
+        900
+      ],
+      "pressureAltitudes": [
+        0,
+        4000,
+        8000
+      ],
+      "oats": [
+        -20,
+        0,
+        20
+      ],
+      "oatAxis": "isa_delta",
+      "values": [
+        [
+          [
+            365,
+            385,
+            400
+          ],
+          [
+            395,
+            420,
+            440
+          ],
+          [
+            430,
+            460,
+            485
+          ]
+        ],
+        [
+          [
+            435,
+            460,
+            485
+          ],
+          [
+            475,
+            505,
+            535
+          ],
+          [
+            525,
+            555,
+            590
+          ]
+        ]
+      ],
+      "windCorrections": [
+        {
+          "speedKt": 10,
+          "factor": 0.78
+        },
+        {
+          "speedKt": 20,
+          "factor": 0.63
+        },
+        {
+          "speedKt": 30,
+          "factor": 0.52
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,260 @@
+{
+  "id": "template-dr48",
+  "name": "DR48",
+  "registration": "FGGJL",
+  "characteristics": {
+    "regimes": [
+      {
+        "label": "75% @ 4000ft",
+        "ias": 139,
+        "fuelBurn": 39
+      },
+      {
+        "label": "75% @ 0ft",
+        "ias": 134,
+        "fuelBurn": 39
+      },
+      {
+        "label": "75% @ 8000ft",
+        "ias": 144,
+        "fuelBurn": 39
+      }
+    ],
+    "fuelCapacity": 190
+  },
+  "massBalance": {
+    "emptyWeight": 634,
+    "emptyArm": 330,
+    "stations": [
+      {
+        "name": "Pilote",
+        "arm": 410,
+        "kind": "dry"
+      },
+      {
+        "name": "Copilote",
+        "arm": 410,
+        "kind": "dry"
+      },
+      {
+        "name": "Passager 1",
+        "arm": 1190,
+        "kind": "dry"
+      },
+      {
+        "name": "Passager 2",
+        "arm": 1190,
+        "kind": "dry"
+      },
+      {
+        "name": "Soute (60kg max)",
+        "arm": 1900,
+        "kind": "dry"
+      },
+      {
+        "name": "Essence Avant (80L max)",
+        "arm": 100,
+        "kind": "fuel"
+      },
+      {
+        "name": "Essence Arrière (110L max)",
+        "arm": 1120,
+        "kind": "fuel"
+      }
+    ],
+    "envelopePoints": [
+      [
+        500,
+        205
+      ],
+      [
+        750,
+        205
+      ],
+      [
+        1100,
+        428
+      ],
+      [
+        1100,
+        564
+      ],
+      [
+        500,
+        564
+      ]
+    ]
+  },
+  "performance": {
+    "toTable": {
+      "weights": [
+        900,
+        1100
+      ],
+      "pressureAltitudes": [
+        0,
+        4000,
+        8000
+      ],
+      "oats": [
+        -20,
+        0,
+        20
+      ],
+      "oatAxis": "isa_delta",
+      "values": [
+        [
+          [
+            360,
+            400,
+            440
+          ],
+          [
+            475,
+            530,
+            585
+          ],
+          [
+            635,
+            715,
+            795
+          ]
+        ],
+        [
+          [
+            550,
+            610,
+            675
+          ],
+          [
+            735,
+            825,
+            920
+          ],
+          [
+            1010,
+            1140,
+            1280
+          ]
+        ]
+      ],
+      "grassValues": [
+        [
+          [
+            405,
+            455,
+            500
+          ],
+          [
+            550,
+            620,
+            690
+          ],
+          [
+            765,
+            870,
+            980
+          ]
+        ],
+        [
+          [
+            645,
+            725,
+            810
+          ],
+          [
+            900,
+            1025,
+            1155
+          ],
+          [
+            1310,
+            1505,
+            1730
+          ]
+        ]
+      ],
+      "windCorrections": [
+        {
+          "speedKt": 10,
+          "factor": 0.81
+        },
+        {
+          "speedKt": 20,
+          "factor": 0.67
+        },
+        {
+          "speedKt": 30,
+          "factor": 0.56
+        }
+      ]
+    },
+    "ldgTable": {
+      "weights": [
+        845,
+        1045
+      ],
+      "pressureAltitudes": [
+        0,
+        4000,
+        8000
+      ],
+      "oats": [
+        -20,
+        0,
+        20
+      ],
+      "oatAxis": "isa_delta",
+      "values": [
+        [
+          [
+            425,
+            450,
+            475
+          ],
+          [
+            465,
+            495,
+            520
+          ],
+          [
+            510,
+            545,
+            575
+          ]
+        ],
+        [
+          [
+            500,
+            530,
+            560
+          ],
+          [
+            550,
+            585,
+            620
+          ],
+          [
+            610,
+            650,
+            690
+          ]
+        ]
+      ],
+      "windCorrections": [
+        {
+          "speedKt": 10,
+          "factor": 0.81
+        },
+        {
+          "speedKt": 20,
+          "factor": 0.67
+        },
+        {
+          "speedKt": 30,
+          "factor": 0.56
+        }
+      ]
+    }
+  }
+}
