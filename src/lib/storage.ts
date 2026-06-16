@@ -1,4 +1,4 @@
-import type { Aircraft, FlightDossier } from '../types'
+import type { Aircraft, AircraftMassBalance, FlightDossier } from '../types'
 
 const AIRCRAFT_KEY_PREFIX = 'dossier-de-vol:aircraft:'
 const AIRCRAFT_INDEX_KEY = 'dossier-de-vol:aircraft:index'
@@ -19,12 +19,15 @@ export function getAircraft(id: string): Aircraft | null {
   const raw = localStorage.getItem(AIRCRAFT_KEY_PREFIX + id)
   if (!raw) return null
   const ac = JSON.parse(raw) as Aircraft
-  // Migrate pre-kind schema: stations had maxWeight instead of kind
-  if (ac.massBalance?.stations) {
+  if (ac.massBalance) {
+    // Migrate pre-kind schema: stations had no kind field
     ac.massBalance.stations = ac.massBalance.stations.map(s => ({
       ...s,
       kind: s.kind ?? 'dry',
     }))
+    // Migrate: maxWeight is now derived from envelopePoints, not stored
+    const mb = ac.massBalance as AircraftMassBalance & { maxWeight?: unknown }
+    delete mb.maxWeight
   }
   return ac
 }

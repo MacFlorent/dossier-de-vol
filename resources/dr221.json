@@ -5,20 +5,19 @@
   "sdReference": "",
   "characteristics": {
     "regimes": [
-      { "label": "75% puissance", "ias": 108, "fuelBurn": 22 },
-      { "label": "65% puissance", "ias": 100, "fuelBurn": 20 }
+      { "label": "75% puissance", "ias": 115, "fuelBurn": 25 }
     ],
-    "fuelCapacity": 116
+    "fuelCapacity": 110
   },
   "massBalance": {
-    "emptyWeight": 615,
-    "emptyArm": 345,
-    "maxWeight": 840,
+    "emptyWeight": 521,
+    "emptyArm": 330,
     "stations": [
-      { "name": "Pilote", "arm": 375, "kind": "dry" },
-      { "name": "Passager", "arm": 505, "kind": "dry" },
-      { "name": "Bagages", "arm": 545, "kind": "dry" },
-      { "name": "Carburant", "arm": 350, "kind": "fuel" }
+      { "name": "Pilote", "arm": 430, "kind": "dry" },
+      { "name": "Copilote", "arm": 430, "kind": "dry" },
+      { "name": "Passager Gauche", "arm": 1220, "kind": "dry" },
+      { "name": "Passager Droit", "arm": 1220, "kind": "dry" },
+      { "name": "Carburant", "arm": 1120, "kind": "fuel" }
     ],
     "envelopePoints": [
       [440, 310],

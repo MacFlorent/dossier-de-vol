@@ -36,7 +36,6 @@ export interface AircraftCharacteristics {
 export interface AircraftMassBalance {
   emptyWeight: number
   emptyArm: number                    // mm depuis le datum
-  maxWeight: number                   // kg MTOW
   stations: WeightStation[]
   envelopePoints: [number, number][]  // [kg, mm][]
 }
