@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<DivelementsFlightPlanner>
+  <AircraftReference Name="DR48-FGLKG" Registration="FGLKG" />
+  <PrimaryRoute CourseType="GreatCircle" Start="N475046.80 E0032947.70" StartType="Aerodrome" Level="4500" CruiseProfile="75%" Rules="Vfr" PlannedFuel="110.000000">
+    <RhumbLineRoute To="N481258.50 E0024635.30" ToType="Unknown" Level="MSL" LevelChange="B" />
+    <RhumbLineRoute To="N483351.00 E0015817.00" ToType="UserWaypoint" Level="2500" LevelChange="B" />
+    <RhumbLineRoute To="N484235.00 E0020637.00" ToType="ReportingPoint" Level="1500" LevelChange="B" />
+    <RhumbLineRoute To="N484459.10 E0020640.25" ToType="Aerodrome" Level="1500" LevelChange="B" />
+    <WeightBalance>
+      <LoadingPoint Name="Pilot" Weight="73.00" />
+      <LoadingPoint Name="Copilot" Weight="0.00" />
+      <LoadingPoint Name="Passenger" Weight="0.00" />
+      <LoadingPoint Name="Passenger" Weight="0.00" />
+      <LoadingPoint Name="Cargo" Weight="0.00" />
+      <LoadingPoint Name="Main fuel" Weight="110.00" />
+      <LoadingPoint Name="Wing left" Weight="40.00" />
+      <LoadingPoint Name="Wing right" Weight="40.00" />
+    </WeightBalance>
+    <ReferencedAirfields />
+  </PrimaryRoute>
+</DivelementsFlightPlanner>
