@@ -47,7 +47,9 @@ interface RunwayInfo {
 
 ### Stockage
 
-Stockée en **localStorage** sous une clé dédiée (`aerodromeDb`), indépendante des dossiers de vol. Initialisée à partir des ~100 entrées hardcodées existantes dans `src/lib/icao/database.ts` (lat/lng uniquement — élévation et pistes à compléter).
+Stockée en **localStorage** sous une clé dédiée (`aerodromeDb`), indépendante des dossiers de vol. Initialisée à la première utilisation depuis **`resources/aerodromes.json`** — un seul fichier JSON regroupant tous les aérodromes de départ (même principe que les templates avions dans `resources/dr221.json` etc.). Ce fichier remplace `src/lib/icao/database.ts` qui est supprimé.
+
+Format de `resources/aerodromes.json` : tableau de `StoredAerodrome[]`. Les entrées initiales issues de la base hardcodée actuelle auront `elevationFt: 0` et `runways: []` — à compléter via OpenAIP ou import.
 
 ### Interface de gestion (HomeScreen)
 
@@ -208,9 +210,12 @@ Une ligne de total agrège le carburant emporté de toutes les branches.
 - `src/features/route/FlightplanImport.tsx`
 - `src/lib/flightplan/parser.ts`
 - `src/__tests__/flightplan/parser.test.ts`
+- `src/lib/icao/database.ts` — remplacé par `resources/aerodromes.json`
+- `src/__tests__/icao/database.test.ts`
 
 ### Nouveaux fichiers
-- `src/lib/icao/aerodromeDb.ts` — service localStorage (CRUD + export/import)
+- `resources/aerodromes.json` — amorce de la base (tableau `StoredAerodrome[]`, ~100 entrées)
+- `src/lib/icao/aerodromeDb.ts` — service localStorage (init depuis JSON, CRUD, export/import)
 - `src/lib/icao/openAipClient.ts` — appels API OpenAIP
 - `src/features/aerodromes/AerodromeScreen.tsx` — écran de gestion de la base
 - `src/features/branches/BranchesPanel.tsx` — remplace `RoutePanel`
