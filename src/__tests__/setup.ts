@@ -1,3 +1,5 @@
+import '@testing-library/jest-dom'
+
 // Node 26 has an experimental localStorage accessor that conflicts with jsdom.
 // Install a minimal Storage implementation so localStorage works in tests.
 class FakeStorage implements Storage {
