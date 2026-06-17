@@ -57,6 +57,27 @@ export interface Aircraft {
 
 export type AircraftSnapshot = Aircraft & { snapshotAt: string }
 
+// ── Base aérodromes ────────────────────────────────────────────────────────────
+
+export interface RunwayInfo {
+  ident: string            // texte libre: "27", "09G", "27 herbe"
+  headingTrue: number      // cap vrai en degrés
+  lengthFt: number
+  toda?: number            // m, optionnel
+  lda?: number             // m, optionnel
+  surface: 'hard' | 'grass'
+}
+
+export interface StoredAerodrome {
+  icao: string
+  name: string
+  lat: number
+  lng: number
+  elevationFt: number
+  runways: RunwayInfo[]
+  updatedAt: string        // ISO 8601
+}
+
 // ── Route ─────────────────────────────────────────────────────────────────────
 
 export interface RouteWaypoint {

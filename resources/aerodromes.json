@@ -1,0 +1,803 @@
+[
+  {
+    "icao": "LFPG",
+    "name": "Paris Charles de Gaulle",
+    "lat": 49.0097,
+    "lng": 2.5478,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFPO",
+    "name": "Paris Orly",
+    "lat": 48.7233,
+    "lng": 2.3794,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFPB",
+    "name": "Paris Le Bourget",
+    "lat": 48.9694,
+    "lng": 2.4414,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFPN",
+    "name": "Paris Toussus-le-Noble",
+    "lat": 48.7497,
+    "lng": 2.1119,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFPH",
+    "name": "Chavenay-Villepreux",
+    "lat": 48.8539,
+    "lng": 1.9778,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFPM",
+    "name": "Melun-Villaroche",
+    "lat": 48.6044,
+    "lng": 2.6711,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFPC",
+    "name": "Creil",
+    "lat": 49.2539,
+    "lng": 2.5192,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFPF",
+    "name": "Brétigny-sur-Orge",
+    "lat": 48.5194,
+    "lng": 2.3333,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFOX",
+    "name": "Étampes-Mondésir",
+    "lat": 48.3886,
+    "lng": 2.0672,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFOJ",
+    "name": "Orléans-Bricy",
+    "lat": 47.9878,
+    "lng": 1.7606,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFON",
+    "name": "Dreux-Vernouillet",
+    "lat": 48.7242,
+    "lng": 1.3681,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFOR",
+    "name": "Chartres-Champhol",
+    "lat": 48.4564,
+    "lng": 1.5211,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFOP",
+    "name": "Rouen-Vallée de Seine",
+    "lat": 49.3842,
+    "lng": 1.1747,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFOK",
+    "name": "Châlons-Vatry",
+    "lat": 48.7733,
+    "lng": 4.1847,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFQE",
+    "name": "Épernay-Plivot",
+    "lat": 49.035,
+    "lng": 3.9517,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFSR",
+    "name": "Reims-Prunay",
+    "lat": 49.2089,
+    "lng": 4.1586,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFQG",
+    "name": "Nevers-Fourchambault",
+    "lat": 46.9997,
+    "lng": 3.1128,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFLD",
+    "name": "Bourges",
+    "lat": 47.0581,
+    "lng": 2.3703,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFRB",
+    "name": "Brest Bretagne",
+    "lat": 48.4478,
+    "lng": -4.4183,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFRN",
+    "name": "Rennes Saint-Jacques",
+    "lat": 48.0695,
+    "lng": -1.7347,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFRS",
+    "name": "Nantes Atlantique",
+    "lat": 47.1531,
+    "lng": -1.6111,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFRD",
+    "name": "Dinard-Pleurtuit",
+    "lat": 48.5878,
+    "lng": -2.0797,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFRG",
+    "name": "Deauville-Normandie",
+    "lat": 49.3653,
+    "lng": 0.1544,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFRK",
+    "name": "Caen-Carpiquet",
+    "lat": 49.1733,
+    "lng": -0.4497,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFRC",
+    "name": "Cherbourg-Maupertus",
+    "lat": 49.6503,
+    "lng": -1.4703,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFRO",
+    "name": "Lannion-Côte de Granit",
+    "lat": 48.7539,
+    "lng": -3.4717,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFRQ",
+    "name": "Quimper-Cornouaille",
+    "lat": 47.975,
+    "lng": -4.1678,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFRT",
+    "name": "Saint-Brieuc-Armor",
+    "lat": 48.5378,
+    "lng": -2.8544,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFRU",
+    "name": "Morlaix-Ploujean",
+    "lat": 48.6031,
+    "lng": -3.8158,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFRH",
+    "name": "Lorient-Bretagne Sud",
+    "lat": 47.7606,
+    "lng": -3.44,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFRI",
+    "name": "La Roche-sur-Yon",
+    "lat": 46.7019,
+    "lng": -1.3786,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFRM",
+    "name": "Le Mans-Arnage",
+    "lat": 47.9489,
+    "lng": 0.2017,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFRV",
+    "name": "Vannes-Meucon",
+    "lat": 47.7233,
+    "lng": -2.7186,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFRA",
+    "name": "Angers-Loire",
+    "lat": 47.5603,
+    "lng": -0.3122,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFOU",
+    "name": "Cholet-Montfaucon",
+    "lat": 47.0811,
+    "lng": -0.8878,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFOV",
+    "name": "Laval-Entrammes",
+    "lat": 48.0314,
+    "lng": -0.7431,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFST",
+    "name": "Strasbourg-Entzheim",
+    "lat": 48.5382,
+    "lng": 7.6283,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFSB",
+    "name": "Bâle-Mulhouse",
+    "lat": 47.59,
+    "lng": 7.5289,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFSH",
+    "name": "Haguenau",
+    "lat": 48.7947,
+    "lng": 7.8172,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFSM",
+    "name": "Montbéliard-Courcelles",
+    "lat": 47.4897,
+    "lng": 6.7908,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFSP",
+    "name": "Pontarlier",
+    "lat": 46.9033,
+    "lng": 6.3275,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFSF",
+    "name": "Metz-Nancy-Lorraine",
+    "lat": 48.9822,
+    "lng": 6.2508,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFSO",
+    "name": "Nancy-Essey",
+    "lat": 48.6922,
+    "lng": 6.2247,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFQO",
+    "name": "Lille-Lesquin",
+    "lat": 50.5636,
+    "lng": 3.0897,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFQT",
+    "name": "Merville-Calonne",
+    "lat": 50.6181,
+    "lng": 2.6428,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFQV",
+    "name": "Charleville-Mézières",
+    "lat": 49.7847,
+    "lng": 4.6475,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFSD",
+    "name": "Dijon-Bourgogne",
+    "lat": 47.2689,
+    "lng": 5.09,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFBO",
+    "name": "Toulouse-Blagnac",
+    "lat": 43.6293,
+    "lng": 1.3638,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFBD",
+    "name": "Bordeaux-Mérignac",
+    "lat": 44.8283,
+    "lng": -0.7156,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFBH",
+    "name": "La Rochelle-Île de Ré",
+    "lat": 46.1792,
+    "lng": -1.1953,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFBZ",
+    "name": "Biarritz-Pays Basque",
+    "lat": 43.4686,
+    "lng": -1.5231,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFBT",
+    "name": "Tarbes-Lourdes-Pyrénées",
+    "lat": 43.1786,
+    "lng": -0.0064,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFBS",
+    "name": "Biscarrosse-Parentis",
+    "lat": 44.3594,
+    "lng": -1.1322,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFCL",
+    "name": "Toulouse-Lasbordes",
+    "lat": 43.5858,
+    "lng": 1.4992,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFML",
+    "name": "Marseille-Provence",
+    "lat": 43.4394,
+    "lng": 5.2214,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFMN",
+    "name": "Nice Côte d'Azur",
+    "lat": 43.6584,
+    "lng": 7.2159,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFLL",
+    "name": "Lyon Saint-Exupéry",
+    "lat": 45.7256,
+    "lng": 5.081,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFLY",
+    "name": "Lyon-Bron",
+    "lat": 45.7281,
+    "lng": 4.9428,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFLS",
+    "name": "Grenoble-Isère",
+    "lat": 45.3628,
+    "lng": 5.3294,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFLU",
+    "name": "Valence-Chabeuil",
+    "lat": 44.9217,
+    "lng": 4.9697,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFLP",
+    "name": "Annecy-Haute-Savoie",
+    "lat": 45.9294,
+    "lng": 6.1028,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFLB",
+    "name": "Chambéry-Savoie",
+    "lat": 45.6381,
+    "lng": 5.8803,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFLC",
+    "name": "Clermont-Ferrand Aulnat",
+    "lat": 45.7867,
+    "lng": 3.1692,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFLH",
+    "name": "Chalon-Champforgeuil",
+    "lat": 46.8261,
+    "lng": 4.8186,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFLI",
+    "name": "Annemasse",
+    "lat": 46.192,
+    "lng": 6.2686,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFLN",
+    "name": "Saint-Yan",
+    "lat": 46.4125,
+    "lng": 4.0131,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFLO",
+    "name": "Roanne-Renaison",
+    "lat": 46.0583,
+    "lng": 4.0014,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFLM",
+    "name": "Mâcon-Charnay",
+    "lat": 46.2953,
+    "lng": 4.7958,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFMA",
+    "name": "Aix-en-Provence",
+    "lat": 43.5056,
+    "lng": 5.3678,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFMD",
+    "name": "Cannes-Mandelieu",
+    "lat": 43.5422,
+    "lng": 6.9536,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFMC",
+    "name": "Le Luc-Le Cannet",
+    "lat": 43.3847,
+    "lng": 6.3878,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFMO",
+    "name": "Orange-Caritat",
+    "lat": 44.1403,
+    "lng": 4.8667,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFMP",
+    "name": "Perpignan-Rivesaltes",
+    "lat": 42.7406,
+    "lng": 2.8703,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFMT",
+    "name": "Montpellier-Méditerranée",
+    "lat": 43.5762,
+    "lng": 3.9631,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFMV",
+    "name": "Avignon-Provence",
+    "lat": 43.9073,
+    "lng": 4.9019,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFMK",
+    "name": "Carcassonne-Salvaza",
+    "lat": 43.2158,
+    "lng": 2.3061,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFMU",
+    "name": "Béziers-Cap d'Agde",
+    "lat": 43.3236,
+    "lng": 3.3539,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFMS",
+    "name": "Alès-Deaux",
+    "lat": 44.0603,
+    "lng": 4.1619,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "EBBR",
+    "name": "Brussels National",
+    "lat": 50.9014,
+    "lng": 4.4844,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "EBCI",
+    "name": "Charleroi Brussels South",
+    "lat": 50.4592,
+    "lng": 4.4528,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "EBLG",
+    "name": "Liège",
+    "lat": 50.6374,
+    "lng": 5.4433,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "EBAW",
+    "name": "Antwerp Deurne",
+    "lat": 51.1894,
+    "lng": 4.4603,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "EBOS",
+    "name": "Ostend-Bruges",
+    "lat": 51.1989,
+    "lng": 2.8622,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LSZH",
+    "name": "Zürich",
+    "lat": 47.4581,
+    "lng": 8.5481,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LSGG",
+    "name": "Geneva",
+    "lat": 46.2381,
+    "lng": 6.1089,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LSZB",
+    "name": "Bern-Belp",
+    "lat": 46.9144,
+    "lng": 7.4972,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LSGC",
+    "name": "Les Eplatures",
+    "lat": 47.0836,
+    "lng": 6.7917,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "ELLX",
+    "name": "Luxembourg Findel",
+    "lat": 49.6233,
+    "lng": 6.2044,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  },
+  {
+    "icao": "LFGH",
+    "name": "La Charité-sur-Loire",
+    "lat": 47.1753,
+    "lng": 3.0294,
+    "elevationFt": 0,
+    "runways": [],
+    "updatedAt": "2026-06-17T00:00:00.000Z"
+  }
+]
