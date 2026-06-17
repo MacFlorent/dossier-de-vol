@@ -41,7 +41,7 @@ interface RunwayInfo {
   lengthFt: number
   toda?: number            // m — optionnel (données souvent absentes pour la France)
   lda?: number             // m — optionnel
-  surface?: string         // "hard" | "grass" | texte libre
+  surface: 'hard' | 'grass'  // défaut "hard" — utilisé pour le calcul de performance
 }
 ```
 
