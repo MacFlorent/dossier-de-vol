@@ -100,6 +100,40 @@ export function duplicateAircraft(ac: Aircraft): Aircraft {
 
 // ── Dossier (JSON file) ──────────────────────────────────────────────────────
 
+export function migrateDossier(d: unknown): FlightDossier {
+  const data = d as Record<string, unknown>
+  // Migrate pre-branches dossiers
+  if (!Array.isArray(data.branches)) {
+    const branchId = crypto.randomUUID()
+    // Migrate route.waypoints → branch points (DEP + ARR)
+    const legacyRoute = data.route as { waypoints?: Array<{ icao?: string }> } | undefined
+    const points = legacyRoute?.waypoints?.length
+      ? legacyRoute.waypoints.map((wp, i, arr) => ({
+          id: crypto.randomUUID(),
+          type: 'AERODROME' as const,
+          identifier: wp.icao ?? '',
+          role: (i === 0 ? 'DEP' : i === arr.length - 1 ? 'ARR' : 'OVERFLY') as import('../types').FlightPointRole,
+        }))
+      : []
+    data.branches = [{
+      id: branchId,
+      label: 'Aller',
+      points,
+      distanceNm: 0,
+      notes: '',
+    }]
+    // Migrate fuelInputs: FuelInputs → Record<branchId, FuelInputs>
+    if (data.fuelInputs && typeof (data.fuelInputs as Record<string, unknown>).gsBase === 'number') {
+      data.fuelInputs = { [branchId]: data.fuelInputs }
+    }
+  }
+  // Remove legacy fields
+  delete data.route
+  delete data.navOverrides
+  delete data.navNotes
+  return data as unknown as FlightDossier
+}
+
 export function downloadDossier(dossier: FlightDossier): void {
   const json = JSON.stringify(dossier, null, 2)
   const blob = new Blob([json], { type: 'application/json' })
@@ -124,26 +158,7 @@ export function loadDossierFromFile(file: File): Promise<FlightDossier> {
           reject(new Error('Invalid dossier file: missing required fields (id, name, aircraft)'))
           return
         }
-        // Migrate pre-branches dossiers
-        if (!Array.isArray(data.branches)) {
-          const branchId = crypto.randomUUID()
-          data.branches = [{
-            id: branchId,
-            label: 'Aller',
-            points: [],
-            distanceNm: 0,
-            notes: '',
-          }]
-          // Migrate fuelInputs: FuelInputs → Record<branchId, FuelInputs>
-          if (data.fuelInputs && typeof data.fuelInputs.gsBase === 'number') {
-            data.fuelInputs = { [branchId]: data.fuelInputs }
-          }
-        }
-        // Remove legacy fields
-        delete data.route
-        delete data.navOverrides
-        delete data.navNotes
-        resolve(data as FlightDossier)
+        resolve(migrateDossier(data))
       } catch {
         reject(new Error('Invalid dossier file: not valid JSON'))
       }

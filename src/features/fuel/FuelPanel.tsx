@@ -166,6 +166,13 @@ export function FuelPanel({ dossier, onUpdate }: Props) {
               </div>
             </dl>
           </Card>
+          {insufficient && (
+            <Card padding="sm">
+              <p className="text-(--red) text-sm font-medium">
+                Carburant insuffisant — prévoir {(totalFuelL - fuelCapacity).toFixed(1)} L supplémentaires ou réduire les marges.
+              </p>
+            </Card>
+          )}
         </div>
       </div>
     </div>
