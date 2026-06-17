@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import type { FlightDossier, FuelInputs, FuelExtra } from '../../types'
 import { FUEL_DENSITY_KGL } from '../../lib/aviation/constants'
 import { Card } from '../../components/ui/Card'
@@ -40,10 +40,11 @@ export function FuelPanel({ dossier, onUpdate }: Props) {
     }, 0)
   }, [branches, fuelInputs, fuelBurn, lastBranchId])
 
-  // Display first branch by default (branch tabs added in Task 8)
-  const activeBranchId = branches[0]?.id ?? ''
-  const activeBranch = branches.find(b => b.id === activeBranchId)
-  const fi: FuelInputs = fuelInputs[activeBranchId] ?? {
+  // Per-branch tab state
+  const [activeBranchId, setActiveBranchId] = useState(() => branches[0]?.id ?? '')
+  const validId = branches.some(b => b.id === activeBranchId) ? activeBranchId : (branches[0]?.id ?? '')
+  const activeBranch = branches.find(b => b.id === validId)
+  const fi: FuelInputs = fuelInputs[validId] ?? {
     gsBase: regime.speed, windAdjust: 0, roulage: 10, marge: 10,
     extras: [], reserveMin: 30, derouteMin: 30, plein: false,
   }
@@ -51,7 +52,7 @@ export function FuelPanel({ dossier, onUpdate }: Props) {
   const gs = Math.max(fi.gsBase - fi.windAdjust, 1)
   const flightMin = activeBranch && activeBranch.distanceNm > 0
     ? (activeBranch.distanceNm / gs) * 60 : 0
-  const isLast = activeBranchId === lastBranchId
+  const isLast = validId === lastBranchId
   const extrasMin = fi.extras.reduce((s, e) => s + e.durationMin, 0)
   const totalMin = flightMin + fi.roulage + extrasMin +
     (isLast ? fi.reserveMin : 0) + (isLast ? fi.derouteMin : 0)
@@ -65,7 +66,7 @@ export function FuelPanel({ dossier, onUpdate }: Props) {
   const statusLabel = insufficient ? 'INSUFFISANT' : tight ? 'ATTENTION' : 'OK'
 
   const update = (partial: Partial<FuelInputs>) =>
-    onUpdate({ ...fuelInputs, [activeBranchId]: { ...fi, ...partial } })
+    onUpdate({ ...fuelInputs, [validId]: { ...fi, ...partial } })
 
   const addExtra = () => update({ extras: [...fi.extras, { id: crypto.randomUUID(), label: '', durationMin: 15 }] })
   const removeExtra = (id: string) => update({ extras: fi.extras.filter(e => e.id !== id) })
@@ -74,6 +75,23 @@ export function FuelPanel({ dossier, onUpdate }: Props) {
 
   return (
     <div className="p-4 max-w-4xl mx-auto">
+      {branches.length > 1 && (
+        <div className="flex gap-1 mb-4 border-b border-(--border)">
+          {branches.map(b => (
+            <button
+              key={b.id}
+              onClick={() => setActiveBranchId(b.id)}
+              className={`px-3 py-1.5 text-sm border-b-2 transition-colors ${
+                b.id === validId
+                  ? 'border-(--amber) text-(--text-1)'
+                  : 'border-transparent text-(--text-muted) hover:text-(--text-1)'
+              }`}
+            >
+              {b.label}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-4">
           <h2 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wider">
