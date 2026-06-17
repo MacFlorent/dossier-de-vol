@@ -12,9 +12,10 @@ interface HomeScreenProps {
   onDuplicateAircraft: (ac: Aircraft) => void
   onNewDossier: (aircraftId: string) => void
   onOpenDossier: (dossier: FlightDossier) => void
+  onOpenAerodromeDb: () => void
 }
 
-export function HomeScreen({ onNewAircraft, onEditAircraft, onDuplicateAircraft, onNewDossier, onOpenDossier }: HomeScreenProps) {
+export function HomeScreen({ onNewAircraft, onEditAircraft, onDuplicateAircraft, onNewDossier, onOpenDossier, onOpenAerodromeDb }: HomeScreenProps) {
   const [aircraft, setAircraft] = useState(() => listAircraft())
   const [error, setError] = useState<string | null>(null)
   const [importModal, setImportModal] = useState<Aircraft[] | null>(null)
@@ -164,6 +165,18 @@ export function HomeScreen({ onNewAircraft, onEditAircraft, onDuplicateAircraft,
             ))}
           </div>
         )}
+      </section>
+
+      {/* Aerodrome DB section */}
+      <section className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+            Base aérodromes
+          </h2>
+          <Button variant="ghost" size="sm" onClick={onOpenAerodromeDb}>
+            Gérer →
+          </Button>
+        </div>
       </section>
 
       {/* Open dossier section */}

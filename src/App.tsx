@@ -5,6 +5,7 @@ import { HomeScreen } from './screens/HomeScreen'
 import { AircraftEditorScreen } from './screens/AircraftEditorScreen'
 import { DossierScreen } from './screens/DossierScreen'
 import { AppChrome } from './components/AppChrome'
+import { AerodromeScreen } from './features/aerodromes/AerodromeScreen'
 
 interface AppState {
   screen: Screen
@@ -23,6 +24,7 @@ type AppAction =
   | { type: 'SET_TAB'; tab: DossierTab }
   | { type: 'UPDATE_DOSSIER'; dossier: FlightDossier }
   | { type: 'CLOSE_DOSSIER' }
+  | { type: 'OPEN_AERODROME_DB' }
 
 function reducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
@@ -41,6 +43,8 @@ function reducer(state: AppState, action: AppAction): AppState {
       return { ...state, dossierTab: action.tab }
     case 'CLOSE_DOSSIER':
       return { ...state, screen: 'home', dossier: null }
+    case 'OPEN_AERODROME_DB':
+      return { ...state, screen: 'aerodrome-db' }
     default:
       return state
   }
@@ -111,6 +115,7 @@ export function App() {
               })
             }}
             onOpenDossier={(dossier) => dispatch({ type: 'OPEN_DOSSIER', dossier })}
+            onOpenAerodromeDb={() => dispatch({ type: 'OPEN_AERODROME_DB' })}
           />
         )}
         {state.screen === 'aircraft-editor' && (
@@ -127,6 +132,9 @@ export function App() {
             activeTab={state.dossierTab}
             onUpdate={(dossier) => dispatch({ type: 'UPDATE_DOSSIER', dossier })}
           />
+        )}
+        {state.screen === 'aerodrome-db' && (
+          <AerodromeScreen />
         )}
       </main>
     </div>

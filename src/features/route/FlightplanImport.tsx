@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import type { ImportedRoute } from '../../types'
 import { parseFlightplan } from '../../lib/flightplan/parser'
-import { findIcaoByCoords } from '../../lib/icao/database'
+import { findIcaoByCoords } from '../../lib/icao/aerodromeDb'
 import { Button } from '../../components/ui/Button'
 
 interface Props {

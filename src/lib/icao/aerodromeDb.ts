@@ -1,4 +1,5 @@
 import type { StoredAerodrome } from '../../types'
+import { distanceNm } from '../aviation/coordinates'
 import SEED from '../../../resources/aerodromes.json'
 
 const KEY = 'dossier-de-vol:aerodromes'
@@ -48,6 +49,25 @@ export function exportAerodromeDb(): void {
   a.click()
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
+}
+
+export function findIcaoByCoords(
+  lat: number,
+  lng: number,
+  thresholdNm = 2,
+): string | null {
+  const db = load()
+  let bestIcao: string | null = null
+  let bestDist = thresholdNm
+
+  for (const a of db) {
+    const d = distanceNm(lat, lng, a.lat, a.lng)
+    if (d < bestDist) {
+      bestDist = d
+      bestIcao = a.icao
+    }
+  }
+  return bestIcao
 }
 
 export function importAerodromeDb(
