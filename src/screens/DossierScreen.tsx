@@ -1,4 +1,4 @@
-import type { FlightDossier, DossierTab } from '../types'
+import type { FlightDossier, DossierTab, FlightBranch, FuelInputs } from '../types'
 import { BranchesPanel } from '../features/branches/BranchesPanel'
 import { WeatherPanel } from '../features/weather/WeatherPanel'
 import { FuelPanel } from '../features/fuel/FuelPanel'
@@ -22,7 +22,15 @@ export function DossierScreen({ dossier, activeTab, onUpdate }: DossierScreenPro
       {activeTab === 'branches' && (
         <BranchesPanel
           branches={dossier.branches}
-          onUpdate={(branches) => update({ branches })}
+          onUpdate={(branches: FlightBranch[]) => {
+            const speed = dossier.aircraft.characteristics.regimes[0].speed
+            const defaultFuel: FuelInputs = { gsBase: speed, windAdjust: 0, roulage: 10, marge: 10, extras: [], reserveMin: 30, derouteMin: 30, plein: false }
+            const synced: Record<string, FuelInputs> = {}
+            for (const b of branches) {
+              synced[b.id] = dossier.fuelInputs[b.id] ?? { ...defaultFuel }
+            }
+            update({ branches, fuelInputs: synced })
+          }}
         />
       )}
       {activeTab === 'weather' && (
