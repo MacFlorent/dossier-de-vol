@@ -6,7 +6,7 @@ const makeAircraft = (overrides: Partial<Aircraft> = {}): Aircraft => ({
   name: 'DR221',
   registration: 'F-BPCT',
   characteristics: {
-    regimes: [{ label: '75%', ias: 108, fuelBurn: 22 }],
+    regimes: [{ label: '75%', speed: 108, fuelBurn: 22 }],
     fuelCapacity: 116,
   },
   massBalance: {

@@ -5,7 +5,7 @@
   "sdReference": "",
   "characteristics": {
     "regimes": [
-      { "label": "75% puissance", "ias": 115, "fuelBurn": 25 }
+      { "label": "75% puissance", "speed": 115, "fuelBurn": 25 }
     ],
     "fuelCapacity": 110
   },

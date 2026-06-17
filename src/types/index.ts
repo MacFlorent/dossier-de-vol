@@ -24,7 +24,7 @@ export interface PerformanceTable {
 
 export interface CruiseRegime {
   label: string    // ex: "75% puissance"
-  ias: number      // kt — utilisé directement comme vitesse de croisière
+  speed: number    // kt TAS — utilisé directement comme vitesse de croisière
   fuelBurn: number // L/h
 }
 

@@ -15,7 +15,7 @@ export function NavlogPanel({ dossier, onUpdate }: Props) {
   }
 
   const regime = aircraft.characteristics.regimes[0]
-  const ac = { ias: regime.ias, fuelBurn: regime.fuelBurn }
+  const ac = { speed: regime.speed, fuelBurn: regime.fuelBurn }
   const entries = generateNavlog(route, weatherInputs, ac, navOverrides)
 
   const totalDist = entries.reduce((s, e) => s + e.dist_nm, 0)
@@ -64,7 +64,7 @@ export function NavlogPanel({ dossier, onUpdate }: Props) {
     <div className="p-4 overflow-x-auto">
       <div className="flex items-center gap-4 mb-4 text-sm text-[var(--text-muted)]">
         <span>Régime : <span className="font-mono text-[var(--text-1)]">{regime.label}</span></span>
-        <span>IAS : <span className="font-mono text-[var(--text-1)]">{regime.ias} kt</span></span>
+        <span>Vitesse : <span className="font-mono text-[var(--text-1)]">{regime.speed} kt</span></span>
         <span>Conso : <span className="font-mono text-[var(--text-1)]">{regime.fuelBurn} L/h</span></span>
       </div>
 

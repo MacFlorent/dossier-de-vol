@@ -91,7 +91,7 @@ export function App() {
                   navOverrides: {},
                   navNotes: {},
                   fuelInputs: {
-                    gsBase: aircraft.characteristics.regimes[0].ias,
+                    gsBase: aircraft.characteristics.regimes[0].speed,
                     windAdjust: 0,
                     roulage: 10,
                     marge: 10,

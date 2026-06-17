@@ -20,7 +20,7 @@ export function FuelPanel({ dossier, onUpdate }: Props) {
 
   const flightMin = useMemo(() => {
     if (!dossier.route || dossier.route.waypoints.length < 2) return 0
-    const ac = { ias: regime.ias, fuelBurn: regime.fuelBurn }
+    const ac = { speed: regime.speed, fuelBurn: regime.fuelBurn }
     const entries = generateNavlog(dossier.route, dossier.weatherInputs, ac, dossier.navOverrides)
     return entries.at(-1)?.cumul_time_min ?? 0
   }, [dossier.route, dossier.weatherInputs, dossier.navOverrides, aircraft])

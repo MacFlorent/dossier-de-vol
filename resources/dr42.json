@@ -6,7 +6,7 @@
     "regimes": [
       {
         "label": "75% puissance",
-        "ias": 108,
+        "speed": 108,
         "fuelBurn": 25
       }
     ],

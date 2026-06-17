@@ -72,6 +72,11 @@ function PerfTablePreview({ json }: { json: string }) {
   const t = table
 
   const safeIdx = Math.min(oatIdx, t.oats.length - 1)
+  const hasGrass = Array.isArray(t.grassValues)
+  const isDelta = t.oatAxis === 'isa_delta'
+
+  const oatLabel = (oat: number) =>
+    isDelta ? `ΔT ${oat >= 0 ? '+' : ''}${oat}°C` : `${oat}°C`
 
   return (
     <div className="mt-2 overflow-x-auto">
@@ -86,7 +91,7 @@ function PerfTablePreview({ json }: { json: string }) {
                 : 'border-[var(--border)] text-[var(--text-dim)]'
             }`}
           >
-            {oat}°C
+            {oatLabel(oat)}
           </button>
         ))}
       </div>
@@ -94,24 +99,48 @@ function PerfTablePreview({ json }: { json: string }) {
         <thead>
           <tr>
             <th className="text-right pr-4 pb-1 text-[var(--text-dim)] font-normal">PA (ft)</th>
-            {t.weights.map(w => (
-              <th key={w} className="text-right px-3 pb-1 text-[var(--text-dim)] font-normal">{w} kg</th>
-            ))}
+            {t.weights.map(w =>
+              hasGrass
+                ? <th key={w} colSpan={2} className="text-center px-3 pb-0 text-[var(--text-dim)] font-normal">{w} kg</th>
+                : <th key={w} className="text-right px-3 pb-1 text-[var(--text-dim)] font-normal">{w} kg</th>
+            )}
           </tr>
+          {hasGrass && (
+            <tr>
+              <th className="pr-4 pb-1" />
+              {t.weights.flatMap((_, wi) => [
+                <th key={`${wi}-dur`} className="text-right px-2 pb-1 text-[var(--text-dim)] font-normal">Dur</th>,
+                <th key={`${wi}-herbe`} className="text-right px-2 pb-1 text-[var(--text-dim)] font-normal">Herbe</th>,
+              ])}
+            </tr>
+          )}
         </thead>
         <tbody>
           {t.pressureAltitudes.map((pa, pi) => (
             <tr key={pa} className="border-t border-[var(--border)]">
               <td className="text-right pr-4 py-1 text-[var(--text-muted)]">{pa}</td>
-              {t.weights.map((_, wi) => (
-                <td key={wi} className="text-right px-3 py-1 text-[var(--text-1)]">
-                  {t.values[wi]?.[pi]?.[safeIdx] ?? '—'}
-                </td>
-              ))}
+              {hasGrass
+                ? t.weights.flatMap((_, wi) => [
+                    <td key={`${wi}-dur`} className="text-right px-2 py-1 text-[var(--text-1)]">
+                      {t.values[wi]?.[pi]?.[safeIdx] ?? '—'}
+                    </td>,
+                    <td key={`${wi}-herbe`} className="text-right px-2 py-1 text-[var(--text-dim)]">
+                      {t.grassValues![wi]?.[pi]?.[safeIdx] ?? '—'}
+                    </td>,
+                  ])
+                : t.weights.map((_, wi) => (
+                    <td key={wi} className="text-right px-3 py-1 text-[var(--text-1)]">
+                      {t.values[wi]?.[pi]?.[safeIdx] ?? '—'}
+                    </td>
+                  ))
+              }
             </tr>
           ))}
         </tbody>
       </table>
+      {t.grassFactor && !hasGrass && (
+        <p className="text-xs text-[var(--text-dim)] mt-1">↳ Herbe = Dur × {t.grassFactor}</p>
+      )}
     </div>
   )
 }
@@ -126,7 +155,7 @@ export function AircraftEditorScreen({ editingAircraftId, prefillAircraft, onSav
   const [registration, setRegistration] = useState('')
   const [sdReference, setSdReference] = useState('')
 
-  const [regimes, setRegimes] = useState<CruiseRegime[]>([{ label: '75% puissance', ias: 100, fuelBurn: 20 }])
+  const [regimes, setRegimes] = useState<CruiseRegime[]>([{ label: '75% puissance', speed: 100, fuelBurn: 20 }])
   const [fuelCapacity, setFuelCapacity] = useState(116)
 
   const [emptyWeight, setEmptyWeight] = useState(615)
@@ -223,7 +252,7 @@ export function AircraftEditorScreen({ editingAircraftId, prefillAircraft, onSav
   ])
 
   const addRegime = useCallback(() => {
-    setRegimes(prev => [...prev, { label: '', ias: 100, fuelBurn: 20 }])
+    setRegimes(prev => [...prev, { label: '', speed: 100, fuelBurn: 20 }])
   }, [])
 
   const removeRegime = useCallback((idx: number) => {
@@ -311,7 +340,7 @@ export function AircraftEditorScreen({ editingAircraftId, prefillAircraft, onSav
                 <thead>
                   <tr className="text-xs text-[var(--text-dim)] text-left">
                     <th className="pb-1 pr-3 font-medium">Label</th>
-                    <th className="pb-1 pr-3 font-medium">IAS (kt)</th>
+                    <th className="pb-1 pr-3 font-medium">Vitesse (kt)</th>
                     <th className="pb-1 pr-3 font-medium">Conso (L/h)</th>
                     <th className="pb-1 font-medium"></th>
                   </tr>
@@ -335,8 +364,8 @@ export function AircraftEditorScreen({ editingAircraftId, prefillAircraft, onSav
                       <td className="py-1.5 pr-3">
                         <input type="number"
                           className="w-20 px-2 py-1 rounded text-xs font-mono text-[var(--text-1)] bg-[var(--bg-inset)] border border-[var(--border)] focus:outline-none focus:border-[var(--amber)]"
-                          value={r.ias}
-                          onChange={e => updateRegime(idx, 'ias', Number(e.target.value))}
+                          value={r.speed}
+                          onChange={e => updateRegime(idx, 'speed', Number(e.target.value))}
                         />
                       </td>
                       <td className="py-1.5 pr-3">

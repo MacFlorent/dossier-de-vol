@@ -28,6 +28,15 @@ export function getAircraft(id: string): Aircraft | null {
     // Migrate: maxWeight is now derived from envelopePoints, not stored
     const mb = ac.massBalance as AircraftMassBalance & { maxWeight?: unknown }
     delete mb.maxWeight
+    // Migrate: ias → speed in cruise regimes
+    ac.characteristics.regimes = ac.characteristics.regimes.map(r => {
+      const legacy = r as typeof r & { ias?: number }
+      if (legacy.ias !== undefined && (r as { speed?: number }).speed === undefined) {
+        const { ias: _ias, ...rest } = legacy
+        return { ...rest, speed: _ias }
+      }
+      return r
+    })
   }
   return ac
 }

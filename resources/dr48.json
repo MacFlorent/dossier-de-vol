@@ -6,17 +6,17 @@
     "regimes": [
       {
         "label": "75% @ 4000ft",
-        "ias": 139,
+        "speed": 139,
         "fuelBurn": 39
       },
       {
         "label": "75% @ 0ft",
-        "ias": 134,
+        "speed": 134,
         "fuelBurn": 39
       },
       {
         "label": "75% @ 8000ft",
-        "ias": 144,
+        "speed": 144,
         "fuelBurn": 39
       }
     ],

@@ -3,7 +3,7 @@ import { generateNavlog } from '../../lib/aviation/navlogGen'
 import type { NavlogAircraftParams } from '../../lib/aviation/navlogGen'
 import type { ImportedRoute, WeatherInputs } from '../../types'
 
-const ac: NavlogAircraftParams = { ias: 100, fuelBurn: 20 }
+const ac: NavlogAircraftParams = { speed: 100, fuelBurn: 20 }
 
 const calmsRoute: ImportedRoute = {
   waypoints: [

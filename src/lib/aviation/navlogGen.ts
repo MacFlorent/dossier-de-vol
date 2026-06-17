@@ -3,7 +3,7 @@ import { distanceNm, trueCourse, normAngle } from './coordinates'
 import { solveWindTriangle, windAtAltitude } from './windTriangle'
 
 export interface NavlogAircraftParams {
-  ias: number       // kt — utilisé directement comme vitesse de croisière
+  speed: number     // kt TAS — utilisé directement comme vitesse de croisière
   fuelBurn: number  // L/h
 }
 
@@ -33,8 +33,7 @@ export function generateNavlog(
     const tc = Math.round(normAngle(trueCourse(from.lat, from.lng, to.lat, to.lng)))
 
     const wind = windAtAltitude(to.alt_ft, weather.winds)
-    // IAS used directly as TAS — acceptable approximation at <10,000 ft / ~100 kt
-    const { wca, gs: calcGs, th } = solveWindTriangle(tc, ac.ias, wind.direction_deg, wind.speed_kt)
+    const { wca, gs: calcGs, th } = solveWindTriangle(tc, ac.speed, wind.direction_deg, wind.speed_kt)
 
     // Variation magnétique à 0 — sera injectée depuis FlightDossier dans une prochaine tâche
     const mh = Math.round(normAngle(th))

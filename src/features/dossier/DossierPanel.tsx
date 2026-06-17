@@ -17,7 +17,7 @@ export function DossierPanel({ dossier }: Props) {
   const navlog = route && route.waypoints.length >= 2
     ? generateNavlog(
         route, weatherInputs,
-        { ias: regime.ias, fuelBurn: regime.fuelBurn },
+        { speed: regime.speed, fuelBurn: regime.fuelBurn },
         navOverrides
       )
     : []
@@ -66,7 +66,7 @@ export function DossierPanel({ dossier }: Props) {
             </div>
             <div className="text-right text-sm font-mono text-[var(--text-muted)]">
               <p>{aircraft.name}</p>
-              <p>IAS {regime.ias} kt · {regime.fuelBurn} L/h</p>
+              <p>{regime.speed} kt · {regime.fuelBurn} L/h</p>
             </div>
           </div>
         </header>
