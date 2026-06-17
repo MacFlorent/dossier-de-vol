@@ -55,7 +55,7 @@ const initialState: AppState = {
   editingAircraftId: null,
   prefillAircraft: null,
   dossier: null,
-  dossierTab: 'route',
+  dossierTab: 'branches',
 }
 
 export function App() {
@@ -84,25 +84,32 @@ export function App() {
                 const aircraft = getAircraft(aircraftId)
                 if (!aircraft) return
                 const now = new Date()
+                const branchId = crypto.randomUUID()
                 const dossier: FlightDossier = {
                   id: crypto.randomUUID(),
                   name: `${aircraft.name} ${now.toISOString().slice(0, 10)}`,
                   date: now.toISOString().slice(0, 10),
                   departureTime: '',
                   aircraft: { ...aircraft, snapshotAt: now.toISOString() },
-                  route: null,
+                  branches: [{
+                    id: branchId,
+                    label: 'Aller',
+                    points: [],
+                    distanceNm: 0,
+                    notes: '',
+                  }],
                   weatherInputs: { fields: {}, winds: [], notes: '' },
-                  navOverrides: {},
-                  navNotes: {},
                   fuelInputs: {
-                    gsBase: aircraft.characteristics.regimes[0].speed,
-                    windAdjust: 0,
-                    roulage: 10,
-                    marge: 10,
-                    extras: [],
-                    reserveMin: 30,
-                    derouteMin: 30,
-                    plein: false,
+                    [branchId]: {
+                      gsBase: aircraft.characteristics.regimes[0].speed,
+                      windAdjust: 0,
+                      roulage: 10,
+                      marge: 10,
+                      extras: [],
+                      reserveMin: 30,
+                      derouteMin: 30,
+                      plein: false,
+                    },
                   },
                   loading: Object.fromEntries(aircraft.massBalance.stations.map(s => [s.name, 0])),
                   perfRegulatory: 1.0,

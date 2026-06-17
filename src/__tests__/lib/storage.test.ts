@@ -12,7 +12,6 @@ const makeAircraft = (overrides: Partial<Aircraft> = {}): Aircraft => ({
   massBalance: {
     emptyWeight: 615,
     emptyArm: 345,
-    maxWeight: 840,
     stations: [],
     envelopePoints: [],
   },

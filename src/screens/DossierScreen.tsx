@@ -1,7 +1,6 @@
 import type { FlightDossier, DossierTab } from '../types'
-import { RoutePanel } from '../features/route/RoutePanel'
+import { BranchesPanel } from '../features/branches/BranchesPanel'
 import { WeatherPanel } from '../features/weather/WeatherPanel'
-import { NavlogPanel } from '../features/navlog/NavlogPanel'
 import { FuelPanel } from '../features/fuel/FuelPanel'
 import { WBPanel } from '../features/wb/WBPanel'
 import { PerfPanel } from '../features/perf/PerfPanel'
@@ -20,30 +19,14 @@ export function DossierScreen({ dossier, activeTab, onUpdate }: DossierScreenPro
 
   return (
     <div className="flex flex-col min-h-0 flex-1">
-      {activeTab === 'route' && (
-        <RoutePanel
-          dossier={dossier}
-          onUpdateRoute={(route) => update({ route })}
-          onUpdateWaypoint={(wpId, changes) => {
-            if (!dossier.route) return
-            const waypoints = dossier.route.waypoints.map(w =>
-              w.id === wpId ? { ...w, ...changes } : w
-            )
-            update({ route: { ...dossier.route, waypoints } })
-          }}
+      {activeTab === 'branches' && (
+        <BranchesPanel
+          branches={dossier.branches}
+          onUpdate={(branches) => update({ branches })}
         />
       )}
       {activeTab === 'weather' && (
-        <WeatherPanel
-          dossier={dossier}
-          onUpdate={(weatherInputs) => update({ weatherInputs })}
-        />
-      )}
-      {activeTab === 'navlog' && (
-        <NavlogPanel
-          dossier={dossier}
-          onUpdate={update}
-        />
+        <WeatherPanel dossier={dossier} onUpdate={(weatherInputs) => update({ weatherInputs })} />
       )}
       {activeTab === 'fuel' && (
         <FuelPanel
@@ -52,10 +35,7 @@ export function DossierScreen({ dossier, activeTab, onUpdate }: DossierScreenPro
         />
       )}
       {activeTab === 'wb' && (
-        <WBPanel
-          dossier={dossier}
-          onUpdate={(loading) => update({ loading })}
-        />
+        <WBPanel dossier={dossier} onUpdate={(loading) => update({ loading })} />
       )}
       {activeTab === 'perf' && (
         <PerfPanel

@@ -3,9 +3,8 @@ import { TabBar } from './ui/Tabs'
 import { Button } from './ui/Button'
 
 const DOSSIER_TABS: { key: DossierTab; label: string }[] = [
-  { key: 'route', label: 'Route' },
+  { key: 'branches', label: 'Branches' },
   { key: 'weather', label: 'Météo' },
-  { key: 'navlog', label: 'Navlog' },
   { key: 'fuel', label: 'Carbu' },
   { key: 'wb', label: 'M&C' },
   { key: 'perf', label: 'Perf' },

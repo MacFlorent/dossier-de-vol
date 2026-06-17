@@ -124,6 +124,25 @@ export function loadDossierFromFile(file: File): Promise<FlightDossier> {
           reject(new Error('Invalid dossier file: missing required fields (id, name, aircraft)'))
           return
         }
+        // Migrate pre-branches dossiers
+        if (!Array.isArray(data.branches)) {
+          const branchId = crypto.randomUUID()
+          data.branches = [{
+            id: branchId,
+            label: 'Aller',
+            points: [],
+            distanceNm: 0,
+            notes: '',
+          }]
+          // Migrate fuelInputs: FuelInputs → Record<branchId, FuelInputs>
+          if (data.fuelInputs && typeof data.fuelInputs.gsBase === 'number') {
+            data.fuelInputs = { [branchId]: data.fuelInputs }
+          }
+        }
+        // Remove legacy fields
+        delete data.route
+        delete data.navOverrides
+        delete data.navNotes
         resolve(data as FlightDossier)
       } catch {
         reject(new Error('Invalid dossier file: not valid JSON'))

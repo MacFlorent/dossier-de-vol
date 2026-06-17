@@ -7,12 +7,6 @@ import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { Badge } from '../../components/ui/Badge'
 
-const TERRAINS = [
-  { key: 'DEP', label: 'Départ', tableKey: 'to' as const },
-  { key: 'ARR', label: 'Arrivée', tableKey: 'ldg' as const },
-  { key: 'DEROUT', label: 'Déroutement', tableKey: 'ldg' as const },
-]
-
 const DEFAULT_PERF: TerrainPerfInputs = {
   surface: 'hard',
   windKt: 0,
@@ -271,18 +265,15 @@ interface Props {
 }
 
 export function PerfPanel({ dossier, onUpdate, onUpdateRegulatory }: Props) {
-  const { aircraft, loading, weatherInputs, perfInputs, route, perfRegulatory } = dossier
+  const { aircraft, loading, weatherInputs, perfInputs, perfRegulatory } = dossier
 
-  const depIcao = route?.waypoints[0]?.name ?? ''
-  const arrIcao = route?.waypoints[route.waypoints.length - 1]?.name ?? ''
-
+  const maxWeight = Math.max(...aircraft.massBalance.envelopePoints.map(([kg]) => kg))
   const depWeight = useMemo(() => {
     const wb = computeWB(aircraft.massBalance, loading)
-    return Math.min(wb.totalWeight, aircraft.massBalance.maxWeight)
-  }, [aircraft, loading])
+    return Math.min(wb.totalWeight, maxWeight)
+  }, [aircraft, loading, maxWeight])
 
-  const getWeatherFor = (terrainKey: string) => {
-    const icao = terrainKey === 'DEP' ? depIcao : terrainKey === 'ARR' ? arrIcao : ''
+  const getWeatherFor = (icao: string) => {
     const field = weatherInputs.fields[icao]
     return { qnh: field?.qnh ?? 1013, temp: field?.temp ?? 15 }
   }
@@ -290,6 +281,20 @@ export function PerfPanel({ dossier, onUpdate, onUpdateRegulatory }: Props) {
   const handleUpdate = (key: string, inputs: TerrainPerfInputs) => {
     onUpdate({ ...perfInputs, [key]: inputs })
   }
+
+  // Temporary: dynamic cards will be added in Task 7
+  const terrainCards: { key: string; label: string; tableKey: 'to' | 'ldg' }[] = []
+  dossier.branches.forEach(branch => {
+    branch.points.forEach(pt => {
+      if (pt.role === 'OVERFLY') return
+      if (terrainCards.some(t => t.key === pt.identifier)) return
+      terrainCards.push({
+        key: pt.identifier,
+        label: pt.identifier,
+        tableKey: pt.role === 'DEP' ? 'to' : 'ldg',
+      })
+    })
+  })
 
   return (
     <div className="p-4 max-w-4xl mx-auto space-y-6">
@@ -310,7 +315,7 @@ export function PerfPanel({ dossier, onUpdate, onUpdateRegulatory }: Props) {
         </div>
       </Card>
 
-      {TERRAINS.map(({ key, label, tableKey }) => {
+      {terrainCards.map(({ key, label, tableKey }) => {
         const weather = getWeatherFor(key)
         return (
           <TerrainCard

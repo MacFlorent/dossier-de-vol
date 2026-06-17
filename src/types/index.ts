@@ -78,41 +78,24 @@ export interface StoredAerodrome {
   updatedAt: string        // ISO 8601
 }
 
-// ── Route ─────────────────────────────────────────────────────────────────────
+// ── Branches de vol ────────────────────────────────────────────────────────────
 
-export interface RouteWaypoint {
+export type FlightPointType = 'AERODROME' | 'VOR' | 'NDB' | 'WAYPOINT' | 'USER'
+export type FlightPointRole = 'DEP' | 'ARR' | 'DIVERT' | 'OVERFLY'
+
+export interface FlightPoint {
   id: string
-  name: string      // ICAO ou nom libre
-  type: string      // "Aerodrome" | "ReportingPoint" | "UserWaypoint" | "Town" | ...
-  lat: number       // decimal degrees
-  lng: number       // decimal degrees
-  alt_ft: number    // altitude cible MSL en ft
-  notes: string     // fréquences, espaces aériens, remarques
+  type: FlightPointType
+  identifier: string
+  role: FlightPointRole
 }
 
-export interface ImportedRoute {
-  waypoints: RouteWaypoint[]
-  sourceFile: string
-}
-
-// ── Navlog ────────────────────────────────────────────────────────────────────
-
-export interface NavlogEntry {
-  legIndex: number        // 0 = premier tronçon (wp[0]→wp[1])
-  fromName: string
-  toName: string
-  tc: number              // cap vrai de la route (°V)
-  wca: number             // wind correction angle (°)
-  th: number              // cap vrai corrigé vent (°V)
-  mh: number              // cap magnétique (°M)
-  dist_nm: number
-  gs: number              // kt (calculé ou overridé)
-  ete_min: number         // minutes
-  fuel_l: number          // L pour ce tronçon
-  cumul_fuel_l: number    // L cumulé depuis départ
-  cumul_time_min: number  // min cumulé depuis départ
-  gsOverridden: boolean
-  eteOverridden: boolean
+export interface FlightBranch {
+  id: string
+  label: string
+  points: FlightPoint[]
+  distanceNm: number
+  notes: string
 }
 
 // ── Météo ─────────────────────────────────────────────────────────────────────
@@ -171,31 +154,29 @@ export interface TerrainPerfInputs {
 
 export interface FlightDossier {
   id: string
-  name: string                    // ex: "VEA2026 LFPN→LFGH"
-  date: string                    // YYYY-MM-DD
-  departureTime: string           // HHMM UTC
+  name: string
+  date: string
+  departureTime: string
 
-  aircraft: AircraftSnapshot      // snapshot complet au moment de la création
+  aircraft: AircraftSnapshot
 
-  route: ImportedRoute | null
+  branches: FlightBranch[]
   weatherInputs: WeatherInputs
-  navOverrides: Record<number, { gs?: number; ete?: number }>  // clé = legIndex
-  navNotes: Record<number, string>  // clé = legIndex
+  fuelInputs: Record<string, FuelInputs>  // key = branch id
 
-  fuelInputs: FuelInputs
-  loading: StationLoading         // masses par station
-  perfRegulatory: number          // facteur marge réglementaire (ex. 1.15 clubs Alcyons)
-  perfInputs: Record<string, TerrainPerfInputs>  // clé = ICAO terrain
+  loading: StationLoading
+  perfRegulatory: number
+  perfInputs: Record<string, TerrainPerfInputs>
 
-  notes: string                   // NOTAM, SUPAIP, remarques libres
+  notes: string
 
-  createdAt: string               // ISO
-  updatedAt: string               // ISO
+  createdAt: string
+  updatedAt: string
 }
 
 // ── UI ────────────────────────────────────────────────────────────────────────
 
-export type DossierTab = 'route' | 'weather' | 'navlog' | 'fuel' | 'wb' | 'perf' | 'dossier'
+export type DossierTab = 'branches' | 'weather' | 'fuel' | 'wb' | 'perf' | 'dossier'
 export type Screen = 'home' | 'aircraft-editor' | 'dossier' | 'aerodrome-db'
 
 // ── Résultats de calcul (non stockés) ────────────────────────────────────────

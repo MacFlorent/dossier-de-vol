@@ -11,7 +11,7 @@ interface Props {
 }
 
 export function WeatherPanel({ dossier, onUpdate }: Props) {
-  const { route, weatherInputs } = dossier
+  const { weatherInputs } = dossier
   const [showMetar, setShowMetar] = useState(false)
 
   // Stable IDs for wind rows so React reconciles correctly when a row is removed from the middle
@@ -21,11 +21,12 @@ export function WeatherPanel({ dossier, onUpdate }: Props) {
     windIdsRef.current.push(crypto.randomUUID())
   }
 
-  // Extract unique aerodromes from route
-  const aerodromes = route
-    ? route.waypoints.filter(w => w.type === 'Aerodrome' && w.name).map(w => w.name)
-    : []
-  const uniqueAerodromes = [...new Set(aerodromes)]
+  // Extract unique aerodromes from branches
+  const uniqueAerodromes: string[] = [...new Set(
+    dossier.branches.flatMap(b => b.points)
+      .filter(p => p.type === 'AERODROME')
+      .map(p => p.identifier)
+  )]
 
   const updateField = (icao: string, field: Partial<FieldWeather>) => {
     onUpdate({

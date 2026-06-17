@@ -4,7 +4,6 @@ import type { AircraftMassBalance } from '../../types'
 const massBalance: AircraftMassBalance = {
   emptyWeight: 615,
   emptyArm: 345,
-  maxWeight: 1000,
   stations: [
     { name: 'Pilote', arm: 375, kind: 'dry' as const },
     { name: 'Passager', arm: 505, kind: 'dry' as const },
