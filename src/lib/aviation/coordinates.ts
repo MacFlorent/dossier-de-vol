@@ -23,3 +23,13 @@ export function trueCourse(lat1: number, lng1: number, lat2: number, lng2: numbe
 
 /** Normalise un angle dans [0, 360) */
 export function normAngle(deg: number): number { return ((deg % 360) + 360) % 360 }
+
+/** Composante de vent face à une piste (kt). Positif = vent de face, négatif = vent de dos. */
+export function headwindKt(
+  windDirTrue: number,
+  windSpeedKt: number,
+  runwayHeadingTrue: number,
+): number {
+  const angle = ((windDirTrue - runwayHeadingTrue) + 360) % 360
+  return Math.round(windSpeedKt * Math.cos(angle * Math.PI / 180))
+}

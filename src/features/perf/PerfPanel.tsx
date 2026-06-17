@@ -3,16 +3,13 @@ import type { FlightDossier, TerrainPerfInputs, PerfConditions, AircraftSnapshot
 import { computePerf } from '../../lib/aviation/perfCalc'
 import { computeWB } from '../../lib/aviation/wbCalc'
 import { validatePerformanceTable } from '../../lib/aviation/perfTableValidation'
+import { headwindKt } from '../../lib/aviation/coordinates'
+import { getAerodrome } from '../../lib/icao/aerodromeDb'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { Badge } from '../../components/ui/Badge'
 
-const DEFAULT_PERF: TerrainPerfInputs = {
-  surface: 'hard',
-  windKt: 0,
-  toda: undefined,
-  lda: undefined,
-}
+const DEFAULT_PERF: TerrainPerfInputs = { surface: 'hard', windKt: 0, toda: undefined, lda: undefined }
 
 function pressureAlt(elevation: number, qnh: number): number {
   return elevation + (1013 - qnh) * 30
@@ -31,53 +28,57 @@ interface TerrainCardProps {
   weight: number
   defaultQnh: number
   defaultTemp: number
+  defaultElevation: number
   perfInputs: TerrainPerfInputs
   perfRegulatory: number
+  runways: Array<{ ident: string; headingTrue: number; toda?: number; lda?: number; surface: 'hard' | 'grass' }>
+  surfaceWindDir: number
+  surfaceWindKt: number
   onUpdate: (inputs: TerrainPerfInputs) => void
 }
 
 function TerrainCard({
-  terrainKey,
-  label,
-  tableKey,
-  aircraft,
-  weight,
-  defaultQnh,
-  defaultTemp,
-  perfInputs,
-  perfRegulatory,
+  terrainKey, label, tableKey, aircraft, weight,
+  defaultQnh, defaultTemp, defaultElevation,
+  perfInputs, perfRegulatory, runways,
+  surfaceWindDir, surfaceWindKt,
   onUpdate,
 }: TerrainCardProps) {
-  const [elevation, setElevation] = useState(0)
+  const [elevation, setElevation] = useState(defaultElevation)
   const [qnh, setQnh] = useState(defaultQnh)
   const [temp, setTemp] = useState(defaultTemp)
+  const [selectedRunway, setSelectedRunway] = useState<string>('')
 
   const inputs = { ...DEFAULT_PERF, ...perfInputs }
-
   const pa = pressureAlt(elevation, qnh)
   const da = densityAlt(pa, temp)
-
   const table = tableKey === 'to' ? aircraft.performance.toTable : aircraft.performance.ldgTable
-
   const tableValidation = useMemo(() => validatePerformanceTable(table), [table])
+  const canCompute = tableValidation.errors.length === 0
 
   const cond: PerfConditions = {
-    weight,
-    pa,          // pressure altitude — NOT density altitude
-    oat: temp,
+    weight, pa, oat: temp,
     surfaceGrass: inputs.surface === 'grass',
     windKt: inputs.windKt,
   }
-
-  const canCompute = tableValidation.errors.length === 0
   const distBase = canCompute ? computePerf(table, cond) : 0
   const distRegulatory = canCompute ? Math.round(distBase * perfRegulatory) : 0
-
   const todaOk = inputs.toda === undefined || distRegulatory <= inputs.toda
   const ldaOk = inputs.lda === undefined || distRegulatory <= inputs.lda
 
-  const update = (changes: Partial<TerrainPerfInputs>) => {
-    onUpdate({ ...inputs, ...changes })
+  const update = (changes: Partial<TerrainPerfInputs>) => onUpdate({ ...inputs, ...changes })
+
+  const handleRunwaySelect = (ident: string) => {
+    setSelectedRunway(ident)
+    const rwy = runways.find(r => r.ident === ident)
+    if (!rwy) return
+    const wkt = headwindKt(surfaceWindDir, surfaceWindKt, rwy.headingTrue)
+    update({
+      windKt: wkt,
+      surface: rwy.surface,
+      toda: rwy.toda,
+      lda: rwy.lda,
+    })
   }
 
   return (
@@ -87,21 +88,15 @@ function TerrainCard({
           {label}
         </h2>
         <div className="flex gap-2 flex-wrap justify-end">
-          {tableValidation.errors.length > 0 && (
-            <Badge variant="error">Config invalide</Badge>
-          )}
+          {tableValidation.errors.length > 0 && <Badge variant="error">Config invalide</Badge>}
           {tableValidation.errors.length === 0 && tableValidation.warnings.length > 0 && (
             <Badge variant="warning">⚠ config partielle</Badge>
           )}
           {inputs.toda !== undefined && canCompute && (
-            <Badge variant={todaOk ? 'success' : 'error'}>
-              {todaOk ? 'TODA OK' : 'TODA INSUFFISANT'}
-            </Badge>
+            <Badge variant={todaOk ? 'success' : 'error'}>{todaOk ? 'TODA OK' : 'TODA INSUFFISANT'}</Badge>
           )}
           {inputs.lda !== undefined && canCompute && (
-            <Badge variant={ldaOk ? 'success' : 'error'}>
-              {ldaOk ? 'LDA OK' : 'LDA INSUFFISANT'}
-            </Badge>
+            <Badge variant={ldaOk ? 'success' : 'error'}>{ldaOk ? 'LDA OK' : 'LDA INSUFFISANT'}</Badge>
           )}
         </div>
       </div>
@@ -112,9 +107,28 @@ function TerrainCard({
         </div>
       )}
 
-      {tableValidation.warnings.length > 0 && (
-        <div className="mb-4 p-3 rounded border border-[var(--amber)] bg-[var(--amber)]/10 text-[var(--amber)] text-xs space-y-1">
-          {tableValidation.warnings.map((w, i) => <p key={i}>{w}</p>)}
+      {/* Runway selector */}
+      {runways.length > 0 && (
+        <div className="mb-4">
+          <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide block mb-1">
+            Piste active
+          </label>
+          <div className="flex gap-2 flex-wrap">
+            {runways.map(rwy => (
+              <button
+                key={rwy.ident}
+                type="button"
+                onClick={() => handleRunwaySelect(rwy.ident)}
+                className={`px-3 py-1 rounded text-xs border transition-colors ${
+                  selectedRunway === rwy.ident
+                    ? 'border-[var(--amber)] text-[var(--amber)] bg-[var(--amber)]/10'
+                    : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--text-muted)]'
+                }`}
+              >
+                {rwy.ident} ({rwy.headingTrue}° — {headwindKt(surfaceWindDir, surfaceWindKt, rwy.headingTrue) >= 0 ? '+' : ''}{headwindKt(surfaceWindDir, surfaceWindKt, rwy.headingTrue)}kt)
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
@@ -122,72 +136,35 @@ function TerrainCard({
         <div className="space-y-3">
           <p className="text-xs text-[var(--text-dim)] uppercase tracking-wider">Conditions</p>
           <div className="grid grid-cols-2 gap-2">
-            <Input
-              label="Elév. (ft)"
-              type="number"
-              value={elevation === 0 ? '' : elevation}
-              placeholder="0"
-              onChange={(e) => setElevation(e.target.value === '' ? 0 : Number(e.target.value))}
-            />
-            <Input
-              label="QNH (hPa)"
-              type="number"
-              value={qnh}
-              onChange={(e) => setQnh(Number(e.target.value))}
-            />
-            <Input
-              label="Temp (°C)"
-              type="number"
-              value={temp}
-              onChange={(e) => setTemp(Number(e.target.value))}
-            />
-            <Input
-              label="Vent (kt)"
-              type="number"
-              value={inputs.windKt === 0 ? '' : inputs.windKt}
-              placeholder="0"
+            <Input label="Elév. (ft)" type="number"
+              value={elevation === 0 ? '' : elevation} placeholder="0"
+              onChange={e => setElevation(e.target.value === '' ? 0 : Number(e.target.value))} />
+            <Input label="QNH (hPa)" type="number" value={qnh}
+              onChange={e => setQnh(Number(e.target.value))} />
+            <Input label="Temp (°C)" type="number" value={temp}
+              onChange={e => setTemp(Number(e.target.value))} />
+            <Input label="Vent (kt)" type="number"
+              value={inputs.windKt === 0 ? '' : inputs.windKt} placeholder="0"
               hint="+face / −arrière"
-              onChange={(e) => update({ windKt: e.target.value === '' ? 0 : Number(e.target.value) })}
-            />
+              onChange={e => update({ windKt: e.target.value === '' ? 0 : Number(e.target.value) })} />
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">
-                Surface
-              </label>
-              <button
-                type="button"
+              <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Surface</label>
+              <button type="button"
                 onClick={() => update({ surface: inputs.surface === 'hard' ? 'grass' : 'hard' })}
-                className={`
-                  px-3 py-2 rounded text-xs font-medium border transition-colors
-                  ${inputs.surface === 'hard'
+                className={`px-3 py-2 rounded text-xs font-medium border transition-colors ${
+                  inputs.surface === 'hard'
                     ? 'border-[var(--amber)] text-[var(--amber)] bg-[var(--amber)]/10'
                     : 'border-[var(--green)] text-[var(--green)] bg-[var(--green)]/10'
-                  }
-                `}
-              >
+                }`}>
                 {inputs.surface === 'hard' ? 'Dur' : 'Herbe'}
               </button>
             </div>
           </div>
-
           <div className="grid grid-cols-2 gap-2">
-            <Input
-              label="TODA (m)"
-              type="number"
-              value={inputs.toda ?? ''}
-              placeholder="optionnel"
-              onChange={(e) =>
-                update({ toda: e.target.value === '' ? undefined : Number(e.target.value) })
-              }
-            />
-            <Input
-              label="LDA (m)"
-              type="number"
-              value={inputs.lda ?? ''}
-              placeholder="optionnel"
-              onChange={(e) =>
-                update({ lda: e.target.value === '' ? undefined : Number(e.target.value) })
-              }
-            />
+            <Input label="TODA (m)" type="number" value={inputs.toda ?? ''} placeholder="optionnel"
+              onChange={e => update({ toda: e.target.value === '' ? undefined : Number(e.target.value) })} />
+            <Input label="LDA (m)" type="number" value={inputs.lda ?? ''} placeholder="optionnel"
+              onChange={e => update({ lda: e.target.value === '' ? undefined : Number(e.target.value) })} />
           </div>
         </div>
 
@@ -213,30 +190,24 @@ function TerrainCard({
                 <dd className="font-mono text-[var(--text-1)]">{distBase} m</dd>
               </div>
               <div className="flex justify-between font-semibold">
-                <dt className="text-[var(--text-muted)]">
-                  Dist. réglementaire (×{perfRegulatory.toFixed(2)})
-                </dt>
+                <dt className="text-[var(--text-muted)]">Dist. régl. (×{perfRegulatory.toFixed(2)})</dt>
                 <dd className="font-mono text-[var(--text-1)]">{distRegulatory} m</dd>
               </div>
               {inputs.toda !== undefined && (
                 <div className="flex justify-between text-xs">
                   <dt className="text-[var(--text-dim)]">TODA disponible</dt>
-                  <dd className={`font-mono ${todaOk ? 'text-[var(--green)]' : 'text-[var(--red)]'}`}>
-                    {inputs.toda} m
-                  </dd>
+                  <dd className={`font-mono ${todaOk ? 'text-[var(--green)]' : 'text-[var(--red)]'}`}>{inputs.toda} m</dd>
                 </div>
               )}
               {inputs.lda !== undefined && (
                 <div className="flex justify-between text-xs">
                   <dt className="text-[var(--text-dim)]">LDA disponible</dt>
-                  <dd className={`font-mono ${ldaOk ? 'text-[var(--green)]' : 'text-[var(--red)]'}`}>
-                    {inputs.lda} m
-                  </dd>
+                  <dd className={`font-mono ${ldaOk ? 'text-[var(--green)]' : 'text-[var(--red)]'}`}>{inputs.lda} m</dd>
                 </div>
               )}
               <div className="flex justify-between text-xs text-[var(--text-dim)] border-t border-[var(--border)] pt-2">
-                <dt>Masse utilisée</dt>
-                <dd className="font-mono">{Math.round(weight)} kg</dd>
+                <dt>Terrain</dt>
+                <dd className="font-mono">{terrainKey}</dd>
               </div>
               <div className="flex justify-between text-xs text-[var(--text-dim)]">
                 <dt>Type</dt>
@@ -244,15 +215,9 @@ function TerrainCard({
               </div>
             </dl>
           ) : (
-            <p className="text-xs text-[var(--text-dim)] italic">
-              Calcul indisponible — corriger la configuration de la table.
-            </p>
+            <p className="text-xs text-[var(--text-dim)] italic">Calcul indisponible — corriger la configuration.</p>
           )}
         </div>
-      </div>
-
-      <div className="mt-3 pt-2 border-t border-[var(--border)]">
-        <p className="text-xs text-[var(--text-dim)]">Terrain : {terrainKey}</p>
       </div>
     </Card>
   )
@@ -265,7 +230,7 @@ interface Props {
 }
 
 export function PerfPanel({ dossier, onUpdate, onUpdateRegulatory }: Props) {
-  const { aircraft, loading, weatherInputs, perfInputs, perfRegulatory } = dossier
+  const { aircraft, loading, weatherInputs, perfInputs, branches, perfRegulatory } = dossier
 
   const maxWeight = Math.max(...aircraft.massBalance.envelopePoints.map(([kg]) => kg))
   const depWeight = useMemo(() => {
@@ -273,28 +238,39 @@ export function PerfPanel({ dossier, onUpdate, onUpdateRegulatory }: Props) {
     return Math.min(wb.totalWeight, maxWeight)
   }, [aircraft, loading, maxWeight])
 
+  // Aggregate unique terrain cards from all branches (OVERFLY excluded)
+  const terrainCards = useMemo(() => {
+    const seen = new Set<string>()
+    const cards: { key: string; label: string; tableKey: 'to' | 'ldg' }[] = []
+    branches.forEach(branch => {
+      branch.points.forEach(pt => {
+        if (pt.role === 'OVERFLY') return
+        if (pt.type !== 'AERODROME') return
+        if (seen.has(pt.identifier)) return
+        seen.add(pt.identifier)
+        cards.push({
+          key: pt.identifier,
+          label: pt.identifier,
+          tableKey: pt.role === 'DEP' ? 'to' : 'ldg',
+        })
+      })
+    })
+    return cards
+  }, [branches])
+
+  // Surface wind: lowest altitude layer, or calm
+  const surfaceWind = useMemo(() => {
+    const sorted = [...weatherInputs.winds].sort((a, b) => a.altitude_ft - b.altitude_ft)
+    return sorted[0] ?? { direction_deg: 0, speed_kt: 0 }
+  }, [weatherInputs.winds])
+
   const getWeatherFor = (icao: string) => {
     const field = weatherInputs.fields[icao]
     return { qnh: field?.qnh ?? 1013, temp: field?.temp ?? 15 }
   }
 
-  const handleUpdate = (key: string, inputs: TerrainPerfInputs) => {
+  const handleUpdate = (key: string, inputs: TerrainPerfInputs) =>
     onUpdate({ ...perfInputs, [key]: inputs })
-  }
-
-  // Temporary: dynamic cards will be added in Task 7
-  const terrainCards: { key: string; label: string; tableKey: 'to' | 'ldg' }[] = []
-  dossier.branches.forEach(branch => {
-    branch.points.forEach(pt => {
-      if (pt.role === 'OVERFLY') return
-      if (terrainCards.some(t => t.key === pt.identifier)) return
-      terrainCards.push({
-        key: pt.identifier,
-        label: pt.identifier,
-        tableKey: pt.role === 'DEP' ? 'to' : 'ldg',
-      })
-    })
-  })
 
   return (
     <div className="p-4 max-w-4xl mx-auto space-y-6">
@@ -304,9 +280,7 @@ export function PerfPanel({ dossier, onUpdate, onUpdateRegulatory }: Props) {
             Marge réglementaire (×)
           </label>
           <input
-            type="number"
-            min={1}
-            step={0.01}
+            type="number" min={1} step={0.01}
             value={perfRegulatory ?? 1.0}
             onChange={e => onUpdateRegulatory(Number(e.target.value) || 1.0)}
             className="w-24 text-right font-mono text-sm bg-[var(--bg-card)] border border-[var(--border)] rounded px-2 py-1 text-[var(--text-1)] focus:outline-none focus:border-[var(--amber)] focus:ring-1 focus:ring-[var(--amber)]"
@@ -315,8 +289,15 @@ export function PerfPanel({ dossier, onUpdate, onUpdateRegulatory }: Props) {
         </div>
       </Card>
 
+      {terrainCards.length === 0 && (
+        <p className="text-[var(--text-muted)] text-sm text-center py-8">
+          Ajoutez des aérodromes (DEP/ARR/DVRT) dans l'onglet Branches pour voir les fiches de performance.
+        </p>
+      )}
+
       {terrainCards.map(({ key, label, tableKey }) => {
         const weather = getWeatherFor(key)
+        const aero = getAerodrome(key)
         return (
           <TerrainCard
             key={key}
@@ -327,9 +308,13 @@ export function PerfPanel({ dossier, onUpdate, onUpdateRegulatory }: Props) {
             weight={depWeight}
             defaultQnh={weather.qnh}
             defaultTemp={weather.temp}
+            defaultElevation={aero?.elevationFt ?? 0}
+            runways={aero?.runways ?? []}
+            surfaceWindDir={surfaceWind.direction_deg}
+            surfaceWindKt={surfaceWind.speed_kt}
             perfInputs={perfInputs[key] ?? DEFAULT_PERF}
             perfRegulatory={perfRegulatory ?? 1.0}
-            onUpdate={(inputs) => handleUpdate(key, inputs)}
+            onUpdate={inputs => handleUpdate(key, inputs)}
           />
         )
       })}
