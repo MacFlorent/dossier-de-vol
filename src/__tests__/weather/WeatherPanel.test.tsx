@@ -59,7 +59,7 @@ describe('WeatherPanel — aerodrome derivation from branches', () => {
         <WeatherPanel dossier={dossier} onUpdate={vi.fn()} />
       </Wrapper>
     )
-    expect(screen.getByText(/Importer une route/i)).toBeInTheDocument()
+    expect(screen.getByText(/Aucun aérodrome dans les branches/i)).toBeInTheDocument()
   })
 
   it('shows a DEP aerodrome from branches', () => {
@@ -134,7 +134,7 @@ describe('WeatherPanel — aerodrome derivation from branches', () => {
         <WeatherPanel dossier={dossier} onUpdate={vi.fn()} />
       </Wrapper>
     )
-    expect(screen.getByText(/Importer une route/i)).toBeInTheDocument()
+    expect(screen.getByText(/Aucun aérodrome dans les branches/i)).toBeInTheDocument()
     expect(screen.queryByText('LMG')).not.toBeInTheDocument()
     expect(screen.queryByText('GS')).not.toBeInTheDocument()
   })

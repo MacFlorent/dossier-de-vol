@@ -1,4 +1,4 @@
-import { importFleet, duplicateAircraft, saveAircraft, listAircraft, getAircraft } from '../../lib/storage'
+import { importFleet, duplicateAircraft, saveAircraft, listAircraft } from '../../lib/storage'
 import type { Aircraft } from '../../types'
 
 const makeAircraft = (overrides: Partial<Aircraft> = {}): Aircraft => ({

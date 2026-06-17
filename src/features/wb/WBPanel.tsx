@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import type { FlightDossier, StationLoading, WBResult } from '../../types'
 import { computeWB } from '../../lib/aviation/wbCalc'
-import { generateNavlog } from '../../lib/aviation/navlogGen'
 import { FUEL_DENSITY_KGL } from '../../lib/aviation/constants'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
@@ -123,21 +122,20 @@ export function WBPanel({ dossier, onUpdate }: Props) {
   const { massBalance, characteristics } = aircraft
   const { stations, emptyWeight, envelopePoints } = massBalance
 
+  // Derive MTOW from envelope points (max weight in envelope)
+  const maxWeight = envelopePoints.length > 0
+    ? Math.max(...envelopePoints.map(([kg]) => kg))
+    : Infinity
+
   const fuelStations = stations.filter(s => s.kind === 'fuel')
   const dryStations = stations.filter(s => s.kind === 'dry')
   const fuelStationNames = fuelStations.map(s => s.name)
 
-  const navlogFuelL = useMemo(() => {
-    if (!dossier.route || dossier.route.waypoints.length < 2) return 0
-    const regime = aircraft.characteristics.regimes[0]
-    const ac = { speed: regime.speed, fuelBurn: regime.fuelBurn }
-    const entries = generateNavlog(dossier.route, dossier.weatherInputs, ac, dossier.navOverrides)
-    return entries.at(-1)?.cumul_fuel_l ?? 0
-  }, [dossier.route, dossier.weatherInputs, dossier.navOverrides, aircraft])
-
+  // Arrival fuel: branches don't carry navlog fuel burn — use departure loading as-is
+  // (arrival W&B is shown as equal to departure when no per-branch fuel is burned)
   const arrLoading = useMemo(
-    () => arrivalFuelLoading(fuelStationNames, loading, navlogFuelL),
-    [fuelStationNames, loading, navlogFuelL],
+    () => arrivalFuelLoading(fuelStationNames, loading, 0),
+    [fuelStationNames, loading],
   )
 
   const depResult = useMemo(
@@ -318,7 +316,7 @@ export function WBPanel({ dossier, onUpdate }: Props) {
               <tfoot>
                 <tr>
                   <td colSpan={4} className="pt-3 text-xs text-[var(--text-dim)]">
-                    MTOW : {aircraft.massBalance.maxWeight} kg
+                    MTOW : {maxWeight} kg
                   </td>
                 </tr>
               </tfoot>
@@ -334,17 +332,17 @@ export function WBPanel({ dossier, onUpdate }: Props) {
             />
           </Card>
 
-          {depResult.totalWeight > aircraft.massBalance.maxWeight && (
+          {depResult.totalWeight > maxWeight && (
             <Card padding="sm">
               <p className="text-[var(--red)] text-sm font-medium">
-                Masse départ ({fmtKg(depResult.totalWeight)}) dépasse le MTOW ({aircraft.massBalance.maxWeight} kg)
+                Masse départ ({fmtKg(depResult.totalWeight)}) dépasse le MTOW ({maxWeight} kg)
               </p>
             </Card>
           )}
-          {arrResult.totalWeight > aircraft.massBalance.maxWeight && (
+          {arrResult.totalWeight > maxWeight && (
             <Card padding="sm">
               <p className="text-[var(--red)] text-sm font-medium">
-                Masse arrivée ({fmtKg(arrResult.totalWeight)}) dépasse le MTOW ({aircraft.massBalance.maxWeight} kg)
+                Masse arrivée ({fmtKg(arrResult.totalWeight)}) dépasse le MTOW ({maxWeight} kg)
               </p>
             </Card>
           )}

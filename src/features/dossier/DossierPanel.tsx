@@ -1,5 +1,4 @@
 import type { FlightDossier } from '../../types'
-import { generateNavlog } from '../../lib/aviation/navlogGen'
 import { computeWB } from '../../lib/aviation/wbCalc'
 import { FUEL_DENSITY_KGL } from '../../lib/aviation/constants'
 import { downloadDossier } from '../../lib/storage'
@@ -10,24 +9,10 @@ import { Card } from '../../components/ui/Card'
 interface Props { dossier: FlightDossier }
 
 export function DossierPanel({ dossier }: Props) {
-  const { aircraft, route, weatherInputs, navOverrides, loading, fuelInputs } = dossier
+  const { aircraft, branches, weatherInputs, loading, fuelInputs } = dossier
 
-  // Compute navlog
-  const regime = aircraft.characteristics.regimes[0]
-  const navlog = route && route.waypoints.length >= 2
-    ? generateNavlog(
-        route, weatherInputs,
-        { speed: regime.speed, fuelBurn: regime.fuelBurn },
-        navOverrides
-      )
-    : []
-
-  // Compute W&B departure — loading stores L for fuel stations, kg for dry
+  // Compute W&B departure
   const wbDep = computeWB(aircraft.massBalance, loading)
-
-  const totalDist = navlog.reduce((s, e) => s + e.dist_nm, 0)
-  const totalTime = navlog.at(-1)?.cumul_time_min ?? 0
-  const totalFuel = navlog.at(-1)?.cumul_fuel_l ?? 0
 
   const fmtTime = (min: number) => {
     const h = Math.floor(min / 60)
@@ -35,11 +20,11 @@ export function DossierPanel({ dossier }: Props) {
     return `${h}h${String(m).padStart(2, '0')}`
   }
 
-  // Compute fuel min
-  const extrasMin = fuelInputs.extras.reduce((s, e) => s + e.durationMin, 0)
-  const totalFuelMin = (totalTime + fuelInputs.roulage + extrasMin + fuelInputs.reserveMin + fuelInputs.derouteMin)
-    * (1 + fuelInputs.marge / 100)
-  const fuelMinL = (totalFuelMin / 60) * regime.fuelBurn
+  // Aggregate totals across all branches
+  const totalDistNm = branches.reduce((s, b) => s + b.distanceNm, 0)
+
+  // Fuel summary per branch (fuelInputs is Record<branchId, FuelInputs>)
+  const regime = aircraft.characteristics.regimes[0]
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -53,7 +38,7 @@ export function DossierPanel({ dossier }: Props) {
         </Button>
       </div>
 
-      {/* ── SHEET 1: Header + Navlog ──────────────────────────────── */}
+      {/* ── SHEET 1: Header + Branches summary ──────────────────────────── */}
       <div className="print-sheet px-6 pb-8">
         {/* Header */}
         <header className="mb-6 pb-4 border-b-2 border-[var(--amber)]">
@@ -72,12 +57,10 @@ export function DossierPanel({ dossier }: Props) {
         </header>
 
         {/* Summary row */}
-        <div className="grid grid-cols-4 gap-4 mb-6 text-center">
+        <div className="grid grid-cols-2 gap-4 mb-6 text-center">
           {[
-            { label: 'Distance', value: `${totalDist.toFixed(0)} nm` },
-            { label: 'Durée', value: fmtTime(totalTime) },
-            { label: 'Carbu navlog', value: `${totalFuel.toFixed(1)} L` },
-            { label: 'Carbu min', value: `${fuelMinL.toFixed(1)} L` },
+            { label: 'Branches', value: `${branches.length}` },
+            { label: 'Distance totale', value: `${totalDistNm.toFixed(0)} nm` },
           ].map(({ label, value }) => (
             <Card key={label} padding="sm" inset>
               <p className="text-xs text-[var(--text-dim)] uppercase tracking-wider">{label}</p>
@@ -86,43 +69,52 @@ export function DossierPanel({ dossier }: Props) {
           ))}
         </div>
 
-        {/* Navlog table */}
-        {navlog.length > 0 ? (
+        {/* Branches table */}
+        {branches.length > 0 ? (
           <section>
-            <h2 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">Journal de navigation</h2>
+            <h2 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">Branches de vol</h2>
             <table className="w-full text-xs border-collapse">
               <thead>
                 <tr className="border-b border-[var(--border)] text-[var(--text-dim)]">
-                  <th className="text-left py-1 pr-2">De → À</th>
-                  <th className="text-right py-1 px-1">Cap °M</th>
-                  <th className="text-right py-1 px-1">Dist</th>
-                  <th className="text-right py-1 px-1">GS</th>
-                  <th className="text-right py-1 px-1">ETE</th>
-                  <th className="text-right py-1 px-1">L</th>
-                  <th className="text-right py-1 px-1">∑ min</th>
-                  <th className="text-right py-1 px-1">∑ L</th>
-                  <th className="text-left py-1 pl-2">Réel</th>
+                  <th className="text-left py-1 pr-2">Branche</th>
+                  <th className="text-left py-1 pr-2">Points</th>
+                  <th className="text-right py-1 px-1">Dist (nm)</th>
+                  <th className="text-right py-1 px-1">Carbu min</th>
+                  <th className="text-left py-1 pl-2">Notes</th>
                 </tr>
               </thead>
               <tbody>
-                {navlog.map(e => (
-                  <tr key={e.legIndex} className="border-b border-[var(--border)]/50">
-                    <td className="py-1 pr-2 font-mono">{e.fromName} → {e.toName}</td>
-                    <td className="text-right py-1 px-1 font-mono">{e.mh}°</td>
-                    <td className="text-right py-1 px-1 font-mono">{e.dist_nm.toFixed(1)}</td>
-                    <td className="text-right py-1 px-1 font-mono">{e.gs}</td>
-                    <td className="text-right py-1 px-1 font-mono">{Math.round(e.ete_min)}'</td>
-                    <td className="text-right py-1 px-1 font-mono">{e.fuel_l.toFixed(1)}</td>
-                    <td className="text-right py-1 px-1 font-mono">{Math.round(e.cumul_time_min)}</td>
-                    <td className="text-right py-1 px-1 font-mono">{e.cumul_fuel_l.toFixed(1)}</td>
-                    <td className="text-left py-1 pl-2 text-[var(--text-dim)]">______</td>
-                  </tr>
-                ))}
+                {branches.map(branch => {
+                  const fi = fuelInputs[branch.id]
+                  // Compute a rough fuel minimum if fuel inputs exist for this branch
+                  let fuelMinL: number | null = null
+                  if (fi) {
+                    const extrasMin = fi.extras.reduce((s, e) => s + e.durationMin, 0)
+                    // Estimate flight time from distance and base speed
+                    const gsKt = Math.max(1, fi.gsBase - fi.windAdjust)
+                    const flightMin = (branch.distanceNm / gsKt) * 60
+                    const totalMin = (flightMin + fi.roulage + extrasMin + fi.reserveMin + fi.derouteMin)
+                      * (1 + fi.marge / 100)
+                    fuelMinL = (totalMin / 60) * regime.fuelBurn
+                  }
+                  const points = branch.points.map(p => p.identifier).join(' → ')
+                  return (
+                    <tr key={branch.id} className="border-b border-[var(--border)]/50">
+                      <td className="py-1 pr-2 font-medium text-[var(--text-1)]">{branch.label}</td>
+                      <td className="py-1 pr-2 font-mono text-[var(--text-2)]">{points || '—'}</td>
+                      <td className="text-right py-1 px-1 font-mono">{branch.distanceNm.toFixed(0)}</td>
+                      <td className="text-right py-1 px-1 font-mono">
+                        {fuelMinL !== null ? `${fuelMinL.toFixed(1)} L` : '—'}
+                      </td>
+                      <td className="text-left py-1 pl-2 text-[var(--text-dim)]">{branch.notes || '—'}</td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </section>
         ) : (
-          <p className="text-sm text-[var(--text-muted)]">Aucune route importée.</p>
+          <p className="text-sm text-[var(--text-muted)]">Aucune branche définie.</p>
         )}
 
         {/* Weather summary */}
@@ -136,11 +128,11 @@ export function DossierPanel({ dossier }: Props) {
         )}
       </div>
 
-      {/* ── SHEET 2: W&B + Carbu summary ────────────────────────── */}
+      {/* ── SHEET 2: W&B ────────────────────────────────────────────────── */}
       <div className="print-sheet px-6 pb-8 mt-8 no-print-break">
         <header className="mb-4 pb-2 border-b border-[var(--border)]">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold text-[var(--text-1)]">Masse & Centrage · Carburant</h2>
+            <h2 className="text-lg font-semibold text-[var(--text-1)]">Masse & Centrage</h2>
             <p className="text-xs font-mono text-[var(--text-muted)]">{dossier.name} · {dossier.date}</p>
           </div>
         </header>
@@ -188,50 +180,46 @@ export function DossierPanel({ dossier }: Props) {
             </div>
           </section>
 
-          {/* Fuel breakdown */}
+          {/* Fuel summary per branch */}
           <section>
-            <h3 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">Carburant</h3>
-            <dl className="space-y-1 text-xs">
-              <div className="flex justify-between">
-                <dt className="text-[var(--text-muted)]">Temps vol navlog</dt>
-                <dd className="font-mono">{fmtTime(totalTime)}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-[var(--text-muted)]">Roulage</dt>
-                <dd className="font-mono">{fuelInputs.roulage} min</dd>
-              </div>
-              {fuelInputs.extras.map(e => (
-                <div key={e.id} className="flex justify-between">
-                  <dt className="text-[var(--text-muted)]">{e.label || 'Extra'}</dt>
-                  <dd className="font-mono">{e.durationMin} min</dd>
+            <h3 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">Carburant par branche</h3>
+            {branches.length === 0 ? (
+              <p className="text-xs text-[var(--text-muted)]">Aucune branche.</p>
+            ) : (
+              <dl className="space-y-2 text-xs">
+                {branches.map(branch => {
+                  const fi = fuelInputs[branch.id]
+                  if (!fi) return (
+                    <div key={branch.id} className="flex justify-between">
+                      <dt className="text-[var(--text-muted)]">{branch.label}</dt>
+                      <dd className="font-mono text-[var(--text-dim)]">—</dd>
+                    </div>
+                  )
+                  const extrasMin = fi.extras.reduce((s, e) => s + e.durationMin, 0)
+                  const gsKt = Math.max(1, fi.gsBase - fi.windAdjust)
+                  const flightMin = (branch.distanceNm / gsKt) * 60
+                  const totalMin = (flightMin + fi.roulage + extrasMin + fi.reserveMin + fi.derouteMin)
+                    * (1 + fi.marge / 100)
+                  const fuelMinL = (totalMin / 60) * regime.fuelBurn
+                  return (
+                    <div key={branch.id} className="border-b border-[var(--border)]/30 pb-1">
+                      <div className="flex justify-between font-medium">
+                        <dt className="text-[var(--text-1)]">{branch.label}</dt>
+                        <dd className="font-mono">{fuelMinL.toFixed(1)} L</dd>
+                      </div>
+                      <div className="flex justify-between text-[var(--text-dim)]">
+                        <dt>Plein {fi.plein ? '✓' : '✗'} · Réserve {fmtTime(fi.reserveMin)}</dt>
+                        <dd className="font-mono">{(fuelMinL * FUEL_DENSITY_KGL).toFixed(1)} kg</dd>
+                      </div>
+                    </div>
+                  )
+                })}
+                <div className="flex justify-between text-[var(--text-dim)]">
+                  <dt>Capacité avion</dt>
+                  <dd className="font-mono">{aircraft.characteristics.fuelCapacity} L</dd>
                 </div>
-              ))}
-              <div className="flex justify-between">
-                <dt className="text-[var(--text-muted)]">Réserve</dt>
-                <dd className="font-mono">{fuelInputs.reserveMin} min</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-[var(--text-muted)]">Déroutement</dt>
-                <dd className="font-mono">{fuelInputs.derouteMin} min</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-[var(--text-muted)]">Marge {fuelInputs.marge}%</dt>
-                <dd className="font-mono">+{((totalFuelMin - (totalFuelMin / (1 + fuelInputs.marge / 100))) * regime.fuelBurn / 60).toFixed(1)} L</dd>
-              </div>
-              <div className="flex justify-between border-t border-[var(--border)] pt-1 font-semibold">
-                <dt>Carbu min</dt>
-                <dd className="font-mono">{fuelMinL.toFixed(1)} L · {(fuelMinL * FUEL_DENSITY_KGL).toFixed(1)} kg</dd>
-              </div>
-              <div className="flex justify-between text-[var(--text-dim)]">
-                <dt>Capacité</dt>
-                <dd className="font-mono">{aircraft.characteristics.fuelCapacity} L</dd>
-              </div>
-              <div className="mt-1">
-                <Badge variant={fuelMinL <= aircraft.characteristics.fuelCapacity ? 'success' : 'error'}>
-                  {fuelMinL <= aircraft.characteristics.fuelCapacity ? 'Carbu OK' : 'INSUFFISANT'}
-                </Badge>
-              </div>
-            </dl>
+              </dl>
+            )}
           </section>
         </div>
 

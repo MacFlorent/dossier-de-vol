@@ -102,7 +102,7 @@ export function WeatherPanel({ dossier, onUpdate }: Props) {
         </h2>
         {uniqueAerodromes.length === 0 ? (
           <Card padding="md" className="text-center text-[var(--text-muted)] text-sm">
-            Importer une route d&apos;abord (onglet Route)
+            Aucun aérodrome dans les branches (onglet Branches)
           </Card>
         ) : (
           <div className="grid gap-3">

@@ -227,17 +227,13 @@ export function AircraftEditorScreen({ editingAircraftId, prefillAircraft, onSav
       return
     }
 
-    const maxWeight = envelopePoints.length > 0
-      ? Math.max(...envelopePoints.map(p => p[0]))
-      : 0
-
     const aircraft: Aircraft = {
       id: editingAircraftId ?? crypto.randomUUID(),
       name,
       registration,
       sdReference: sdReference || undefined,
       characteristics: { regimes, fuelCapacity },
-      massBalance: { emptyWeight, emptyArm, maxWeight, stations, envelopePoints },
+      massBalance: { emptyWeight, emptyArm, stations, envelopePoints },
       performance: { toTable, ldgTable },
     }
     saveAircraft(aircraft)
@@ -276,7 +272,7 @@ export function AircraftEditorScreen({ editingAircraftId, prefillAircraft, onSav
       if (i !== idx) return s
       if (field === 'kind') return { ...s, kind: value as 'dry' | 'fuel' }
       if (field === 'arm') return { ...s, arm: Number(value) }
-      return { ...s, [field]: value }
+      return { ...s, name: String(value) }
     }))
   }, [])
 

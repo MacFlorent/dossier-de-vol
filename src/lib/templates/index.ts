@@ -8,11 +8,12 @@ export interface TemplateEntry {
 
 const modules = import.meta.glob('../../../resources/*.json', { eager: true })
 
-export const TEMPLATES: TemplateEntry[] = Object.entries(modules).map(([path, mod]) => {
+export const TEMPLATES: TemplateEntry[] = Object.entries(modules).flatMap(([path, mod]) => {
   const aircraft = (mod as { default: Aircraft }).default
-  if (!aircraft?.name) throw new Error(`Template at ${path} is missing a name field`)
+  // Skip files that don't look like aircraft templates (e.g. aerodromes.json)
+  if (!aircraft?.name || !aircraft?.massBalance || !aircraft?.performance) return []
   const key = path.split('/').pop()!.replace(/\.json$/, '')
-  return { key, label: aircraft.name, template: aircraft }
+  return [{ key, label: aircraft.name, template: aircraft }]
 })
 
 export function getTemplate(key: string): Aircraft | null {
