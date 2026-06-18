@@ -47,7 +47,7 @@ Le champ `branches` dans `FlightDossier` conserve son nom en base JSON pour ne p
 
 ```ts
 onUpdateName: (name: string) => void
-onChangeAircraft: () => void
+onChangeAircraft: (newAircraftId: string) => void
 ```
 
 ### Nom éditable inline
@@ -72,17 +72,23 @@ dossier de vol · [nom éditable]  DR221 [Changer]  2026-06-18
 
 ### ChangeAircraftModal
 
-Nouveau composant (peut vivre dans `src/components/AppChrome.tsx` ou `src/features/aircraft/ChangeAircraftModal.tsx`).
+Composant local dans `src/components/AppChrome.tsx` (pas de nouveau fichier).
 
-- Liste tous les avions de la flotte (`listAircraft()`)
-- Au clic sur un avion : affiche une `window.confirm` (ou un dialogue inline) :
-  > "Changer l'avion pour [Nom] ? Les données carburant (GS de base), masse & centrage et performances seront réinitialisées."
-- Si confirmé : dispatch `UPDATE_DOSSIER` avec le dossier recalculé (voir §2.1)
-- Si annulé : ferme la modale sans changement
+AppChrome gère son propre état `showChangeModal: boolean`. La modale a deux étapes :
+
+**Étape 1 — Sélection :**
+- Appelle `listAircraft()` directement (pattern identique à HomeScreen)
+- Liste les avions disponibles avec leur nom et immatriculation
+- Au clic sur un avion : passe à l'étape 2
+
+**Étape 2 — Confirmation :**
+- Affiche le message : "Changer l'avion pour [Nom] ? Les données carburant (GS de base), masse & centrage et performances seront réinitialisées."
+- Bouton "Confirmer" → appelle `onChangeAircraft(selectedId)` et ferme la modale
+- Bouton "Annuler" → retour à l'étape 1
 
 ### 2.1 Recalcul lors du changement d'avion
 
-Dans `App.tsx`, le handler construit un nouveau dossier :
+Dans `App.tsx`, le handler reçoit `newAircraftId: string`, récupère l'avion via `getAircraft(newAircraftId)` et construit un nouveau dossier :
 
 ```ts
 const newDossier: FlightDossier = {
@@ -207,7 +213,7 @@ for (const branch of dossier.branches) {
 |---------|-----------|
 | `src/types/index.ts` | Ajout `notes?: string` sur `FlightPoint` |
 | `src/components/AppChrome.tsx` | Nom éditable inline, avion + bouton Changer, modale ChangeAircraft |
-| `src/App.tsx` | Props `onUpdateName`, `onChangeAircraft` ; logique recalcul avion |
+| `src/App.tsx` | Props `onUpdateName`, `onChangeAircraft(id)` ; logique recalcul avion |
 | `src/features/branches/BranchesPanel.tsx` | Renommage Vols, durée calculée, FlightPoint 2 lignes (notes + rôle cycle), label "custom" |
 | `src/lib/storage.ts` | Migration `notes` sur FlightPoint |
 
