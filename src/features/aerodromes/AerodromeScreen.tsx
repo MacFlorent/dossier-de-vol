@@ -4,13 +4,10 @@ import {
   getAerodromeDb, upsertAerodrome, deleteAerodromeFromDb,
   exportAerodromeDb, importAerodromeDb,
 } from '../../lib/icao/aerodromeDb'
-import { fetchFromOpenAip } from '../../lib/icao/openAipClient'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Badge } from '../../components/ui/Badge'
-
-const OPENAIP_KEY_STORAGE = 'dossier-de-vol:openaip-key'
 
 function RunwayEditor({
   runways,
@@ -19,7 +16,7 @@ function RunwayEditor({
   runways: RunwayInfo[]
   onChange: (runways: RunwayInfo[]) => void
 }) {
-  const add = () => onChange([...runways, { ident: '', headingTrue: 0, lengthFt: 0, surface: 'hard' }])
+  const add = () => onChange([...runways, { ident: '', headingMag: 0, lengthFt: 0, surface: 'hard' }])
   const remove = (i: number) => onChange(runways.filter((_, j) => j !== i))
   const update = (i: number, changes: Partial<RunwayInfo>) =>
     onChange(runways.map((r, j) => j === i ? { ...r, ...changes } : r))
@@ -30,8 +27,8 @@ function RunwayEditor({
         <div key={i} className="grid grid-cols-6 gap-2 items-end">
           <Input label="Piste" value={rwy.ident}
             onChange={e => update(i, { ident: e.target.value })} />
-          <Input label="Cap vrai (°)" type="number" value={rwy.headingTrue}
-            onChange={e => update(i, { headingTrue: Number(e.target.value) })} />
+          <Input label="QFU (°)" type="number" value={rwy.headingMag}
+            onChange={e => update(i, { headingMag: Number(e.target.value) })} />
           <Input label="Long. (ft)" type="number" value={rwy.lengthFt}
             onChange={e => update(i, { lengthFt: Number(e.target.value) })} />
           <Input label="TODA (m)" type="number" value={rwy.toda ?? ''}
@@ -66,14 +63,10 @@ function AerodromeCard({
   aerodrome,
   onSave,
   onDelete,
-  onRefresh,
-  refreshing,
 }: {
   aerodrome: StoredAerodrome
   onSave: (a: StoredAerodrome) => void
   onDelete: () => void
-  onRefresh: () => void
-  refreshing: boolean
 }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(aerodrome)
@@ -90,9 +83,6 @@ function AerodromeCard({
         <Badge variant="neutral">{aerodrome.runways.length} piste{aerodrome.runways.length !== 1 ? 's' : ''}</Badge>
         <Button variant="ghost" size="sm" onClick={() => setEditing(e => !e)}>
           {editing ? 'Fermer' : 'Modifier'}
-        </Button>
-        <Button variant="ghost" size="sm" onClick={onRefresh} disabled={refreshing}>
-          {refreshing ? '...' : '↻'}
         </Button>
         <Button variant="danger" size="sm" onClick={onDelete}>✕</Button>
       </div>
@@ -126,8 +116,6 @@ function AerodromeCard({
 export function AerodromeScreen() {
   const [db, setDb] = useState(() => getAerodromeDb())
   const [search, setSearch] = useState('')
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem(OPENAIP_KEY_STORAGE) ?? '')
-  const [refreshing, setRefreshing] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const importRef = useRef<HTMLInputElement>(null)
 
@@ -144,16 +132,6 @@ export function AerodromeScreen() {
       refresh()
     }
   }, [])
-
-  const handleRefreshFromApi = useCallback(async (icao: string) => {
-    if (!apiKey) { setError('Clé OpenAIP non configurée'); return }
-    setRefreshing(icao)
-    setError(null)
-    const result = await fetchFromOpenAip(icao, apiKey)
-    if (result) { upsertAerodrome(result); refresh() }
-    else setError(`Impossible de récupérer ${icao} depuis OpenAIP`)
-    setRefreshing(null)
-  }, [apiKey])
 
   const handleImport = useCallback((file: File) => {
     const reader = new FileReader()
@@ -204,20 +182,6 @@ export function AerodromeScreen() {
           onChange={e => { const f = e.target.files?.[0]; if (f) handleImport(f); e.target.value = '' }} />
       </div>
 
-      {/* OpenAIP key */}
-      <details className="mb-6">
-        <summary className="text-xs text-[var(--text-dim)] cursor-pointer">Clé API OpenAIP</summary>
-        <div className="mt-2 flex gap-2">
-          <input
-            type="password"
-            value={apiKey}
-            onChange={e => { setApiKey(e.target.value); localStorage.setItem(OPENAIP_KEY_STORAGE, e.target.value) }}
-            placeholder="Votre clé api.core.openaip.net"
-            className="flex-1 text-sm bg-[var(--bg-inset)] border border-[var(--border)] rounded px-3 py-1.5 text-[var(--text-1)] focus:border-[var(--amber)] focus:outline-none"
-          />
-        </div>
-      </details>
-
       {/* List */}
       <div className="space-y-2">
         <p className="text-xs text-[var(--text-dim)]">{filtered.length} aérodrome{filtered.length !== 1 ? 's' : ''}</p>
@@ -227,8 +191,6 @@ export function AerodromeScreen() {
             aerodrome={a}
             onSave={handleSave}
             onDelete={() => handleDelete(a.icao)}
-            onRefresh={() => handleRefreshFromApi(a.icao)}
-            refreshing={refreshing === a.icao}
           />
         ))}
       </div>
