@@ -5,6 +5,7 @@ import iconUrl from 'leaflet/dist/images/marker-icon.png'
 import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png'
 import shadowUrl from 'leaflet/dist/images/marker-shadow.png'
 import type { FlightBranch, FlightPoint, FlightPointRole } from '../../types'
+import type { AircraftSnapshot } from '../../types'
 import { getAerodromeDb, getAerodrome } from '../../lib/icao/aerodromeDb'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
@@ -35,6 +36,19 @@ const ROLE_LABELS: Record<FlightPointRole, string> = {
 
 const ROLE_COLORS: Record<FlightPointRole, string> = {
   DEP: 'var(--blue)', ARR: 'var(--green)', DIVERT: 'var(--amber)', OVERFLY: 'var(--text-dim)',
+}
+
+function formatDuration(distanceNm: number, speedKt: number): string {
+  if (distanceNm <= 0) return '--'
+  const totalMin = Math.round((distanceNm / speedKt) * 60)
+  const h = Math.floor(totalMin / 60)
+  const m = totalMin % 60
+  return `${h}h${String(m).padStart(2, '0')}`
+}
+
+const ROLE_CYCLE: FlightPointRole[] = ['DEP', 'ARR', 'DIVERT', 'OVERFLY']
+function cycleRole(role: FlightPointRole): FlightPointRole {
+  return ROLE_CYCLE[(ROLE_CYCLE.indexOf(role) + 1) % ROLE_CYCLE.length]
 }
 
 interface AddPointModalProps {
@@ -131,11 +145,12 @@ function AddPointModal({ onAdd, onClose }: AddPointModalProps) {
 interface BranchViewProps {
   branch: FlightBranch
   isOnly: boolean
+  speedKt: number
   onChange: (branch: FlightBranch) => void
   onDelete: () => void
 }
 
-function BranchView({ branch, isOnly, onChange, onDelete }: BranchViewProps) {
+function BranchView({ branch, isOnly, speedKt, onChange, onDelete }: BranchViewProps) {
   const [showAdd, setShowAdd] = useState(false)
 
   const resolved = useMemo(() =>
@@ -202,9 +217,10 @@ function BranchView({ branch, isOnly, onChange, onDelete }: BranchViewProps) {
             className="w-24 text-right font-mono text-sm bg-[var(--bg-inset)] border border-[var(--border)] rounded px-2 py-1 text-[var(--text-1)] focus:border-[var(--amber)] focus:outline-none"
           />
           <span className="text-xs text-[var(--text-dim)]">nm</span>
+          <span className="font-mono text-xs text-[var(--text-dim)]">{formatDuration(branch.distanceNm, speedKt)}</span>
           {!isOnly && (
             <Button variant="danger" size="sm" className="ml-auto" onClick={onDelete}>
-              Supprimer branche
+              Supprimer vol
             </Button>
           )}
         </div>
@@ -224,33 +240,43 @@ function BranchView({ branch, isOnly, onChange, onDelete }: BranchViewProps) {
         )}
 
         {resolved.map(({ pt, aero }, idx) => (
-          <Card key={pt.id} padding="sm" className="flex gap-3 items-center">
-            <Badge
-              variant="neutral"
-              style={{ backgroundColor: ROLE_COLORS[pt.role], color: 'white', minWidth: '3rem', textAlign: 'center' }}
-            >
-              {ROLE_LABELS[pt.role]}
-            </Badge>
-            <span className="font-mono text-[var(--amber)] text-sm">{pt.identifier}</span>
-            <span className="flex-1 text-sm text-[var(--text-2)] truncate">
-              {aero ? aero.name : <span className="text-[var(--amber)]">? non résolu</span>}
-            </span>
-            <div className="flex gap-1">
-              <button
-                onClick={() => movePoint(pt.id, -1)}
-                disabled={idx === 0}
-                className="text-[var(--text-dim)] hover:text-[var(--text-1)] disabled:opacity-30 px-1"
-              >↑</button>
-              <button
-                onClick={() => movePoint(pt.id, 1)}
-                disabled={idx === branch.points.length - 1}
-                className="text-[var(--text-dim)] hover:text-[var(--text-1)] disabled:opacity-30 px-1"
-              >↓</button>
-              <button
-                onClick={() => removePoint(pt.id)}
-                className="text-[var(--text-dim)] hover:text-[var(--red)] text-sm px-1"
-              >✕</button>
+          <Card key={pt.id} padding="sm">
+            <div className="flex gap-3 items-center">
+              <Badge
+                variant="neutral"
+                style={{ backgroundColor: ROLE_COLORS[pt.role], color: 'white', minWidth: '3rem', textAlign: 'center', cursor: 'pointer' }}
+                onClick={() => onChange({ ...branch, points: branch.points.map(p => p.id === pt.id ? { ...p, role: cycleRole(p.role) } : p) })}
+              >
+                {ROLE_LABELS[pt.role]}
+              </Badge>
+              <span className="font-mono text-[var(--amber)] text-sm">{pt.identifier}</span>
+              <span className="flex-1 text-sm text-[var(--text-2)] truncate">
+                {aero ? aero.name : <span className="text-[var(--text-dim)]">custom</span>}
+              </span>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => movePoint(pt.id, -1)}
+                  disabled={idx === 0}
+                  className="text-[var(--text-dim)] hover:text-[var(--text-1)] disabled:opacity-30 px-1"
+                >↑</button>
+                <button
+                  onClick={() => movePoint(pt.id, 1)}
+                  disabled={idx === branch.points.length - 1}
+                  className="text-[var(--text-dim)] hover:text-[var(--text-1)] disabled:opacity-30 px-1"
+                >↓</button>
+                <button
+                  onClick={() => removePoint(pt.id)}
+                  className="text-[var(--text-dim)] hover:text-[var(--red)] text-sm px-1"
+                >✕</button>
+              </div>
             </div>
+            <input
+              type="text"
+              value={pt.notes ?? ''}
+              onChange={e => onChange({ ...branch, points: branch.points.map(p => p.id === pt.id ? { ...p, notes: e.target.value } : p) })}
+              placeholder="Notes..."
+              className="mt-1 w-full text-xs bg-[var(--bg-inset)] border border-[var(--border)] rounded px-2 py-0.5 text-[var(--text-2)] focus:border-[var(--amber)] focus:outline-none"
+            />
           </Card>
         ))}
 
@@ -274,17 +300,19 @@ function BranchView({ branch, isOnly, onChange, onDelete }: BranchViewProps) {
 
 interface Props {
   branches: FlightBranch[]
+  aircraft: AircraftSnapshot
   onUpdate: (branches: FlightBranch[]) => void
 }
 
-export function BranchesPanel({ branches, onUpdate }: Props) {
+export function BranchesPanel({ branches, aircraft, onUpdate }: Props) {
+  const speedKt = aircraft.characteristics.regimes[0].speed
   const [activeId, setActiveId] = useState(() => branches[0]?.id ?? '')
   const activeBranch = branches.find(b => b.id === activeId) ?? branches[0]
 
   const addBranch = () => {
     const newBranch: FlightBranch = {
       id: crypto.randomUUID(),
-      label: `Étape ${branches.length + 1}`,
+      label: `Vol ${branches.length + 1}`,
       points: [],
       distanceNm: 0,
       notes: '',
@@ -352,6 +380,7 @@ export function BranchesPanel({ branches, onUpdate }: Props) {
         <BranchView
           branch={activeBranch}
           isOnly={branches.length === 1}
+          speedKt={speedKt}
           onChange={updateBranch}
           onDelete={() => deleteBranch(activeBranch.id)}
         />

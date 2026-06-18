@@ -1,4 +1,4 @@
-import type { ReactNode, CSSProperties } from 'react'
+import type { ReactNode, CSSProperties, MouseEventHandler } from 'react'
 
 type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral'
 
@@ -7,9 +7,10 @@ interface BadgeProps {
   children: ReactNode
   className?: string
   style?: CSSProperties
+  onClick?: MouseEventHandler<HTMLSpanElement>
 }
 
-export function Badge({ variant = 'neutral', children, className = '', style }: BadgeProps) {
+export function Badge({ variant = 'neutral', children, className = '', style, onClick }: BadgeProps) {
   const variants: Record<BadgeVariant, string> = {
     success: 'bg-[var(--green)]/20 text-[var(--green)] border-[var(--green)]/40',
     warning: 'bg-[var(--amber)]/20 text-[var(--amber)] border-[var(--amber)]/40',
@@ -22,6 +23,7 @@ export function Badge({ variant = 'neutral', children, className = '', style }: 
     <span
       className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${variants[variant]} ${className}`}
       style={style}
+      onClick={onClick}
     >
       {children}
     </span>

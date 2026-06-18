@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
-// Mock react-leaflet and leaflet (DOM rendering not available in jsdom)
 vi.mock('react-leaflet', () => ({
   MapContainer: ({ children }: { children: React.ReactNode }) => <div data-testid="map">{children}</div>,
   TileLayer: () => null,
@@ -29,7 +28,6 @@ vi.mock('leaflet/dist/images/marker-icon.png', () => ({ default: '' }))
 vi.mock('leaflet/dist/images/marker-icon-2x.png', () => ({ default: '' }))
 vi.mock('leaflet/dist/images/marker-shadow.png', () => ({ default: '' }))
 
-// Mock aerodromeDb
 const mockDb = [
   { icao: 'LFPN', name: 'Toussus-le-Noble', lat: 48.75, lng: 2.11, elevationFt: 538, runways: [], updatedAt: '' },
   { icao: 'LFPO', name: 'Paris Orly', lat: 48.72, lng: 2.37, elevationFt: 291, runways: [], updatedAt: '' },
@@ -41,7 +39,20 @@ vi.mock('../../lib/icao/aerodromeDb', () => ({
 }))
 
 import { BranchesPanel } from '../../features/branches/BranchesPanel'
-import type { FlightBranch } from '../../types'
+import type { AircraftSnapshot, FlightBranch } from '../../types'
+
+const aircraftStub: AircraftSnapshot = {
+  id: 'ac-1',
+  name: 'DR221',
+  registration: 'F-BPCT',
+  snapshotAt: '2026-01-01T00:00:00.000Z',
+  characteristics: { regimes: [{ label: '75%', speed: 108, fuelBurn: 22 }], fuelCapacity: 116 },
+  massBalance: { emptyWeight: 615, emptyArm: 345, stations: [], envelopePoints: [] },
+  performance: {
+    toTable: { weights: [840], pressureAltitudes: [0], oats: [15], values: [[[440]]] },
+    ldgTable: { weights: [840], pressureAltitudes: [0], oats: [15], values: [[[510]]] },
+  },
+}
 
 function makeBranch(overrides: Partial<FlightBranch> = {}): FlightBranch {
   return {
@@ -61,8 +72,7 @@ describe('BranchesPanel', () => {
 
   describe('rendering', () => {
     it('renders a branch tab with the branch label', () => {
-      const branch = makeBranch({ label: 'Aller' })
-      render(<BranchesPanel branches={[branch]} onUpdate={vi.fn()} />)
+      render(<BranchesPanel branches={[makeBranch({ label: 'Aller' })]} aircraft={aircraftStub} onUpdate={vi.fn()} />)
       expect(screen.getByText('Aller')).toBeInTheDocument()
     })
 
@@ -71,90 +81,95 @@ describe('BranchesPanel', () => {
         makeBranch({ id: 'b1', label: 'Aller' }),
         makeBranch({ id: 'b2', label: 'Retour' }),
       ]
-      render(<BranchesPanel branches={branches} onUpdate={vi.fn()} />)
+      render(<BranchesPanel branches={branches} aircraft={aircraftStub} onUpdate={vi.fn()} />)
       expect(screen.getByText('Aller')).toBeInTheDocument()
       expect(screen.getByText('Retour')).toBeInTheDocument()
     })
 
     it('renders the map container', () => {
-      render(<BranchesPanel branches={[makeBranch()]} onUpdate={vi.fn()} />)
+      render(<BranchesPanel branches={[makeBranch()]} aircraft={aircraftStub} onUpdate={vi.fn()} />)
       expect(screen.getByTestId('map')).toBeInTheDocument()
     })
 
     it('renders empty points message when branch has no points', () => {
-      render(<BranchesPanel branches={[makeBranch()]} onUpdate={vi.fn()} />)
+      render(<BranchesPanel branches={[makeBranch()]} aircraft={aircraftStub} onUpdate={vi.fn()} />)
       expect(screen.getByText(/Aucun point/i)).toBeInTheDocument()
     })
 
     it('renders a point when branch has a point', () => {
       const branch = makeBranch({
-        points: [{
-          id: 'pt-1',
-          type: 'AERODROME',
-          identifier: 'LFPN',
-          role: 'DEP',
-        }],
+        points: [{ id: 'pt-1', type: 'AERODROME', identifier: 'LFPN', role: 'DEP' }],
       })
-      render(<BranchesPanel branches={[branch]} onUpdate={vi.fn()} />)
+      render(<BranchesPanel branches={[branch]} aircraft={aircraftStub} onUpdate={vi.fn()} />)
       expect(screen.getByText('LFPN')).toBeInTheDocument()
       expect(screen.getByText('Toussus-le-Noble')).toBeInTheDocument()
     })
 
-    it('shows "non résolu" for an unknown aerodrome identifier', () => {
+    it('shows "custom" for an unresolved aerodrome identifier', () => {
       const branch = makeBranch({
-        points: [{
-          id: 'pt-1',
-          type: 'AERODROME',
-          identifier: 'ZZZZ',
-          role: 'OVERFLY',
-        }],
+        points: [{ id: 'pt-1', type: 'AERODROME', identifier: 'ZZZZ', role: 'OVERFLY' }],
       })
-      render(<BranchesPanel branches={[branch]} onUpdate={vi.fn()} />)
-      expect(screen.getByText(/non résolu/i)).toBeInTheDocument()
+      render(<BranchesPanel branches={[branch]} aircraft={aircraftStub} onUpdate={vi.fn()} />)
+      expect(screen.getByText('custom')).toBeInTheDocument()
+      expect(screen.queryByText(/non résolu/i)).not.toBeInTheDocument()
     })
 
-    it('does not show delete branch button when there is only one branch', () => {
-      render(<BranchesPanel branches={[makeBranch()]} onUpdate={vi.fn()} />)
-      expect(screen.queryByText(/Supprimer branche/i)).not.toBeInTheDocument()
+    it('does not show delete vol button when there is only one branch', () => {
+      render(<BranchesPanel branches={[makeBranch()]} aircraft={aircraftStub} onUpdate={vi.fn()} />)
+      expect(screen.queryByText(/Supprimer vol/i)).not.toBeInTheDocument()
     })
 
-    it('shows delete branch button when there are multiple branches', () => {
+    it('shows delete vol button when there are multiple branches', () => {
       const branches = [
         makeBranch({ id: 'b1', label: 'Aller' }),
         makeBranch({ id: 'b2', label: 'Retour' }),
       ]
-      render(<BranchesPanel branches={branches} onUpdate={vi.fn()} />)
-      expect(screen.getByText(/Supprimer branche/i)).toBeInTheDocument()
+      render(<BranchesPanel branches={branches} aircraft={aircraftStub} onUpdate={vi.fn()} />)
+      expect(screen.getByText(/Supprimer vol/i)).toBeInTheDocument()
+    })
+  })
+
+  describe('duration display', () => {
+    it('shows calculated duration when distanceNm > 0 (108nm at 108kt = 1h00)', () => {
+      render(<BranchesPanel branches={[makeBranch({ distanceNm: 108 })]} aircraft={aircraftStub} onUpdate={vi.fn()} />)
+      expect(screen.getByText('1h00')).toBeInTheDocument()
+    })
+
+    it('shows -- when distanceNm is 0', () => {
+      render(<BranchesPanel branches={[makeBranch({ distanceNm: 0 })]} aircraft={aircraftStub} onUpdate={vi.fn()} />)
+      expect(screen.getByText('--')).toBeInTheDocument()
+    })
+
+    it('shows 0hMM format for durations under 1 hour (54nm at 108kt = 0h30)', () => {
+      render(<BranchesPanel branches={[makeBranch({ distanceNm: 54 })]} aircraft={aircraftStub} onUpdate={vi.fn()} />)
+      expect(screen.getByText('0h30')).toBeInTheDocument()
     })
   })
 
   describe('adding a branch', () => {
     it('calls onUpdate with a new branch when + is clicked', async () => {
       const onUpdate = vi.fn()
-      const branch = makeBranch()
-      render(<BranchesPanel branches={[branch]} onUpdate={onUpdate} />)
+      render(<BranchesPanel branches={[makeBranch()]} aircraft={aircraftStub} onUpdate={onUpdate} />)
 
-      const addBtn = screen.getByText('+')
-      await userEvent.click(addBtn)
+      await userEvent.click(screen.getByText('+'))
 
       expect(onUpdate).toHaveBeenCalledOnce()
       const updatedBranches: FlightBranch[] = onUpdate.mock.calls[0][0]
       expect(updatedBranches).toHaveLength(2)
-      expect(updatedBranches[1].label).toMatch(/Étape/)
+      expect(updatedBranches[1].label).toMatch(/Vol/)
     })
   })
 
   describe('deleting a branch', () => {
-    it('calls onUpdate removing the branch when Supprimer is clicked', async () => {
+    it('calls onUpdate removing the branch when Supprimer vol is clicked', async () => {
       const onUpdate = vi.fn()
       const branches = [
         makeBranch({ id: 'b1', label: 'Aller' }),
         makeBranch({ id: 'b2', label: 'Retour' }),
       ]
-      render(<BranchesPanel branches={branches} onUpdate={onUpdate} />)
+      render(<BranchesPanel branches={branches} aircraft={aircraftStub} onUpdate={onUpdate} />)
 
-      const deleteBtn = screen.getByText(/Supprimer branche/i)
-      await userEvent.click(deleteBtn)
+      await userEvent.click(screen.getByText(/Supprimer vol/i))
 
       expect(onUpdate).toHaveBeenCalledOnce()
       const updatedBranches: FlightBranch[] = onUpdate.mock.calls[0][0]
@@ -170,9 +185,8 @@ describe('BranchesPanel', () => {
           { id: 'pt-1', type: 'AERODROME', identifier: 'LFPO', role: 'ARR' }
         ]}),
       ]
-      render(<BranchesPanel branches={branches} onUpdate={vi.fn()} />)
+      render(<BranchesPanel branches={branches} aircraft={aircraftStub} onUpdate={vi.fn()} />)
 
-      // Clicking "Retour" tab should show its content
       await userEvent.click(screen.getByText('Retour'))
       expect(screen.getByText('LFPO')).toBeInTheDocument()
     })
@@ -181,11 +195,9 @@ describe('BranchesPanel', () => {
   describe('updating distance', () => {
     it('calls onUpdate with updated distanceNm when distance is changed', async () => {
       const onUpdate = vi.fn()
-      const branch = makeBranch({ distanceNm: 0 })
-      render(<BranchesPanel branches={[branch]} onUpdate={onUpdate} />)
+      render(<BranchesPanel branches={[makeBranch({ distanceNm: 0 })]} aircraft={aircraftStub} onUpdate={onUpdate} />)
 
-      const distanceInput = screen.getByPlaceholderText('0')
-      fireEvent.change(distanceInput, { target: { value: '120' } })
+      fireEvent.change(screen.getByPlaceholderText('0'), { target: { value: '120' } })
 
       expect(onUpdate).toHaveBeenCalled()
       const updatedBranches: FlightBranch[] = onUpdate.mock.calls[0][0]
@@ -193,14 +205,12 @@ describe('BranchesPanel', () => {
     })
   })
 
-  describe('updating notes', () => {
+  describe('updating branch notes', () => {
     it('calls onUpdate with updated notes when notes textarea is changed', async () => {
       const onUpdate = vi.fn()
-      const branch = makeBranch({ notes: '' })
-      render(<BranchesPanel branches={[branch]} onUpdate={onUpdate} />)
+      render(<BranchesPanel branches={[makeBranch({ notes: '' })]} aircraft={aircraftStub} onUpdate={onUpdate} />)
 
-      const notesTextarea = screen.getByPlaceholderText(/Commentaires libres/i)
-      fireEvent.change(notesTextarea, { target: { value: 'Test note' } })
+      fireEvent.change(screen.getByPlaceholderText(/Commentaires libres/i), { target: { value: 'Test note' } })
 
       expect(onUpdate).toHaveBeenCalled()
       const updatedBranches: FlightBranch[] = onUpdate.mock.calls[0][0]
@@ -208,43 +218,91 @@ describe('BranchesPanel', () => {
     })
   })
 
+  describe('point notes', () => {
+    it('renders a notes input for each point', () => {
+      const branch = makeBranch({
+        points: [{ id: 'pt-1', type: 'AERODROME', identifier: 'LFPN', role: 'DEP' }],
+      })
+      render(<BranchesPanel branches={[branch]} aircraft={aircraftStub} onUpdate={vi.fn()} />)
+      expect(screen.getByPlaceholderText('Notes...')).toBeInTheDocument()
+    })
+
+    it('calls onUpdate with updated point notes when notes input changes', async () => {
+      const onUpdate = vi.fn()
+      const branch = makeBranch({
+        points: [{ id: 'pt-1', type: 'AERODROME', identifier: 'LFPN', role: 'DEP' }],
+      })
+      render(<BranchesPanel branches={[branch]} aircraft={aircraftStub} onUpdate={onUpdate} />)
+
+      fireEvent.change(screen.getByPlaceholderText('Notes...'), { target: { value: 'Vérifier NOTAM' } })
+
+      expect(onUpdate).toHaveBeenCalledOnce()
+      const updated: FlightBranch[] = onUpdate.mock.calls[0][0]
+      expect(updated[0].points[0].notes).toBe('Vérifier NOTAM')
+    })
+  })
+
+  describe('role cycling', () => {
+    it('cycles point role DEP→ARR when badge is clicked', async () => {
+      const onUpdate = vi.fn()
+      const branch = makeBranch({
+        points: [{ id: 'pt-1', type: 'AERODROME', identifier: 'LFPN', role: 'DEP' }],
+      })
+      render(<BranchesPanel branches={[branch]} aircraft={aircraftStub} onUpdate={onUpdate} />)
+
+      await userEvent.click(screen.getByText('DEP'))
+
+      expect(onUpdate).toHaveBeenCalledOnce()
+      const updated: FlightBranch[] = onUpdate.mock.calls[0][0]
+      expect(updated[0].points[0].role).toBe('ARR')
+    })
+
+    it('cycles OVERFLY back to DEP', async () => {
+      const onUpdate = vi.fn()
+      const branch = makeBranch({
+        points: [{ id: 'pt-1', type: 'AERODROME', identifier: 'LFPN', role: 'OVERFLY' }],
+      })
+      render(<BranchesPanel branches={[branch]} aircraft={aircraftStub} onUpdate={onUpdate} />)
+
+      await userEvent.click(screen.getByText('OVFL'))
+
+      expect(onUpdate).toHaveBeenCalledOnce()
+      const updated: FlightBranch[] = onUpdate.mock.calls[0][0]
+      expect(updated[0].points[0].role).toBe('DEP')
+    })
+  })
+
   describe('AddPointModal', () => {
     it('opens AddPointModal when "+ Ajouter" is clicked', async () => {
-      render(<BranchesPanel branches={[makeBranch()]} onUpdate={vi.fn()} />)
+      render(<BranchesPanel branches={[makeBranch()]} aircraft={aircraftStub} onUpdate={vi.fn()} />)
 
       await userEvent.click(screen.getByText('+ Ajouter'))
       expect(screen.getByText(/Ajouter un point/i)).toBeInTheDocument()
     })
 
     it('closes the modal when clicking outside', async () => {
-      render(<BranchesPanel branches={[makeBranch()]} onUpdate={vi.fn()} />)
+      render(<BranchesPanel branches={[makeBranch()]} aircraft={aircraftStub} onUpdate={vi.fn()} />)
 
       await userEvent.click(screen.getByText('+ Ajouter'))
-      expect(screen.getByText(/Ajouter un point/i)).toBeInTheDocument()
-
-      // Click on backdrop
       const backdrop = screen.getByText(/Ajouter un point/i).closest('[class*="fixed"]')!
       fireEvent.click(backdrop)
       expect(screen.queryByText(/Ajouter un point/i)).not.toBeInTheDocument()
     })
 
     it('shows aerodrome suggestions when typing ICAO prefix', async () => {
-      render(<BranchesPanel branches={[makeBranch()]} onUpdate={vi.fn()} />)
+      render(<BranchesPanel branches={[makeBranch()]} aircraft={aircraftStub} onUpdate={vi.fn()} />)
 
       await userEvent.click(screen.getByText('+ Ajouter'))
-      const input = screen.getByPlaceholderText(/ICAO ou nom/i)
-      await userEvent.type(input, 'LFP')
-
+      await userEvent.type(screen.getByPlaceholderText(/ICAO ou nom/i), 'LFP')
       expect(screen.getByText('LFPN')).toBeInTheDocument()
     })
 
     it('adds a point when aerodrome is selected from suggestions', async () => {
       const onUpdate = vi.fn()
-      render(<BranchesPanel branches={[makeBranch()]} onUpdate={onUpdate} />)
+      render(<BranchesPanel branches={[makeBranch()]} aircraft={aircraftStub} onUpdate={onUpdate} />)
 
       await userEvent.click(screen.getByText('+ Ajouter'))
-      const input = screen.getByPlaceholderText(/ICAO ou nom/i)
-      await userEvent.type(input, 'LFP')
+      await userEvent.type(screen.getByPlaceholderText(/ICAO ou nom/i), 'LFP')
       await userEvent.click(screen.getByText('LFPN'))
 
       expect(onUpdate).toHaveBeenCalledOnce()
@@ -255,13 +313,11 @@ describe('BranchesPanel', () => {
 
     it('adds an unresolved point when using free identifier mode', async () => {
       const onUpdate = vi.fn()
-      render(<BranchesPanel branches={[makeBranch()]} onUpdate={onUpdate} />)
+      render(<BranchesPanel branches={[makeBranch()]} aircraft={aircraftStub} onUpdate={onUpdate} />)
 
       await userEvent.click(screen.getByText('+ Ajouter'))
       await userEvent.click(screen.getByText(/Ajouter sans résolution/i))
-
-      const input = screen.getByPlaceholderText(/Identifiant/i)
-      await userEvent.type(input, 'VOR42')
+      await userEvent.type(screen.getByPlaceholderText(/Identifiant/i), 'VOR42')
       await userEvent.click(screen.getByText('Ajouter'))
 
       expect(onUpdate).toHaveBeenCalledOnce()
@@ -280,10 +336,9 @@ describe('BranchesPanel', () => {
 
     it('moves a point down when ↓ is clicked', async () => {
       const onUpdate = vi.fn()
-      render(<BranchesPanel branches={[twoPointBranch]} onUpdate={onUpdate} />)
+      render(<BranchesPanel branches={[twoPointBranch]} aircraft={aircraftStub} onUpdate={onUpdate} />)
 
-      const downButtons = screen.getAllByText('↓')
-      await userEvent.click(downButtons[0]) // Move first point down
+      await userEvent.click(screen.getAllByText('↓')[0])
 
       expect(onUpdate).toHaveBeenCalledOnce()
       const updated: FlightBranch[] = onUpdate.mock.calls[0][0]
@@ -293,10 +348,9 @@ describe('BranchesPanel', () => {
 
     it('moves a point up when ↑ is clicked', async () => {
       const onUpdate = vi.fn()
-      render(<BranchesPanel branches={[twoPointBranch]} onUpdate={onUpdate} />)
+      render(<BranchesPanel branches={[twoPointBranch]} aircraft={aircraftStub} onUpdate={onUpdate} />)
 
-      const upButtons = screen.getAllByText('↑')
-      await userEvent.click(upButtons[1]) // Move second point up
+      await userEvent.click(screen.getAllByText('↑')[1])
 
       expect(onUpdate).toHaveBeenCalledOnce()
       const updated: FlightBranch[] = onUpdate.mock.calls[0][0]
@@ -305,13 +359,12 @@ describe('BranchesPanel', () => {
     })
 
     it('first point ↑ button is disabled', () => {
-      render(<BranchesPanel branches={[twoPointBranch]} onUpdate={vi.fn()} />)
-      const upButtons = screen.getAllByText('↑')
-      expect(upButtons[0]).toBeDisabled()
+      render(<BranchesPanel branches={[twoPointBranch]} aircraft={aircraftStub} onUpdate={vi.fn()} />)
+      expect(screen.getAllByText('↑')[0]).toBeDisabled()
     })
 
     it('last point ↓ button is disabled', () => {
-      render(<BranchesPanel branches={[twoPointBranch]} onUpdate={vi.fn()} />)
+      render(<BranchesPanel branches={[twoPointBranch]} aircraft={aircraftStub} onUpdate={vi.fn()} />)
       const downButtons = screen.getAllByText('↓')
       expect(downButtons[downButtons.length - 1]).toBeDisabled()
     })
@@ -323,7 +376,7 @@ describe('BranchesPanel', () => {
       const branch = makeBranch({
         points: [{ id: 'pt-1', type: 'AERODROME', identifier: 'LFPN', role: 'DEP' }],
       })
-      render(<BranchesPanel branches={[branch]} onUpdate={onUpdate} />)
+      render(<BranchesPanel branches={[branch]} aircraft={aircraftStub} onUpdate={onUpdate} />)
 
       await userEvent.click(screen.getByText('✕'))
 
@@ -335,8 +388,7 @@ describe('BranchesPanel', () => {
 
   describe('label editing', () => {
     it('shows an input when double-clicking a tab label', async () => {
-      const branch = makeBranch({ label: 'Aller' })
-      render(<BranchesPanel branches={[branch]} onUpdate={vi.fn()} />)
+      render(<BranchesPanel branches={[makeBranch({ label: 'Aller' })]} aircraft={aircraftStub} onUpdate={vi.fn()} />)
 
       await userEvent.dblClick(screen.getByText('Aller'))
       expect(screen.getByDisplayValue('Aller')).toBeInTheDocument()
@@ -344,8 +396,7 @@ describe('BranchesPanel', () => {
 
     it('calls onUpdate with the new label on blur', async () => {
       const onUpdate = vi.fn()
-      const branch = makeBranch({ label: 'Aller' })
-      render(<BranchesPanel branches={[branch]} onUpdate={onUpdate} />)
+      render(<BranchesPanel branches={[makeBranch({ label: 'Aller' })]} aircraft={aircraftStub} onUpdate={onUpdate} />)
 
       await userEvent.dblClick(screen.getByText('Aller'))
       const input = screen.getByDisplayValue('Aller')
