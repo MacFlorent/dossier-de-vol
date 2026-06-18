@@ -88,6 +88,7 @@ export interface FlightPoint {
   type: FlightPointType
   identifier: string
   role: FlightPointRole
+  notes?: string
 }
 
 export interface FlightBranch {
