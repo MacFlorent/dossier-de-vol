@@ -131,16 +131,6 @@ export function migrateDossier(d: unknown): FlightDossier {
   delete data.route
   delete data.navOverrides
   delete data.navNotes
-  // Migrate missing notes on FlightPoints
-  if (Array.isArray(data.branches)) {
-    for (const branch of data.branches as Array<{ points?: Array<Record<string, unknown>> }>) {
-      if (Array.isArray(branch.points)) {
-        for (const pt of branch.points) {
-          if (pt.notes === undefined) pt.notes = ''
-        }
-      }
-    }
-  }
   return data as unknown as FlightDossier
 }
 

@@ -174,47 +174,4 @@ describe('migrateDossier', () => {
     })
   })
 
-  describe('FlightPoint notes migration', () => {
-    it('adds empty notes to points that have none', () => {
-      const modern = {
-        ...baseDossierFields,
-        branches: [{
-          id: 'b1',
-          label: 'Aller',
-          points: [{ id: 'pt-1', type: 'AERODROME', identifier: 'LFPN', role: 'DEP' }],
-          distanceNm: 0,
-          notes: '',
-        }],
-        fuelInputs: { 'b1': {
-          gsBase: 108, windAdjust: 0, roulage: 10, marge: 10,
-          extras: [], reserveMin: 30, derouteMin: 30, plein: false,
-        }},
-      }
-
-      const result = migrateDossier(modern)
-
-      expect(result.branches[0].points[0].notes).toBe('')
-    })
-
-    it('preserves existing notes on points', () => {
-      const modern = {
-        ...baseDossierFields,
-        branches: [{
-          id: 'b1',
-          label: 'Aller',
-          points: [{ id: 'pt-1', type: 'AERODROME', identifier: 'LFPN', role: 'DEP', notes: 'VFR entry' }],
-          distanceNm: 0,
-          notes: '',
-        }],
-        fuelInputs: { 'b1': {
-          gsBase: 108, windAdjust: 0, roulage: 10, marge: 10,
-          extras: [], reserveMin: 30, derouteMin: 30, plein: false,
-        }},
-      }
-
-      const result = migrateDossier(modern)
-
-      expect(result.branches[0].points[0].notes).toBe('VFR entry')
-    })
-  })
 })
