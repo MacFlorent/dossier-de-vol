@@ -126,7 +126,7 @@ export function AppChrome({ screen, dossier, dossierTab, onGoHome, onSetTab, onD
               />
             ) : (
               <span
-                className={`text-[var(--text-2)] text-sm truncate ${onUpdateName ? 'cursor-pointer hover:text-[var(--text-1)]' : ''}`}
+                className={`text-[var(--text-2)] text-sm truncate flex-1 min-w-0 ${onUpdateName ? 'cursor-pointer hover:text-[var(--text-1)]' : ''}`}
                 onClick={handleNameClick}
                 title={onUpdateName ? 'Cliquer pour renommer' : undefined}
               >
