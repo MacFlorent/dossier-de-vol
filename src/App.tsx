@@ -72,6 +72,9 @@ export function App() {
         onDownload={state.dossier ? () => {
           import('./lib/storage').then(({ downloadDossier }) => downloadDossier(state.dossier!))
         } : undefined}
+        onUpdateName={state.dossier ? (name) => {
+          dispatch({ type: 'UPDATE_DOSSIER', dossier: { ...state.dossier!, name, updatedAt: new Date().toISOString() } })
+        } : undefined}
       />
       <main className="flex-1 overflow-auto">
         {state.screen === 'home' && (

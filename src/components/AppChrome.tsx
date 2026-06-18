@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { FlightDossier, DossierTab, Screen } from '../types'
 import { TabBar } from './ui/Tabs'
 import { Button } from './ui/Button'
@@ -18,9 +19,29 @@ interface AppChromeProps {
   onGoHome: () => void
   onSetTab: (tab: DossierTab) => void
   onDownload?: () => void
+  onUpdateName?: (name: string) => void
 }
 
-export function AppChrome({ screen, dossier, dossierTab, onGoHome, onSetTab, onDownload }: AppChromeProps) {
+export function AppChrome({ screen, dossier, dossierTab, onGoHome, onSetTab, onDownload, onUpdateName }: AppChromeProps) {
+  const [editingName, setEditingName] = useState(false)
+  const [nameValue, setNameValue] = useState('')
+
+  const handleNameClick = () => {
+    if (!dossier || !onUpdateName) return
+    setNameValue(dossier.name)
+    setEditingName(true)
+  }
+
+  const handleNameConfirm = () => {
+    if (nameValue.trim()) onUpdateName?.(nameValue.trim())
+    setEditingName(false)
+  }
+
+  const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') handleNameConfirm()
+    if (e.key === 'Escape') setEditingName(false)
+  }
+
   return (
     <header
       className="sticky top-0 z-50 flex flex-col no-print"
@@ -38,7 +59,24 @@ export function AppChrome({ screen, dossier, dossierTab, onGoHome, onSetTab, onD
         {dossier && (
           <>
             <span className="text-[var(--text-dim)] text-sm">·</span>
-            <span className="text-[var(--text-2)] text-sm truncate flex-1">{dossier.name}</span>
+            {editingName ? (
+              <input
+                autoFocus
+                value={nameValue}
+                onChange={e => setNameValue(e.target.value)}
+                onBlur={handleNameConfirm}
+                onKeyDown={handleNameKeyDown}
+                className="text-sm bg-transparent border-b border-[var(--amber)] text-[var(--text-2)] focus:outline-none flex-1 min-w-0"
+              />
+            ) : (
+              <span
+                className={`text-[var(--text-2)] text-sm truncate flex-1 ${onUpdateName ? 'cursor-pointer hover:text-[var(--text-1)]' : ''}`}
+                onClick={handleNameClick}
+                title={onUpdateName ? 'Cliquer pour renommer' : undefined}
+              >
+                {dossier.name}
+              </span>
+            )}
             <span className="text-[var(--text-dim)] text-xs">{dossier.date}</span>
           </>
         )}
