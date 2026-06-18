@@ -61,7 +61,7 @@ export type AircraftSnapshot = Aircraft & { snapshotAt: string }
 
 export interface RunwayInfo {
   ident: string            // texte libre: "27", "09G", "27 herbe"
-  headingTrue: number      // cap vrai en degrés
+  headingMag: number       // QFU — orientation magnétique de la piste
   lengthFt: number
   toda?: number            // m, optionnel
   lda?: number             // m, optionnel
