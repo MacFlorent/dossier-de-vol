@@ -31,7 +31,7 @@ interface TerrainCardProps {
   defaultElevation: number
   perfInputs: TerrainPerfInputs
   perfRegulatory: number
-  runways: Array<{ ident: string; headingTrue: number; toda?: number; lda?: number; surface: 'hard' | 'grass' }>
+  runways: Array<{ ident: string; headingMag: number; toda?: number; lda?: number; surface: 'hard' | 'grass' }>
   surfaceWindDir: number
   surfaceWindKt: number
   onUpdate: (inputs: TerrainPerfInputs) => void
@@ -72,7 +72,7 @@ function TerrainCard({
     setSelectedRunway(ident)
     const rwy = runways.find(r => r.ident === ident)
     if (!rwy) return
-    const wkt = headwindKt(surfaceWindDir, surfaceWindKt, rwy.headingTrue)
+    const wkt = headwindKt(surfaceWindDir, surfaceWindKt, rwy.headingMag)
     update({
       windKt: wkt,
       surface: rwy.surface,
@@ -125,7 +125,7 @@ function TerrainCard({
                     : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--text-muted)]'
                 }`}
               >
-                {rwy.ident} ({rwy.headingTrue}° — {headwindKt(surfaceWindDir, surfaceWindKt, rwy.headingTrue) >= 0 ? '+' : ''}{headwindKt(surfaceWindDir, surfaceWindKt, rwy.headingTrue)}kt)
+                {rwy.ident} ({rwy.headingMag}° — {headwindKt(surfaceWindDir, surfaceWindKt, rwy.headingMag) >= 0 ? '+' : ''}{headwindKt(surfaceWindDir, surfaceWindKt, rwy.headingMag)}kt)
               </button>
             ))}
           </div>
