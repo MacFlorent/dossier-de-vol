@@ -1,6 +1,7 @@
 import { useReducer } from 'react'
 import type { Aircraft, FlightDossier, DossierTab, Screen } from './types'
-import { duplicateAircraft } from './lib/storage'
+import { duplicateAircraft, getAircraft } from './lib/storage'
+import { applyAircraftChange } from './lib/dossierTransforms'
 import { HomeScreen } from './screens/HomeScreen'
 import { AircraftEditorScreen } from './screens/AircraftEditorScreen'
 import { DossierScreen } from './screens/DossierScreen'
@@ -74,6 +75,11 @@ export function App() {
         } : undefined}
         onUpdateName={state.dossier ? (name) => {
           dispatch({ type: 'UPDATE_DOSSIER', dossier: { ...state.dossier!, name, updatedAt: new Date().toISOString() } })
+        } : undefined}
+        onChangeAircraft={state.dossier ? (newAircraftId) => {
+          const newAircraft = getAircraft(newAircraftId)
+          if (!newAircraft || !state.dossier) return
+          dispatch({ type: 'UPDATE_DOSSIER', dossier: applyAircraftChange(state.dossier, newAircraft) })
         } : undefined}
       />
       <main className="flex-1 overflow-auto">
