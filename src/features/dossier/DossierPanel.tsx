@@ -1,6 +1,7 @@
 import type { FlightDossier } from '../../types'
 import { computeWB } from '../../lib/aviation/wbCalc'
 import { FUEL_DENSITY_KGL } from '../../lib/aviation/constants'
+import { computeBranchFuel } from '../../lib/aviation/fuelCalc'
 import { downloadDossier } from '../../lib/storage'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
@@ -21,7 +22,7 @@ export function DossierPanel({ dossier }: Props) {
   }
 
   // Aggregate totals across all branches
-  const totalDistNm = branches.reduce((s, b) => s + b.distanceNm, 0)
+  const totalDistNm = branches.reduce((s, b) => s + b.segments.reduce((ss, seg) => ss + seg.distanceNm, 0), 0)
 
   // Fuel summary per branch (fuelInputs is Record<branchId, FuelInputs>)
   const regime = aircraft.characteristics.regimes[0]
@@ -86,23 +87,17 @@ export function DossierPanel({ dossier }: Props) {
               <tbody>
                 {branches.map(branch => {
                   const fi = fuelInputs[branch.id]
-                  // Compute a rough fuel minimum if fuel inputs exist for this branch
-                  let fuelMinL: number | null = null
-                  if (fi) {
-                    const extrasMin = fi.extras.reduce((s, e) => s + e.durationMin, 0)
-                    // Estimate flight time from distance and base speed
-                    const gsKt = Math.max(1, fi.gsBase - fi.windAdjust)
-                    const flightMin = (branch.distanceNm / gsKt) * 60
-                    const totalMin = (flightMin + fi.roulage + extrasMin + fi.reserveMin + fi.derouteMin)
-                      * (1 + fi.marge / 100)
-                    fuelMinL = (totalMin / 60) * regime.fuelBurn
-                  }
-                  const points = branch.points.map(p => p.identifier).join(' → ')
+                  const fuelResult = fi ? computeBranchFuel(branch, fi, regime) : null
+                  const fuelMinL = fuelResult?.fuelL ?? null
+                  const distNm = branch.segments.reduce((s, seg) => s + seg.distanceNm, 0)
+                  const aeroStr = branch.aerodromes
+                    .filter(a => a.role === 'DEP' || a.role === 'ARR')
+                    .map(a => a.identifier).join(' → ')
                   return (
                     <tr key={branch.id} className="border-b border-[var(--border)]/50">
                       <td className="py-1 pr-2 font-medium text-[var(--text-1)]">{branch.label}</td>
-                      <td className="py-1 pr-2 font-mono text-[var(--text-2)]">{points || '—'}</td>
-                      <td className="text-right py-1 px-1 font-mono">{branch.distanceNm.toFixed(0)}</td>
+                      <td className="py-1 pr-2 font-mono text-[var(--text-2)]">{aeroStr || '—'}</td>
+                      <td className="text-right py-1 px-1 font-mono">{distNm.toFixed(0)}</td>
                       <td className="text-right py-1 px-1 font-mono">
                         {fuelMinL !== null ? `${fuelMinL.toFixed(1)} L` : '—'}
                       </td>
@@ -195,21 +190,16 @@ export function DossierPanel({ dossier }: Props) {
                       <dd className="font-mono text-[var(--text-dim)]">—</dd>
                     </div>
                   )
-                  const extrasMin = fi.extras.reduce((s, e) => s + e.durationMin, 0)
-                  const gsKt = Math.max(1, fi.gsBase - fi.windAdjust)
-                  const flightMin = (branch.distanceNm / gsKt) * 60
-                  const totalMin = (flightMin + fi.roulage + extrasMin + fi.reserveMin + fi.derouteMin)
-                    * (1 + fi.marge / 100)
-                  const fuelMinL = (totalMin / 60) * regime.fuelBurn
+                  const { fuelL, fuelKg } = computeBranchFuel(branch, fi, regime)
                   return (
                     <div key={branch.id} className="border-b border-[var(--border)]/30 pb-1">
                       <div className="flex justify-between font-medium">
                         <dt className="text-[var(--text-1)]">{branch.label}</dt>
-                        <dd className="font-mono">{fuelMinL.toFixed(1)} L</dd>
+                        <dd className="font-mono">{fuelL.toFixed(1)} L</dd>
                       </div>
                       <div className="flex justify-between text-[var(--text-dim)]">
                         <dt>Plein {fi.plein ? '✓' : '✗'} · Réserve {fmtTime(fi.reserveMin)}</dt>
-                        <dd className="font-mono">{(fuelMinL * FUEL_DENSITY_KGL).toFixed(1)} kg</dd>
+                        <dd className="font-mono">{fuelKg.toFixed(1)} kg</dd>
                       </div>
                     </div>
                   )
