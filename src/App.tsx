@@ -103,20 +103,17 @@ export function App() {
                   branches: [{
                     id: branchId,
                     label: 'Aller',
-                    points: [],
-                    distanceNm: 0,
+                    aerodromes: [],
+                    segments: [{ id: crypto.randomUUID(), role: 'ENROUTE' as const, name: 'Vol', distanceNm: 0, headingMag: 0, wind: null, notes: '' }],
                     notes: '',
                   }],
-                  weatherInputs: { fields: {}, winds: [], notes: '' },
+                  weatherInputs: { fields: {}, notes: '' },
                   fuelInputs: {
                     [branchId]: {
-                      gsBase: aircraft.characteristics.regimes[0].speed,
-                      windAdjust: 0,
                       roulage: 10,
                       marge: 10,
                       extras: [],
                       reserveMin: 30,
-                      derouteMin: 30,
                       plein: false,
                     },
                   },

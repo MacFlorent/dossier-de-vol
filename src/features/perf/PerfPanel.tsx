@@ -243,26 +243,22 @@ export function PerfPanel({ dossier, onUpdate, onUpdateRegulatory }: Props) {
     const seen = new Set<string>()
     const cards: { key: string; label: string; tableKey: 'to' | 'ldg' }[] = []
     branches.forEach(branch => {
-      branch.points.forEach(pt => {
-        if (pt.role === 'OVERFLY') return
-        if (pt.type !== 'AERODROME') return
-        if (seen.has(pt.identifier)) return
-        seen.add(pt.identifier)
+      branch.aerodromes.forEach(ad => {
+        if (ad.role === 'OVERFLY') return
+        if (seen.has(ad.identifier)) return
+        seen.add(ad.identifier)
         cards.push({
-          key: pt.identifier,
-          label: pt.identifier,
-          tableKey: pt.role === 'DEP' ? 'to' : 'ldg',
+          key: ad.identifier,
+          label: ad.identifier,
+          tableKey: ad.role === 'DEP' ? 'to' : 'ldg',
         })
       })
     })
     return cards
   }, [branches])
 
-  // Surface wind: lowest altitude layer, or calm
-  const surfaceWind = useMemo(() => {
-    const sorted = [...weatherInputs.winds].sort((a, b) => a.altitude_ft - b.altitude_ft)
-    return sorted[0] ?? { direction_deg: 0, speed_kt: 0 }
-  }, [weatherInputs.winds])
+  // Surface wind: calm (no wind layers in new WeatherInputs shape)
+  const surfaceWind = { direction_deg: 0, speed_kt: 0 }
 
   const getWeatherFor = (icao: string) => {
     const field = weatherInputs.fields[icao]

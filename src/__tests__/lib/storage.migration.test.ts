@@ -1,5 +1,5 @@
 import { migrateDossier } from '../../lib/storage'
-import type { FlightDossier, FuelInputs } from '../../types'
+import type { FlightDossier } from '../../types'
 
 // Minimal aircraft snapshot stub shared by all test fixtures
 const aircraftStub = {
@@ -21,7 +21,7 @@ const baseDossierFields = {
   date: '2026-01-15',
   departureTime: '09:00',
   aircraft: aircraftStub,
-  weatherInputs: { fields: {}, winds: [], notes: '' },
+  weatherInputs: { fields: {}, notes: '' },
   loading: {},
   perfRegulatory: 0,
   perfInputs: {},
@@ -31,7 +31,7 @@ const baseDossierFields = {
 }
 
 describe('migrateDossier', () => {
-  describe('old dossier with route.waypoints (no branches)', () => {
+  describe('old dossier without branches array', () => {
     it('creates a branches array with one branch', () => {
       const old = {
         ...baseDossierFields,
@@ -50,7 +50,7 @@ describe('migrateDossier', () => {
       expect(result.branches).toHaveLength(1)
     })
 
-    it('branch contains 2 FlightPoints with DEP and ARR roles', () => {
+    it('branch uses new shape: aerodromes[], segments[] with one ENROUTE', () => {
       const old = {
         ...baseDossierFields,
         route: {
@@ -65,11 +65,11 @@ describe('migrateDossier', () => {
       const result = migrateDossier(old)
       const branch = result.branches[0]
 
-      expect(branch.points).toHaveLength(2)
-      expect(branch.points[0].identifier).toBe('LFPG')
-      expect(branch.points[0].role).toBe('DEP')
-      expect(branch.points[1].identifier).toBe('LFOB')
-      expect(branch.points[1].role).toBe('ARR')
+      expect(Array.isArray(branch.aerodromes)).toBe(true)
+      expect(Array.isArray(branch.segments)).toBe(true)
+      expect(branch.segments).toHaveLength(1)
+      expect(branch.segments[0].role).toBe('ENROUTE')
+      expect(branch.segments[0].name).toBe('Vol')
     })
 
     it('removes the legacy route field', () => {
@@ -85,9 +85,9 @@ describe('migrateDossier', () => {
     })
   })
 
-  describe('old dossier with flat fuelInputs (no branches)', () => {
-    it('wraps fuelInputs in a record keyed by the new branch id', () => {
-      const legacyFuel: FuelInputs = {
+  describe('old dossier with flat fuelInputs (legacy gsBase shape)', () => {
+    it('wraps fuelInputs in a record keyed by the new branch id, stripping gsBase/windAdjust/derouteMin', () => {
+      const legacyFuel = {
         gsBase: 108,
         windAdjust: 0,
         roulage: 10,
@@ -119,8 +119,29 @@ describe('migrateDossier', () => {
       expect(result.branches).toHaveLength(1)
       expect(result.branches[0].id).toBe(branchId)
 
-      // The wrapped value must equal the original flat FuelInputs
-      expect(result.fuelInputs[branchId]).toEqual(legacyFuel)
+      // Legacy fields stripped, core fields preserved
+      const fi = result.fuelInputs[branchId] as Record<string, unknown>
+      expect(fi.gsBase).toBeUndefined()
+      expect(fi.windAdjust).toBeUndefined()
+      expect(fi.derouteMin).toBeUndefined()
+      expect(fi.roulage).toBe(10)
+      expect(fi.reserveMin).toBe(45)
+      expect(fi.plein).toBe(false)
+    })
+  })
+
+  describe('legacy weatherInputs with winds field', () => {
+    it('removes the winds field from weatherInputs', () => {
+      const old = {
+        ...baseDossierFields,
+        weatherInputs: { fields: {}, winds: [{ altitude_ft: 0, direction_deg: 270, speed_kt: 10 }], notes: '' },
+        branches: [{ id: 'b1', label: 'Aller', aerodromes: [], segments: [{ id: 's1', role: 'ENROUTE', name: 'Vol', distanceNm: 0, headingMag: 0, wind: null, notes: '' }], notes: '' }],
+        fuelInputs: { 'b1': { roulage: 10, marge: 10, extras: [], reserveMin: 30, plein: false } },
+      }
+
+      const result = migrateDossier(old)
+
+      expect((result.weatherInputs as unknown as { winds?: unknown }).winds).toBeUndefined()
     })
   })
 
@@ -130,48 +151,39 @@ describe('migrateDossier', () => {
         {
           id: 'branch-existing',
           label: 'Aller',
-          points: [],
-          distanceNm: 100,
+          aerodromes: [],
+          segments: [{ id: 's1', role: 'ENROUTE' as const, name: 'Vol', distanceNm: 100, headingMag: 0, wind: null, notes: '' }],
           notes: 'already migrated',
         },
       ]
       const modern: FlightDossier = {
         ...baseDossierFields,
         branches: existingBranches,
-        fuelInputs: { 'branch-existing': {
-          gsBase: 108, windAdjust: 0, roulage: 10, marge: 10,
-          extras: [], reserveMin: 30, derouteMin: 30, plein: false,
-        }},
+        fuelInputs: { 'branch-existing': { roulage: 10, marge: 10, extras: [], reserveMin: 30, plein: false } },
       }
 
       const result = migrateDossier(modern)
 
       expect(result.branches).toHaveLength(1)
       expect(result.branches[0].id).toBe('branch-existing')
-      expect(result.branches[0].distanceNm).toBe(100)
       expect(result.branches[0].notes).toBe('already migrated')
     })
 
     it('returns the same fuelInputs record without wrapping', () => {
       const fuelRecord = {
-        'branch-existing': {
-          gsBase: 108, windAdjust: 0, roulage: 10, marge: 10,
-          extras: [], reserveMin: 30, derouteMin: 30, plein: false,
-        },
+        'branch-existing': { roulage: 10, marge: 10, extras: [], reserveMin: 30, plein: false },
       }
       const modern: FlightDossier = {
         ...baseDossierFields,
-        branches: [{ id: 'branch-existing', label: 'Aller', points: [], distanceNm: 0, notes: '' }],
+        branches: [{ id: 'branch-existing', label: 'Aller', aerodromes: [], segments: [{ id: 's1', role: 'ENROUTE' as const, name: 'Vol', distanceNm: 0, headingMag: 0, wind: null, notes: '' }], notes: '' }],
         fuelInputs: fuelRecord,
       }
 
       const result = migrateDossier(modern)
 
       expect(result.fuelInputs).toEqual(fuelRecord)
-      // Must still be keyed by branch id, not a flat FuelInputs
       expect(Object.keys(result.fuelInputs)).toHaveLength(1)
       expect(Object.keys(result.fuelInputs)[0]).toBe('branch-existing')
     })
   })
-
 })

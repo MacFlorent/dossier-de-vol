@@ -43,7 +43,9 @@ export function FuelPanel({ dossier, onUpdate }: Props) {
   const autonomyMin = (fuelCapacity / regime.fuelBurn) * 60
   const insufficient = totalFuelL > fuelCapacity
   const tight = !insufficient && totalFuelL > fuelCapacity * 0.9
-  const statusVariant = insufficient ? 'error' : tight ? 'warning' : 'success'
+  const hasNegativeGs = result?.segmentDetails.some(d => d.gs <= 0) ?? false
+  const statusVariant = insufficient ? 'error' : hasNegativeGs ? 'error' : tight ? 'warning' : 'success'
+  const statusLabel = insufficient ? 'INSUFFISANT' : hasNegativeGs ? 'INVALIDE' : tight ? 'ATTENTION' : 'OK'
 
   const update = (partial: Partial<FuelInputs>) =>
     onUpdate({ ...fuelInputs, [validId]: { ...fi, ...partial } })
@@ -106,7 +108,7 @@ export function FuelPanel({ dossier, onUpdate }: Props) {
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <h2 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wider">Résultats</h2>
-            <Badge variant={statusVariant}>{insufficient ? 'INSUFFISANT' : tight ? 'ATTENTION' : 'OK'}</Badge>
+            <Badge variant={statusVariant}>{statusLabel}</Badge>
           </div>
           {result && (
             <Card padding="md" inset>

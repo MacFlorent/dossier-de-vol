@@ -105,27 +105,23 @@ export function migrateDossier(d: unknown): FlightDossier {
   // Migrate pre-branches dossiers
   if (!Array.isArray(data.branches)) {
     const branchId = crypto.randomUUID()
-    // Migrate route.waypoints → branch points (DEP + ARR)
-    const legacyRoute = data.route as { waypoints?: Array<{ icao?: string }> } | undefined
-    const points = legacyRoute?.waypoints?.length
-      ? legacyRoute.waypoints.map((wp, i, arr) => ({
-          id: crypto.randomUUID(),
-          type: 'AERODROME' as const,
-          identifier: wp.icao ?? '',
-          role: (i === 0 ? 'DEP' : i === arr.length - 1 ? 'ARR' : 'OVERFLY') as import('../types').FlightPointRole,
-        }))
-      : []
     data.branches = [{
       id: branchId,
       label: 'Aller',
-      points,
-      distanceNm: 0,
+      aerodromes: [],
+      segments: [{ id: crypto.randomUUID(), role: 'ENROUTE', name: 'Vol', distanceNm: 0, headingMag: 0, wind: null, notes: '' }],
       notes: '',
     }]
     // Migrate fuelInputs: FuelInputs → Record<branchId, FuelInputs>
     if (data.fuelInputs && typeof (data.fuelInputs as Record<string, unknown>).gsBase === 'number') {
-      data.fuelInputs = { [branchId]: data.fuelInputs }
+      const legacy = data.fuelInputs as Record<string, unknown>
+      const { gsBase: _gsBase, windAdjust: _windAdjust, derouteMin: _derouteMin, ...rest } = legacy
+      data.fuelInputs = { [branchId]: rest }
     }
+  }
+  // Migrate weatherInputs: remove legacy winds field
+  if (data.weatherInputs && Array.isArray((data.weatherInputs as Record<string, unknown>).winds)) {
+    delete (data.weatherInputs as Record<string, unknown>).winds
   }
   // Remove legacy fields
   delete data.route
