@@ -78,34 +78,35 @@ export interface StoredAerodrome {
   updatedAt: string        // ISO 8601
 }
 
-// ── Branches de vol ────────────────────────────────────────────────────────────
+// ── Branches de vol ───────────────────────────────────────────────────────────
 
-export type FlightPointType = 'AERODROME' | 'VOR' | 'NDB' | 'WAYPOINT' | 'USER'
-export type FlightPointRole = 'DEP' | 'ARR' | 'DIVERT' | 'OVERFLY'
-
-export interface FlightPoint {
+export interface FlightAerodrome {
   id: string
-  type: FlightPointType
-  identifier: string
-  role: FlightPointRole
-  notes?: string
+  identifier: string             // code OACI
+  role: 'DEP' | 'ARR' | 'ALTERNATE' | 'OVERFLY'
+}
+
+export type FlightSegmentRole = 'ENROUTE' | 'ALTERNATE'
+
+export interface FlightSegment {
+  id: string
+  role: FlightSegmentRole
+  name: string
+  distanceNm: number
+  headingMag: number             // Cap magnétique (°M)
+  wind: { directionDeg: number; speedKt: number } | null  // Direction °M
+  notes: string
 }
 
 export interface FlightBranch {
   id: string
-  label: string
-  points: FlightPoint[]
-  distanceNm: number
+  label: string                  // obligatoire, non vide
+  aerodromes: FlightAerodrome[]
+  segments: FlightSegment[]      // min 1 ENROUTE
   notes: string
 }
 
 // ── Météo ─────────────────────────────────────────────────────────────────────
-
-export interface WindLayer {
-  altitude_ft: number
-  direction_deg: number   // vent vrai (°V)
-  speed_kt: number
-}
 
 export interface FieldWeather {
   qnh: number   // hPa
@@ -114,8 +115,7 @@ export interface FieldWeather {
 
 export interface WeatherInputs {
   fields: Record<string, FieldWeather>  // clé = ICAO
-  winds: WindLayer[]
-  notes: string  // NOTAM collés, SUPAIP, etc.
+  notes: string
 }
 
 // ── Carburant ─────────────────────────────────────────────────────────────────
@@ -127,14 +127,11 @@ export interface FuelExtra {
 }
 
 export interface FuelInputs {
-  gsBase: number          // kt GS de base (depuis navlog ou manuel)
-  windAdjust: number      // kt d'ajustement vent (positif = vent de face)
-  roulage: number         // min de roulage
-  marge: number           // % de marge (ex: 10)
-  extras: FuelExtra[]     // lignes libres (évolutions, etc.)
-  reserveMin: number      // min de réserve (30 jour / 45 nuit)
-  derouteMin: number      // min pour déroutement
-  plein: boolean          // true = plein prévu
+  roulage: number
+  marge: number
+  extras: FuelExtra[]
+  reserveMin: number
+  plein: boolean
 }
 
 // ── Masse & centrage ──────────────────────────────────────────────────────────
