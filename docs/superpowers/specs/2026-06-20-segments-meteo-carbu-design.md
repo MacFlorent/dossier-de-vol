@@ -62,7 +62,7 @@ interface FlightSegment {
   name: string
   distanceNm: number
   headingMag: number             // Cap magnétique (°M)
-  wind: { directionDeg: number; speedKt: number } | null  // Direction vraie (°V, standard METAR)
+  wind: { directionDeg: number; speedKt: number } | null  // Direction magnétique (°M) — responsabilité du pilote de convertir si nécessaire
   notes: string
 }
 ```
@@ -83,17 +83,19 @@ Tous les autres champs restent inchangés : `roulage`, `marge`, `extras`, `reser
 
 Pour chaque segment (le calcul est identique pour ENROUTE et ALTERNATE) :
 
+Tous les angles sont en degrés magnétiques (°M) — cap du segment et direction du vent.
+
 ```
 headwindComponent = wind.speedKt × cos(wind.directionDeg − segment.headingMag)
-GS  = max(1, TAS − headwindComponent)          [utilisé pour le carbu]
-WCA = asin(wind.speedKt × sin(wind.directionDeg − headingMag) / TAS)  [affiché, non stocké]
+GS  = TAS − headwindComponent          [utilisé pour le carbu, affiché dans le segment]
+WCA = asin(wind.speedKt × sin(wind.directionDeg − headingMag) / TAS)  [affiché dans le segment, non stocké]
 
 segmentTimeMin = (distanceNm / GS) × 60
 ```
 
-Si `wind` est `null` : `GS = TAS` (pas de correction vent).
+Si `wind` est `null` : `GS = TAS`, `WCA = 0`.
 
-> **Note :** On traite `headingMag ≈ headingTrue`. La déclinaison magnétique en France (~1–2°W) est négligeable pour une planification VFR approximative.
+Une GS nulle ou négative n'est pas bloquée — elle indique une erreur de saisie ou un vent exceptionnellement fort. Le temps de vol du segment sera invalide et visible par le pilote.
 
 `TAS` = `CruiseRegime.speed` du régime sélectionné.
 
@@ -134,7 +136,7 @@ Chaque branche expose deux sous-sections :
 **Aérodromes** — liste d'entrées OACI + rôle (DEP, ARR, ALTERNATE, OVERFLY). Ajout/suppression libres sauf contraintes métier ci-dessus.
 
 **Segments** — liste ordonnée. Par segment :
-- Champs éditables : nom, distance (nm), cap°M, vent (direction °V + force kt), notes
+- Champs éditables : nom, distance (nm), cap°M, vent (direction °M + force kt), notes
 - Valeurs calculées (lecture seule) : **WCA** et **GS**
 - Le segment ALTERNATE est visuellement différencié (couleur ou badge)
 - Le dernier segment ENROUTE est protégé contre la suppression
