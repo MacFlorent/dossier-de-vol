@@ -37,25 +37,29 @@ export function solveWindTriangle(
   }
 }
 
-/**
- * Retourne le vent interpolé à une altitude donnée depuis un tableau de couches.
- * Interpolation linéaire simple entre les deux couches encadrantes.
- */
-export function windAtAltitude(
-  altitude: number,
-  layers: { altitude_ft: number; direction_deg: number; speed_kt: number }[],
-): { direction_deg: number; speed_kt: number } {
-  if (layers.length === 0) return { direction_deg: 0, speed_kt: 0 }
-  const sorted = [...layers].sort((a, b) => a.altitude_ft - b.altitude_ft)
-  if (altitude <= sorted[0].altitude_ft) return { direction_deg: sorted[0].direction_deg, speed_kt: sorted[0].speed_kt }
-  const last = sorted[sorted.length - 1]
-  if (altitude >= last.altitude_ft) return { direction_deg: last.direction_deg, speed_kt: last.speed_kt }
+export interface SegmentWindResult {
+  gs: number   // vitesse sol (kt) — peut être négative
+  wca: number  // angle de correction vent (°), positif = à droite
+}
 
-  const lower = sorted.findLast(l => l.altitude_ft <= altitude)!
-  const upper = sorted.find(l => l.altitude_ft > altitude)!
-  const t = (altitude - lower.altitude_ft) / (upper.altitude_ft - lower.altitude_ft)
+/**
+ * Calcule GS et WCA pour un segment depuis le cap magnétique et le vent magnétique.
+ * Tous les angles en °M. GS non bornée (une GS négative signale une erreur de saisie).
+ */
+export function computeSegmentWind(
+  headingMag: number,
+  tas: number,
+  windDirMag: number,
+  windSpeedKt: number,
+): SegmentWindResult {
+  if (windSpeedKt === 0) return { gs: tas, wca: 0 }
+  const angleRad = ((windDirMag - headingMag) * Math.PI) / 180
+  const headwindComponent = windSpeedKt * Math.cos(angleRad)
+  const gs = tas - headwindComponent
+  const sinWca = (windSpeedKt * Math.sin(angleRad)) / tas
+  const wca = Math.asin(Math.max(-1, Math.min(1, sinWca))) * (180 / Math.PI)
   return {
-    direction_deg: normAngle(lower.direction_deg + t * (upper.direction_deg - lower.direction_deg)),
-    speed_kt: lower.speed_kt + t * (upper.speed_kt - lower.speed_kt),
+    gs: Math.round(gs * 10) / 10,
+    wca: Math.round(wca * 10) / 10,
   }
 }
