@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "build:aerodromes": "node scripts/build-aerodromes.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.0",
