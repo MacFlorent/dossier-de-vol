@@ -206,7 +206,7 @@ function BranchView({ branch, isOnly, speedKt, onChange, onDelete }: BranchViewP
     ? [positions.reduce((s, p) => s + p[0], 0) / positions.length, positions.reduce((s, p) => s + p[1], 0) / positions.length]
     : [46.5, 2.5]
 
-  const totalDistNm = branch.segments.reduce((s, seg) => s + seg.distanceNm, 0)
+  const totalDistNm = branch.segments.filter(s => s.role === 'ENROUTE').reduce((s, seg) => s + seg.distanceNm, 0)
 
   const enrouteSegments = branch.segments.filter(s => s.role === 'ENROUTE')
   const alternateSegment = branch.segments.find(s => s.role === 'ALTERNATE')

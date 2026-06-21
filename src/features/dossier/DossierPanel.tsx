@@ -22,7 +22,7 @@ export function DossierPanel({ dossier }: Props) {
   }
 
   // Aggregate totals across all branches
-  const totalDistNm = branches.reduce((s, b) => s + b.segments.reduce((ss, seg) => ss + seg.distanceNm, 0), 0)
+  const totalDistNm = branches.reduce((s, b) => s + b.segments.filter(seg => seg.role === 'ENROUTE').reduce((ss, seg) => ss + seg.distanceNm, 0), 0)
 
   // Fuel summary per branch (fuelInputs is Record<branchId, FuelInputs>)
   const regime = aircraft.characteristics.regimes[0]
@@ -89,7 +89,7 @@ export function DossierPanel({ dossier }: Props) {
                   const fi = fuelInputs[branch.id]
                   const fuelResult = fi ? computeBranchFuel(branch, fi, regime) : null
                   const fuelMinL = fuelResult?.fuelL ?? null
-                  const distNm = branch.segments.reduce((s, seg) => s + seg.distanceNm, 0)
+                  const distNm = branch.segments.filter(seg => seg.role === 'ENROUTE').reduce((s, seg) => s + seg.distanceNm, 0)
                   const aeroStr = branch.aerodromes
                     .filter(a => a.role === 'DEP' || a.role === 'ARR')
                     .map(a => a.identifier).join(' → ')
