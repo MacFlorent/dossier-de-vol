@@ -68,6 +68,12 @@ export interface RunwayInfo {
   surface: 'hard' | 'grass'
 }
 
+export interface FrequencyInfo {
+  type: string             // ex : "TWR", "AFIS", "ATIS", "APP"
+  description: string
+  frequencyMhz: number
+}
+
 export interface StoredAerodrome {
   icao: string
   name: string
@@ -75,6 +81,7 @@ export interface StoredAerodrome {
   lng: number
   elevationFt: number
   runways: RunwayInfo[]
+  frequencies?: FrequencyInfo[]
   updatedAt: string        // ISO 8601
 }
 
