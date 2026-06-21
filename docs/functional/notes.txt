@@ -1,0 +1,2 @@
+https://piaf.stac.aviation-civile.gouv.fr/airports/table
+https://fr.wikipedia.org/wiki/Liste_des_a%C3%A9rodromes_et_a%C3%A9roports_en_France
