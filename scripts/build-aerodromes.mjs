@@ -88,10 +88,10 @@ function buildRunwayMap(runways) {
     const list = map.get(icao)
     const lengthFt = Number(r.length_ft) || 0
     const surface  = classifySurface(r.surface)
-    if (r.le_ident) {
+    if (r.le_ident && !isNaN(parseInt(r.le_ident, 10))) {
       list.push({ ident: r.le_ident, headingMag: headingFromIdent(r.le_ident), lengthFt, surface })
     }
-    if (r.he_ident) {
+    if (r.he_ident && !isNaN(parseInt(r.he_ident, 10))) {
       list.push({ ident: r.he_ident, headingMag: headingFromIdent(r.he_ident), lengthFt, surface })
     }
   }

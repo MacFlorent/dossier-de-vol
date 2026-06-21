@@ -2,7 +2,7 @@ import type { StoredAerodrome } from '../../types'
 import { distanceNm } from '../aviation/coordinates'
 import SEED from '../../../resources/aerodromes.json'
 
-const KEY = 'dossier-de-vol:aerodromes'
+const KEY = 'dossier-de-vol:aerodromes_v2'
 
 function load(): StoredAerodrome[] {
   const raw = localStorage.getItem(KEY)
