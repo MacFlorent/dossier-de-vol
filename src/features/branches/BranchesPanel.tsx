@@ -202,6 +202,9 @@ function BranchView({ branch, isOnly, speedKt, onChange, onDelete }: BranchViewP
   , [branch.aerodromes])
 
   const positions: [number, number][] = resolved.filter(r => r.aero).map(r => [r.aero!.lat, r.aero!.lng])
+  const routePositions: [number, number][] = resolved
+    .filter(r => r.aero && (r.a.role === 'DEP' || r.a.role === 'ARR'))
+    .map(r => [r.aero!.lat, r.aero!.lng])
   const center: [number, number] = positions.length > 0
     ? [positions.reduce((s, p) => s + p[0], 0) / positions.length, positions.reduce((s, p) => s + p[1], 0) / positions.length]
     : [46.5, 2.5]
@@ -272,7 +275,7 @@ function BranchView({ branch, isOnly, speedKt, onChange, onDelete }: BranchViewP
             attribution='&copy; <a href="https://carto.com">CartoDB</a>'
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
             subdomains="abcd" maxZoom={19} />
-          {positions.length >= 2 && <Polyline positions={positions} color="#f0a93b" weight={2} opacity={0.7} />}
+          {routePositions.length >= 2 && <Polyline positions={routePositions} color="#f0a93b" weight={2} opacity={0.7} />}
           {resolved.filter(r => r.aero).map(({ a, aero }) => (
             <Marker key={a.id} position={[aero!.lat, aero!.lng]} icon={ROLE_ICONS[a.role]}>
               <Popup>{ROLE_LABELS[a.role]} — {a.identifier} — {aero!.name}</Popup>
