@@ -138,16 +138,20 @@ async function main() {
   for (const a of airports) {
     if (a.iso_country !== 'FR') continue
     if (!ALLOWED_TYPES.has(a.type)) continue
-    if (!a.icao_code) continue
+    if (!a.ident) continue
+
+    // airport_ident in runways/frequencies CSVs matches the `ident` field in airports.csv
+    // Use icao_code when available, else gps_code, else fall back to ident (e.g. FR-XXXX)
+    const icao = a.icao_code || a.gps_code || a.ident
 
     result.push({
-      icao:        a.icao_code,
+      icao,
       name:        a.name,
       lat:         Number(a.latitude_deg),
       lng:         Number(a.longitude_deg),
       elevationFt: Number(a.elevation_ft) || 0,
-      runways:     runwayMap.get(a.icao_code) ?? [],
-      frequencies: freqMap.get(a.icao_code) ?? [],
+      runways:     runwayMap.get(a.ident) ?? [],
+      frequencies: freqMap.get(a.ident) ?? [],
       updatedAt:   now,
     })
   }
