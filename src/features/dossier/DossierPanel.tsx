@@ -88,7 +88,7 @@ export function DossierPanel({ dossier }: Props) {
                 {branches.map(branch => {
                   const fi = fuelInputs[branch.id]
                   const fuelResult = fi ? computeBranchFuel(branch, fi, regime) : null
-                  const fuelMinL = fuelResult?.fuelL ?? null
+                  const fuelMinL = fuelResult?.requiredFuelL ?? null
                   const distNm = branch.segments.filter(seg => seg.role === 'ENROUTE').reduce((s, seg) => s + seg.distanceNm, 0)
                   const aeroStr = branch.aerodromes
                     .filter(a => a.role === 'DEP' || a.role === 'ARR')
@@ -190,16 +190,16 @@ export function DossierPanel({ dossier }: Props) {
                       <dd className="font-mono text-[var(--text-dim)]">—</dd>
                     </div>
                   )
-                  const { fuelL, fuelKg } = computeBranchFuel(branch, fi, regime)
+                  const { requiredFuelL, requiredFuelKg, reserveMin } = computeBranchFuel(branch, fi, regime)
                   return (
                     <div key={branch.id} className="border-b border-[var(--border)]/30 pb-1">
                       <div className="flex justify-between font-medium">
                         <dt className="text-[var(--text-1)]">{branch.label}</dt>
-                        <dd className="font-mono">{fuelL.toFixed(1)} L</dd>
+                        <dd className="font-mono">{requiredFuelL.toFixed(1)} L</dd>
                       </div>
                       <div className="flex justify-between text-[var(--text-dim)]">
-                        <dt>Plein {fi.plein ? '✓' : '✗'} · Réserve {fmtTime(fi.reserveMin)}</dt>
-                        <dd className="font-mono">{fuelKg.toFixed(1)} kg</dd>
+                        <dt>Réserve {fmtTime(reserveMin)} · {fi.reserveMode === 'day' ? 'Jour' : 'Nuit'}</dt>
+                        <dd className="font-mono">{requiredFuelKg.toFixed(1)} kg</dd>
                       </div>
                     </div>
                   )

@@ -2,6 +2,7 @@ import { useReducer } from 'react'
 import type { Aircraft, FlightDossier, DossierTab, Screen } from './types'
 import { duplicateAircraft, getAircraft } from './lib/storage'
 import { applyAircraftChange } from './lib/dossierTransforms'
+import { DEFAULT_FUEL_INPUTS } from './lib/aviation/fuelCalc'
 import { HomeScreen } from './screens/HomeScreen'
 import { AircraftEditorScreen } from './screens/AircraftEditorScreen'
 import { DossierScreen } from './screens/DossierScreen'
@@ -109,13 +110,7 @@ export function App() {
                   }],
                   weatherInputs: { fields: {}, notes: '' },
                   fuelInputs: {
-                    [branchId]: {
-                      roulage: 10,
-                      marge: 10,
-                      extras: [],
-                      reserveMin: 30,
-                      plein: false,
-                    },
+                    [branchId]: { ...DEFAULT_FUEL_INPUTS },
                   },
                   loading: Object.fromEntries(aircraft.massBalance.stations.map(s => [s.name, 0])),
                   perfRegulatory: 1.0,

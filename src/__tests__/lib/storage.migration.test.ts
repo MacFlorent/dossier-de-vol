@@ -120,7 +120,7 @@ describe('migrateDossier', () => {
       expect(result.branches[0].id).toBe(branchId)
 
       // Legacy fields stripped, core fields preserved
-      const fi = result.fuelInputs[branchId] as Record<string, unknown>
+      const fi = result.fuelInputs[branchId] as unknown as Record<string, unknown>
       expect(fi.gsBase).toBeUndefined()
       expect(fi.windAdjust).toBeUndefined()
       expect(fi.derouteMin).toBeUndefined()
@@ -136,7 +136,7 @@ describe('migrateDossier', () => {
         ...baseDossierFields,
         weatherInputs: { fields: {}, winds: [{ altitude_ft: 0, direction_deg: 270, speed_kt: 10 }], notes: '' },
         branches: [{ id: 'b1', label: 'Aller', aerodromes: [], segments: [{ id: 's1', role: 'ENROUTE', name: 'Vol', distanceNm: 0, headingMag: 0, wind: null, notes: '' }], notes: '' }],
-        fuelInputs: { 'b1': { roulage: 10, marge: 10, extras: [], reserveMin: 30, plein: false } },
+        fuelInputs: { 'b1': { pilotFactor: 0, taxiMin: 10, landingMin: 15, alternateLandingMin: 15, extras: [], reserveMode: 'day' as const } },
       }
 
       const result = migrateDossier(old)
@@ -159,7 +159,7 @@ describe('migrateDossier', () => {
       const modern: FlightDossier = {
         ...baseDossierFields,
         branches: existingBranches,
-        fuelInputs: { 'branch-existing': { roulage: 10, marge: 10, extras: [], reserveMin: 30, plein: false } },
+        fuelInputs: { 'branch-existing': { pilotFactor: 0, taxiMin: 10, landingMin: 15, alternateLandingMin: 15, extras: [], reserveMode: 'day' } },
       }
 
       const result = migrateDossier(modern)
@@ -171,7 +171,7 @@ describe('migrateDossier', () => {
 
     it('returns the same fuelInputs record without wrapping', () => {
       const fuelRecord = {
-        'branch-existing': { roulage: 10, marge: 10, extras: [], reserveMin: 30, plein: false },
+        'branch-existing': { pilotFactor: 0, taxiMin: 10, landingMin: 15, alternateLandingMin: 15, extras: [], reserveMode: 'day' as const },
       }
       const modern: FlightDossier = {
         ...baseDossierFields,

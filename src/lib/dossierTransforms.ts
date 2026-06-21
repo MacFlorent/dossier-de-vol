@@ -1,6 +1,5 @@
-import type { Aircraft, AircraftSnapshot, FlightDossier, FuelInputs } from '../types'
-
-const DEFAULT_FUEL: FuelInputs = { roulage: 10, marge: 10, extras: [], reserveMin: 30, plein: false }
+import type { Aircraft, AircraftSnapshot, FlightDossier } from '../types'
+import { DEFAULT_FUEL_INPUTS } from './aviation/fuelCalc'
 
 export function applyAircraftChange(dossier: FlightDossier, newAircraft: Aircraft): FlightDossier {
   const snapshot: AircraftSnapshot = { ...newAircraft, snapshotAt: new Date().toISOString() }
@@ -8,7 +7,7 @@ export function applyAircraftChange(dossier: FlightDossier, newAircraft: Aircraf
     ...dossier,
     aircraft: snapshot,
     fuelInputs: Object.fromEntries(
-      dossier.branches.map(b => [b.id, dossier.fuelInputs[b.id] ?? { ...DEFAULT_FUEL }])
+      dossier.branches.map(b => [b.id, dossier.fuelInputs[b.id] ?? { ...DEFAULT_FUEL_INPUTS }])
     ),
     loading: Object.fromEntries(
       newAircraft.massBalance.stations.map(s => [s.name, 0])

@@ -2,6 +2,15 @@ import { computeSegmentWind } from './windTriangle'
 import { FUEL_DENSITY_KGL } from './constants'
 import type { FlightBranch, FuelInputs, CruiseRegime, FlightSegment } from '../../types'
 
+export const DEFAULT_FUEL_INPUTS: FuelInputs = {
+  pilotFactor: 0,
+  taxiMin: 10,
+  landingMin: 15,
+  alternateLandingMin: 15,
+  extras: [],
+  reserveMode: 'day',
+}
+
 export interface SegmentFuelDetail {
   segmentId: string
   name: string

@@ -37,8 +37,8 @@ const baseDossier: FlightDossier = {
   ],
   weatherInputs: { fields: {}, notes: '' },
   fuelInputs: {
-    'b1': { roulage: 15, marge: 10, extras: [], reserveMin: 30, plein: false },
-    'b2': { roulage: 10, marge: 10, extras: [], reserveMin: 45, plein: true },
+    'b1': { pilotFactor: 0, taxiMin: 15, landingMin: 15, alternateLandingMin: 15, extras: [], reserveMode: 'day' },
+    'b2': { pilotFactor: 0, taxiMin: 10, landingMin: 15, alternateLandingMin: 15, extras: [], reserveMode: 'night' },
   },
   loading: { 'Pilote': 80 },
   perfRegulatory: 1.15,
@@ -55,14 +55,12 @@ describe('applyAircraftChange', () => {
     expect(result.aircraft.snapshotAt).toBeDefined()
   })
 
-  it('preserves fuelInputs fields (roulage, marge, extras, reserveMin, plein)', () => {
+  it('preserves fuelInputs fields (pilotFactor, taxiMin, extras, reserveMode)', () => {
     const result = applyAircraftChange(baseDossier, newAircraft)
-    expect(result.fuelInputs['b1'].roulage).toBe(15)
-    expect(result.fuelInputs['b1'].marge).toBe(10)
-    expect(result.fuelInputs['b1'].reserveMin).toBe(30)
-    expect(result.fuelInputs['b1'].plein).toBe(false)
-    expect(result.fuelInputs['b2'].reserveMin).toBe(45)
-    expect(result.fuelInputs['b2'].plein).toBe(true)
+    expect(result.fuelInputs['b1'].taxiMin).toBe(15)
+    expect(result.fuelInputs['b1'].pilotFactor).toBe(0)
+    expect(result.fuelInputs['b1'].reserveMode).toBe('day')
+    expect(result.fuelInputs['b2'].reserveMode).toBe('night')
   })
 
   it('resets loading to 0 for all new aircraft stations', () => {

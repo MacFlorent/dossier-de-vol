@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { FlightDossier, FuelInputs, FuelExtra, FlightBranch } from '../../types'
-import { computeBranchFuel } from '../../lib/aviation/fuelCalc'
+import { computeBranchFuel, DEFAULT_FUEL_INPUTS } from '../../lib/aviation/fuelCalc'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
@@ -12,15 +12,6 @@ interface Props {
   onUpdateBranches: (branches: FlightBranch[]) => void
 }
 
-const DEFAULT_FI: FuelInputs = {
-  pilotFactor: 0,
-  taxiMin: 10,
-  landingMin: 15,
-  alternateLandingMin: 15,
-  extras: [],
-  reserveMode: 'day',
-}
-
 export function FuelPanel({ dossier, onUpdate, onUpdateBranches }: Props) {
   const { branches, fuelInputs, aircraft } = dossier
   const regime = aircraft.characteristics.regimes[0]
@@ -29,7 +20,7 @@ export function FuelPanel({ dossier, onUpdate, onUpdateBranches }: Props) {
   const [activeBranchId, setActiveBranchId] = useState(() => branches[0]?.id ?? '')
   const validId = branches.some(b => b.id === activeBranchId) ? activeBranchId : (branches[0]?.id ?? '')
   const activeBranch = branches.find(b => b.id === validId)
-  const fi: FuelInputs = fuelInputs[validId] ?? DEFAULT_FI
+  const fi: FuelInputs = fuelInputs[validId] ?? DEFAULT_FUEL_INPUTS
 
   const result = useMemo(
     () => activeBranch ? computeBranchFuel(activeBranch, fi, regime) : null,

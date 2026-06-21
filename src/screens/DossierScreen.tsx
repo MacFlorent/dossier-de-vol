@@ -5,6 +5,7 @@ import { FuelPanel } from '../features/fuel/FuelPanel'
 import { WBPanel } from '../features/wb/WBPanel'
 import { PerfPanel } from '../features/perf/PerfPanel'
 import { DossierPanel } from '../features/dossier/DossierPanel'
+import { DEFAULT_FUEL_INPUTS } from '../lib/aviation/fuelCalc'
 
 interface DossierScreenProps {
   dossier: FlightDossier
@@ -24,10 +25,9 @@ export function DossierScreen({ dossier, activeTab, onUpdate }: DossierScreenPro
           branches={dossier.branches}
           aircraft={dossier.aircraft}
           onUpdate={(branches: FlightBranch[]) => {
-            const defaultFuel: FuelInputs = { pilotFactor: 0, taxiMin: 10, landingMin: 15, alternateLandingMin: 15, extras: [], reserveMode: 'day' }
             const synced: Record<string, FuelInputs> = {}
             for (const b of branches) {
-              synced[b.id] = dossier.fuelInputs[b.id] ?? { ...defaultFuel }
+              synced[b.id] = dossier.fuelInputs[b.id] ?? { ...DEFAULT_FUEL_INPUTS }
             }
             update({ branches, fuelInputs: synced })
           }}
