@@ -28,7 +28,11 @@ function makeBranch(overrides: Partial<FlightBranch> = {}): FlightBranch {
 }
 
 function makeFuelInputs(overrides: Partial<FuelInputs> = {}): FuelInputs {
-  return { roulage: 10, marge: 10, extras: [], reserveMin: 30, plein: false, ...overrides }
+  return {
+    pilotFactor: 0, taxiMin: 10, landingMin: 15,
+    alternateLandingMin: 15, extras: [], reserveMode: 'day',
+    ...overrides,
+  }
 }
 
 function makeDossier(branches: FlightBranch[], fuelInputs: Record<string, FuelInputs> = {}): FlightDossier {
@@ -42,68 +46,105 @@ function makeDossier(branches: FlightBranch[], fuelInputs: Record<string, FuelIn
 }
 
 describe('FuelPanel', () => {
-  describe('single branch', () => {
-    it('shows Réserve input', () => {
+  describe('Bloc 1 — Appareil', () => {
+    it('shows Facteur pilote input', () => {
       const dossier = makeDossier([makeBranch()], { b1: makeFuelInputs() })
-      render(<FuelPanel dossier={dossier} onUpdate={vi.fn()} />)
-      expect(screen.getByLabelText(/Réserve/i)).toBeInTheDocument()
-    })
-
-    it('does not show gsBase or windAdjust inputs', () => {
-      const dossier = makeDossier([makeBranch()], { b1: makeFuelInputs() })
-      render(<FuelPanel dossier={dossier} onUpdate={vi.fn()} />)
-      expect(screen.queryByLabelText(/GS de base/i)).not.toBeInTheDocument()
-      expect(screen.queryByLabelText(/Ajust vent/i)).not.toBeInTheDocument()
-    })
-
-    it('does not show manual derouteMin input', () => {
-      const dossier = makeDossier([makeBranch()], { b1: makeFuelInputs() })
-      render(<FuelPanel dossier={dossier} onUpdate={vi.fn()} />)
-      expect(screen.queryByLabelText(/Déroutement \(min\)/i)).not.toBeInTheDocument()
-    })
-
-    it('shows per-segment breakdown with GS and time', () => {
-      const dossier = makeDossier([makeBranch()], { b1: makeFuelInputs() })
-      render(<FuelPanel dossier={dossier} onUpdate={vi.fn()} />)
-      // Segment named 'Vol' should appear in results
-      expect(screen.getByText('Vol')).toBeInTheDocument()
+      render(<FuelPanel dossier={dossier} onUpdate={vi.fn()} onUpdateBranches={vi.fn()} />)
+      expect(screen.getByLabelText(/Facteur pilote/i)).toBeInTheDocument()
     })
   })
 
-  describe('multiple branches — tab bar', () => {
+  describe('Bloc 2 — Segments', () => {
+    it('shows segment name', () => {
+      const dossier = makeDossier([makeBranch()], { b1: makeFuelInputs() })
+      render(<FuelPanel dossier={dossier} onUpdate={vi.fn()} onUpdateBranches={vi.fn()} />)
+      expect(screen.getByText('Vol')).toBeInTheDocument()
+    })
+
+    it('shows wind direction and speed inputs', () => {
+      const dossier = makeDossier([makeBranch()], { b1: makeFuelInputs() })
+      render(<FuelPanel dossier={dossier} onUpdate={vi.fn()} onUpdateBranches={vi.fn()} />)
+      expect(screen.getAllByLabelText(/Vent °M/i)[0]).toBeInTheDocument()
+      expect(screen.getAllByLabelText(/Force kt/i)[0]).toBeInTheDocument()
+    })
+
+    it('calls onUpdateBranches when wind direction changes', async () => {
+      const onUpdateBranches = vi.fn()
+      const dossier = makeDossier([makeBranch()], { b1: makeFuelInputs() })
+      render(<FuelPanel dossier={dossier} onUpdate={vi.fn()} onUpdateBranches={onUpdateBranches} />)
+      const windInput = screen.getAllByLabelText(/Vent °M/i)[0]
+      await userEvent.clear(windInput)
+      await userEvent.type(windInput, '2')
+      expect(onUpdateBranches).toHaveBeenCalled()
+    })
+  })
+
+  describe('Bloc 3 — Temps complémentaires', () => {
+    it('shows Roulage déc. and Intégration att. inputs', () => {
+      const dossier = makeDossier([makeBranch()], { b1: makeFuelInputs() })
+      render(<FuelPanel dossier={dossier} onUpdate={vi.fn()} onUpdateBranches={vi.fn()} />)
+      expect(screen.getByLabelText(/Roulage déc\./i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Intégration att\./i)).toBeInTheDocument()
+    })
+  })
+
+  describe('Bloc 4 — Déroutement planifié', () => {
+    it('Intégration alt. is hidden when no ALTERNATE segment', () => {
+      const dossier = makeDossier([makeBranch()], { b1: makeFuelInputs() })
+      render(<FuelPanel dossier={dossier} onUpdate={vi.fn()} onUpdateBranches={vi.fn()} />)
+      expect(screen.queryByLabelText(/Intégration alt\./i)).not.toBeInTheDocument()
+    })
+
+    it('shows Intégration alt. when ALTERNATE segment exists', () => {
+      const branch = makeBranch({
+        segments: [makeSegment(), makeSegment({ id: 's2', role: 'ALTERNATE', distanceNm: 20 })],
+      })
+      const dossier = makeDossier([branch], { b1: makeFuelInputs() })
+      render(<FuelPanel dossier={dossier} onUpdate={vi.fn()} onUpdateBranches={vi.fn()} />)
+      expect(screen.getByLabelText(/Intégration alt\./i)).toBeInTheDocument()
+    })
+  })
+
+  describe('Bloc 5 — Réserve réglementaire', () => {
+    it('shows Jour and Nuit toggle buttons', () => {
+      const dossier = makeDossier([makeBranch()], { b1: makeFuelInputs() })
+      render(<FuelPanel dossier={dossier} onUpdate={vi.fn()} onUpdateBranches={vi.fn()} />)
+      expect(screen.getByRole('button', { name: /Jour/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Nuit/i })).toBeInTheDocument()
+    })
+
+    it('clicking Nuit calls onUpdate with reserveMode: night', async () => {
+      const onUpdate = vi.fn()
+      const dossier = makeDossier([makeBranch()], { b1: makeFuelInputs() })
+      render(<FuelPanel dossier={dossier} onUpdate={onUpdate} onUpdateBranches={vi.fn()} />)
+      await userEvent.click(screen.getByRole('button', { name: /Nuit/i }))
+      const last = onUpdate.mock.calls.at(-1)![0] as Record<string, FuelInputs>
+      expect(last['b1'].reserveMode).toBe('night')
+    })
+  })
+
+  describe('multi-branch tab bar', () => {
     function makeTwo() {
       const b1 = makeBranch({ id: 'b1', label: 'Aller' })
       const b2 = makeBranch({ id: 'b2', label: 'Retour', segments: [makeSegment({ id: 's2', distanceNm: 80 })] })
-      return { b1, b2, dossier: makeDossier([b1, b2], { b1: makeFuelInputs(), b2: makeFuelInputs() }) }
+      return { dossier: makeDossier([b1, b2], { b1: makeFuelInputs(), b2: makeFuelInputs() }) }
     }
 
     it('renders a tab button for each branch', () => {
-      render(<FuelPanel dossier={makeTwo().dossier} onUpdate={vi.fn()} />)
+      render(<FuelPanel dossier={makeTwo().dossier} onUpdate={vi.fn()} onUpdateBranches={vi.fn()} />)
       expect(screen.getByRole('button', { name: 'Aller' })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'Retour' })).toBeInTheDocument()
     })
 
-    it('shows Réserve on first branch (not just last)', () => {
-      render(<FuelPanel dossier={makeTwo().dossier} onUpdate={vi.fn()} />)
-      // First branch (Aller) is active by default
-      expect(screen.getByLabelText(/Réserve/i)).toBeInTheDocument()
-    })
-
-    it('shows Réserve on second branch too', async () => {
-      render(<FuelPanel dossier={makeTwo().dossier} onUpdate={vi.fn()} />)
-      await userEvent.click(screen.getByRole('button', { name: 'Retour' }))
-      expect(screen.getByLabelText(/Réserve/i)).toBeInTheDocument()
-    })
-
-    it('calls onUpdate with correct branch key', async () => {
+    it('calls onUpdate with the active branch key when taxiMin changes', async () => {
       const onUpdate = vi.fn()
-      render(<FuelPanel dossier={makeTwo().dossier} onUpdate={onUpdate} />)
+      render(<FuelPanel dossier={makeTwo().dossier} onUpdate={onUpdate} onUpdateBranches={vi.fn()} />)
       await userEvent.click(screen.getByRole('button', { name: 'Retour' }))
-      const roulageInput = screen.getByLabelText(/Roulage/i)
-      await userEvent.clear(roulageInput)
-      await userEvent.type(roulageInput, '15')
-      const lastCall = onUpdate.mock.calls[onUpdate.mock.calls.length - 1][0] as Record<string, FuelInputs>
-      expect(lastCall).toHaveProperty('b2')
+      const taxiInput = screen.getByLabelText(/Roulage déc\./i)
+      await userEvent.clear(taxiInput)
+      await userEvent.type(taxiInput, '15')
+      const last = onUpdate.mock.calls.at(-1)![0] as Record<string, FuelInputs>
+      expect(last).toHaveProperty('b2')
     })
   })
 })

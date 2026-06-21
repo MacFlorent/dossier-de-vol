@@ -24,7 +24,7 @@ export function DossierScreen({ dossier, activeTab, onUpdate }: DossierScreenPro
           branches={dossier.branches}
           aircraft={dossier.aircraft}
           onUpdate={(branches: FlightBranch[]) => {
-            const defaultFuel: FuelInputs = { roulage: 10, marge: 10, extras: [], reserveMin: 30, plein: false }
+            const defaultFuel: FuelInputs = { pilotFactor: 0, taxiMin: 10, landingMin: 15, alternateLandingMin: 15, extras: [], reserveMode: 'day' }
             const synced: Record<string, FuelInputs> = {}
             for (const b of branches) {
               synced[b.id] = dossier.fuelInputs[b.id] ?? { ...defaultFuel }
@@ -40,6 +40,7 @@ export function DossierScreen({ dossier, activeTab, onUpdate }: DossierScreenPro
         <FuelPanel
           dossier={dossier}
           onUpdate={(fuelInputs) => update({ fuelInputs })}
+          onUpdateBranches={(branches: FlightBranch[]) => update({ branches })}
         />
       )}
       {activeTab === 'wb' && (
