@@ -134,11 +134,12 @@ export interface FuelExtra {
 }
 
 export interface FuelInputs {
-  roulage: number
-  marge: number
-  extras: FuelExtra[]
-  reserveMin: number
-  plein: boolean
+  pilotFactor: number           // pilot adjustment %, default 0
+  taxiMin: number               // taxi + takeoff, default 10
+  landingMin: number            // integration + landing, default 15
+  alternateLandingMin: number   // alternate integration + landing, default 15
+  extras: FuelExtra[]           // named extra phases (unchanged)
+  reserveMode: 'day' | 'night'  // regulatory reserve: 30 or 45 min
 }
 
 // ── Masse & centrage ──────────────────────────────────────────────────────────

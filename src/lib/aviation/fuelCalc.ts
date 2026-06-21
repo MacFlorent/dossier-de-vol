@@ -14,13 +14,17 @@ export interface SegmentFuelDetail {
 
 export interface BranchFuelResult {
   segmentDetails: SegmentFuelDetail[]
-  flightTimeMin: number
-  derouteMin: number
+  rawFlightTimeMin: number
+  alternateTimeMin: number
   extrasMin: number
-  totalTime: number
-  totalWithMargin: number
-  fuelL: number
-  fuelKg: number
+  totalFlightTimeMin: number
+  flightFuelL: number
+  totalAlternateTimeMin: number
+  alternateFuelL: number
+  reserveMin: number
+  requiredEnduranceMin: number
+  requiredFuelL: number
+  requiredFuelKg: number
 }
 
 function computeSegmentDetail(segment: FlightSegment, tas: number): SegmentFuelDetail {
@@ -44,14 +48,29 @@ export function computeBranchFuel(
   const enroute = segmentDetails.filter(s => s.role === 'ENROUTE')
   const alternate = segmentDetails.find(s => s.role === 'ALTERNATE')
 
-  const flightTimeMin = enroute.reduce((s, d) => s + d.timeMin, 0)
-  const derouteMin = alternate?.timeMin ?? 0
+  const rawFlightTimeMin = enroute.reduce((s, d) => s + d.timeMin, 0)
+  const alternateTimeMin = alternate?.timeMin ?? 0
   const extrasMin = fi.extras.reduce((s, e) => s + e.durationMin, 0)
 
-  const totalTime = flightTimeMin + fi.roulage + extrasMin + fi.reserveMin + derouteMin
-  const totalWithMargin = totalTime * (1 + fi.marge / 100)
-  const fuelL = (totalWithMargin / 60) * regime.fuelBurn
-  const fuelKg = fuelL * FUEL_DENSITY_KGL
+  const factor = 1 + fi.pilotFactor / 100
+  const totalFlightTimeMin = (rawFlightTimeMin + fi.taxiMin + fi.landingMin) * factor + extrasMin
+  const flightFuelL = (totalFlightTimeMin / 60) * regime.fuelBurn
 
-  return { segmentDetails, flightTimeMin, derouteMin, extrasMin, totalTime, totalWithMargin, fuelL, fuelKg }
+  const totalAlternateTimeMin = alternate
+    ? (alternateTimeMin + fi.alternateLandingMin) * factor
+    : 0
+  const alternateFuelL = (totalAlternateTimeMin / 60) * regime.fuelBurn
+
+  const reserveMin = fi.reserveMode === 'day' ? 30 : 45
+
+  const requiredEnduranceMin = totalFlightTimeMin + totalAlternateTimeMin + reserveMin
+  const requiredFuelL = (requiredEnduranceMin / 60) * regime.fuelBurn
+  const requiredFuelKg = requiredFuelL * FUEL_DENSITY_KGL
+
+  return {
+    segmentDetails, rawFlightTimeMin, alternateTimeMin, extrasMin,
+    totalFlightTimeMin, flightFuelL,
+    totalAlternateTimeMin, alternateFuelL,
+    reserveMin, requiredEnduranceMin, requiredFuelL, requiredFuelKg,
+  }
 }
