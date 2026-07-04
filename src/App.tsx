@@ -108,7 +108,6 @@ export function App() {
                     segments: [{ id: crypto.randomUUID(), role: 'ENROUTE' as const, name: 'Vol', distanceNm: 0, headingMag: 0, wind: null, notes: '' }],
                     notes: '',
                   }],
-                  weatherInputs: { fields: {}, notes: '' },
                   fuelInputs: {
                     [branchId]: { ...DEFAULT_FUEL_INPUTS },
                   },

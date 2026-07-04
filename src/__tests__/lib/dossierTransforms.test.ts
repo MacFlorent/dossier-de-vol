@@ -35,7 +35,6 @@ const baseDossier: FlightDossier = {
     { id: 'b1', label: 'Aller', aerodromes: [], segments: [defaultSegment], notes: '' },
     { id: 'b2', label: 'Retour', aerodromes: [], segments: [defaultSegment], notes: '' },
   ],
-  weatherInputs: { fields: {}, notes: '' },
   fuelInputs: {
     'b1': { pilotFactor: 0, taxiMin: 15, landingMin: 15, alternateLandingMin: 15, extras: [], reserveMode: 'day' },
     'b2': { pilotFactor: 0, taxiMin: 10, landingMin: 15, alternateLandingMin: 15, extras: [], reserveMode: 'night' },

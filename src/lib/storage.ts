@@ -119,10 +119,6 @@ export function migrateDossier(d: unknown): FlightDossier {
       data.fuelInputs = { [branchId]: rest }
     }
   }
-  // Migrate weatherInputs: remove legacy winds field
-  if (data.weatherInputs && Array.isArray((data.weatherInputs as Record<string, unknown>).winds)) {
-    delete (data.weatherInputs as Record<string, unknown>).winds
-  }
   // Remove legacy fields
   delete data.route
   delete data.navOverrides

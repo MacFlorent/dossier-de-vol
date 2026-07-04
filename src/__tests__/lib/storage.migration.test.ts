@@ -21,7 +21,6 @@ const baseDossierFields = {
   date: '2026-01-15',
   departureTime: '09:00',
   aircraft: aircraftStub,
-  weatherInputs: { fields: {}, notes: '' },
   loading: {},
   perfRegulatory: 0,
   perfInputs: {},
@@ -127,21 +126,6 @@ describe('migrateDossier', () => {
       expect(fi.roulage).toBe(10)
       expect(fi.reserveMin).toBe(45)
       expect(fi.plein).toBe(false)
-    })
-  })
-
-  describe('legacy weatherInputs with winds field', () => {
-    it('removes the winds field from weatherInputs', () => {
-      const old = {
-        ...baseDossierFields,
-        weatherInputs: { fields: {}, winds: [{ altitude_ft: 0, direction_deg: 270, speed_kt: 10 }], notes: '' },
-        branches: [{ id: 'b1', label: 'Aller', aerodromes: [], segments: [{ id: 's1', role: 'ENROUTE', name: 'Vol', distanceNm: 0, headingMag: 0, wind: null, notes: '' }], notes: '' }],
-        fuelInputs: { 'b1': { pilotFactor: 0, taxiMin: 10, landingMin: 15, alternateLandingMin: 15, extras: [], reserveMode: 'day' as const } },
-      }
-
-      const result = migrateDossier(old)
-
-      expect((result.weatherInputs as unknown as { winds?: unknown }).winds).toBeUndefined()
     })
   })
 

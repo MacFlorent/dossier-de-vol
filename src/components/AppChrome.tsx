@@ -6,7 +6,6 @@ import { Button } from './ui/Button'
 
 const DOSSIER_TABS: { key: DossierTab; label: string }[] = [
   { key: 'branches', label: 'Vols' },
-  { key: 'weather', label: 'Météo' },
   { key: 'fuel', label: 'Carbu' },
   { key: 'wb', label: 'M&C' },
   { key: 'perf', label: 'Perf' },

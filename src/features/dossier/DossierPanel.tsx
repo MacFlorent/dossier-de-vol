@@ -10,7 +10,7 @@ import { Card } from '../../components/ui/Card'
 interface Props { dossier: FlightDossier }
 
 export function DossierPanel({ dossier }: Props) {
-  const { aircraft, branches, weatherInputs, loading, fuelInputs } = dossier
+  const { aircraft, branches, loading, fuelInputs } = dossier
 
   // Compute W&B departure
   const wbDep = computeWB(aircraft.massBalance, loading)
@@ -110,16 +110,6 @@ export function DossierPanel({ dossier }: Props) {
           </section>
         ) : (
           <p className="text-sm text-[var(--text-muted)]">Aucune branche définie.</p>
-        )}
-
-        {/* Weather summary */}
-        {weatherInputs.notes && (
-          <section className="mt-6">
-            <h2 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">Notes / NOTAM</h2>
-            <pre className="text-xs font-mono text-[var(--text-2)] whitespace-pre-wrap bg-[var(--bg-inset)] p-3 rounded">
-              {weatherInputs.notes}
-            </pre>
-          </section>
         )}
       </div>
 

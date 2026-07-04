@@ -39,7 +39,7 @@ function makeDossier(branches: FlightBranch[], fuelInputs: Record<string, FuelIn
   return {
     id: 'dos-1', name: 'Test', date: '2026-06-17', departureTime: '09:00',
     aircraft: makeAircraft() as FlightDossier['aircraft'],
-    branches, weatherInputs: { fields: {}, notes: '' }, fuelInputs,
+    branches, fuelInputs,
     loading: {}, perfRegulatory: 1.0, perfInputs: {}, notes: '',
     createdAt: '2026-06-17T00:00:00Z', updatedAt: '2026-06-17T00:00:00Z',
   }

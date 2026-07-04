@@ -230,7 +230,7 @@ interface Props {
 }
 
 export function PerfPanel({ dossier, onUpdate, onUpdateRegulatory }: Props) {
-  const { aircraft, loading, weatherInputs, perfInputs, branches, perfRegulatory } = dossier
+  const { aircraft, loading, perfInputs, branches, perfRegulatory } = dossier
 
   const maxWeight = Math.max(...aircraft.massBalance.envelopePoints.map(([kg]) => kg))
   const depWeight = useMemo(() => {
@@ -257,13 +257,8 @@ export function PerfPanel({ dossier, onUpdate, onUpdateRegulatory }: Props) {
     return cards
   }, [branches])
 
-  // Surface wind: calm (no wind layers in new WeatherInputs shape)
+  // Surface wind: calm (no wind layers)
   const surfaceWind = { direction_deg: 0, speed_kt: 0 }
-
-  const getWeatherFor = (icao: string) => {
-    const field = weatherInputs.fields[icao]
-    return { qnh: field?.qnh ?? 1013, temp: field?.temp ?? 15 }
-  }
 
   const handleUpdate = (key: string, inputs: TerrainPerfInputs) =>
     onUpdate({ ...perfInputs, [key]: inputs })
@@ -292,7 +287,6 @@ export function PerfPanel({ dossier, onUpdate, onUpdateRegulatory }: Props) {
       )}
 
       {terrainCards.map(({ key, label, tableKey }) => {
-        const weather = getWeatherFor(key)
         const aero = getAerodrome(key)
         return (
           <TerrainCard
@@ -302,8 +296,8 @@ export function PerfPanel({ dossier, onUpdate, onUpdateRegulatory }: Props) {
             tableKey={tableKey}
             aircraft={aircraft}
             weight={depWeight}
-            defaultQnh={weather.qnh}
-            defaultTemp={weather.temp}
+            defaultQnh={1013}
+            defaultTemp={15}
             defaultElevation={aero?.elevationFt ?? 0}
             runways={aero?.runways ?? []}
             surfaceWindDir={surfaceWind.direction_deg}

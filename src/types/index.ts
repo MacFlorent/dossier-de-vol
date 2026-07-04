@@ -113,18 +113,6 @@ export interface FlightBranch {
   notes: string
 }
 
-// ── Météo ─────────────────────────────────────────────────────────────────────
-
-export interface FieldWeather {
-  qnh: number   // hPa
-  temp: number  // °C
-}
-
-export interface WeatherInputs {
-  fields: Record<string, FieldWeather>  // clé = ICAO
-  notes: string
-}
-
 // ── Carburant ─────────────────────────────────────────────────────────────────
 
 export interface FuelExtra {
@@ -167,7 +155,6 @@ export interface FlightDossier {
   aircraft: AircraftSnapshot
 
   branches: FlightBranch[]
-  weatherInputs: WeatherInputs
   fuelInputs: Record<string, FuelInputs>  // key = branch id
 
   loading: StationLoading
@@ -182,7 +169,7 @@ export interface FlightDossier {
 
 // ── UI ────────────────────────────────────────────────────────────────────────
 
-export type DossierTab = 'branches' | 'weather' | 'fuel' | 'wb' | 'perf' | 'dossier'
+export type DossierTab = 'branches' | 'fuel' | 'wb' | 'perf' | 'dossier'
 export type Screen = 'home' | 'aircraft-editor' | 'dossier' | 'aerodrome-db'
 
 // ── Résultats de calcul (non stockés) ────────────────────────────────────────

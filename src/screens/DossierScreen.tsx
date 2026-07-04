@@ -1,6 +1,5 @@
 import type { FlightDossier, DossierTab, FlightBranch, FuelInputs } from '../types'
 import { BranchesPanel } from '../features/branches/BranchesPanel'
-import { WeatherPanel } from '../features/weather/WeatherPanel'
 import { FuelPanel } from '../features/fuel/FuelPanel'
 import { WBPanel } from '../features/wb/WBPanel'
 import { PerfPanel } from '../features/perf/PerfPanel'
@@ -32,9 +31,6 @@ export function DossierScreen({ dossier, activeTab, onUpdate }: DossierScreenPro
             update({ branches, fuelInputs: synced })
           }}
         />
-      )}
-      {activeTab === 'weather' && (
-        <WeatherPanel dossier={dossier} onUpdate={(weatherInputs) => update({ weatherInputs })} />
       )}
       {activeTab === 'fuel' && (
         <FuelPanel
