@@ -34,6 +34,27 @@ describe('FlightTabStrip', () => {
     expect(onAdd).toHaveBeenCalledOnce()
   })
 
+  it('calls onSelect with the branch id when a tab is activated with Enter', () => {
+    const onSelect = vi.fn()
+    render(<FlightTabStrip branches={branches} activeId="b1" onSelect={onSelect} />)
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Retour' }), { key: 'Enter' })
+    expect(onSelect).toHaveBeenCalledWith('b2')
+  })
+
+  it('calls onSelect with the branch id when a tab is activated with Space', () => {
+    const onSelect = vi.fn()
+    render(<FlightTabStrip branches={branches} activeId="b1" onSelect={onSelect} />)
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Retour' }), { key: ' ' })
+    expect(onSelect).toHaveBeenCalledWith('b2')
+  })
+
+  it('does not call onSelect for other keys', () => {
+    const onSelect = vi.fn()
+    render(<FlightTabStrip branches={branches} activeId="b1" onSelect={onSelect} />)
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Retour' }), { key: 'Tab' })
+    expect(onSelect).not.toHaveBeenCalled()
+  })
+
   it('double-click does not show a rename input when onRename is omitted', async () => {
     render(<FlightTabStrip branches={branches} activeId="b1" onSelect={vi.fn()} />)
     await userEvent.dblClick(screen.getByText('Aller'))

@@ -25,6 +25,12 @@ export function FlightTabStrip({ branches, activeId, onSelect, onRename, onAdd, 
               : 'text-[var(--text-muted)] hover:text-[var(--text-1)]'
           }`}
           onClick={() => onSelect(b.id)}
+          onKeyDown={e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              onSelect(b.id)
+            }
+          }}
         >
           {onRename && editingId === b.id ? (
             <input
@@ -32,7 +38,11 @@ export function FlightTabStrip({ branches, activeId, onSelect, onRename, onAdd, 
               defaultValue={b.label}
               className="w-20 bg-transparent border-b border-[var(--amber)] text-xs focus:outline-none"
               onBlur={e => { onRename(b.id, e.target.value || b.label); setEditingId(null) }}
-              onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); if (e.key === 'Escape') setEditingId(null) }}
+              onKeyDown={e => {
+                e.stopPropagation()
+                if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+                if (e.key === 'Escape') setEditingId(null)
+              }}
               onClick={e => e.stopPropagation()}
             />
           ) : (
