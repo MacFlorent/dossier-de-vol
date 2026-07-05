@@ -11,6 +11,7 @@ import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Input } from '../../components/ui/Input'
+import { FlightTabStrip } from '../../components/ui/FlightTabStrip'
 
 delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl
 L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl })
@@ -380,7 +381,6 @@ export function BranchesPanel({ branches, aircraft, onUpdate }: Props) {
   const speedKt = aircraft.characteristics.regimes[0].speed
   const [activeId, setActiveId] = useState(() => branches[0]?.id ?? '')
   const activeBranch = branches.find(b => b.id === activeId) ?? branches[0]
-  const [editingLabel, setEditingLabel] = useState<string | null>(null)
 
   const addBranch = () => {
     const newBranch: FlightBranch = {
@@ -406,29 +406,16 @@ export function BranchesPanel({ branches, aircraft, onUpdate }: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-1 px-3 pt-2 border-b border-[var(--border)] bg-[var(--bg-chrome)] overflow-x-auto">
-        {branches.map(b => (
-          <div key={b.id}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-t text-sm cursor-pointer select-none transition-colors ${
-              b.id === activeId
-                ? 'bg-[var(--bg-card)] text-[var(--text-1)] border border-b-0 border-[var(--border)]'
-                : 'text-[var(--text-muted)] hover:text-[var(--text-1)]'
-            }`}
-            onClick={() => setActiveId(b.id)}>
-            {editingLabel === b.id ? (
-              <input autoFocus defaultValue={b.label}
-                className="w-20 bg-transparent border-b border-[var(--amber)] text-xs focus:outline-none"
-                onBlur={e => { updateBranch({ ...b, label: e.target.value || b.label }); setEditingLabel(null) }}
-                onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); if (e.key === 'Escape') setEditingLabel(null) }}
-                onClick={e => e.stopPropagation()} />
-            ) : (
-              <span onDoubleClick={() => setEditingLabel(b.id)}>{b.label}</span>
-            )}
-          </div>
-        ))}
-        <button onClick={addBranch}
-          className="px-2 py-1 text-sm text-[var(--text-dim)] hover:text-[var(--amber)] transition-colors">+</button>
-      </div>
+      <FlightTabStrip
+        branches={branches}
+        activeId={activeId}
+        onSelect={setActiveId}
+        onRename={(id, label) => {
+          const b = branches.find(x => x.id === id)
+          if (b) updateBranch({ ...b, label })
+        }}
+        onAdd={addBranch}
+      />
       {activeBranch && (
         <BranchView branch={activeBranch} isOnly={branches.length === 1}
           speedKt={speedKt} onChange={updateBranch} onDelete={() => deleteBranch(activeBranch.id)} />
