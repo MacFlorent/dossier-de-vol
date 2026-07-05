@@ -46,6 +46,14 @@ function makeDossier(branches: FlightBranch[], fuelInputs: Record<string, FuelIn
 }
 
 describe('FuelPanel', () => {
+  describe('flight tab bar', () => {
+    it('is visible even with a single branch', () => {
+      const dossier = makeDossier([makeBranch()], { b1: makeFuelInputs() })
+      render(<FuelPanel dossier={dossier} onUpdate={vi.fn()} onUpdateBranches={vi.fn()} />)
+      expect(screen.getByRole('button', { name: 'Aller' })).toBeInTheDocument()
+    })
+  })
+
   describe('Bloc 1 — Appareil', () => {
     it('shows Facteur pilote input', () => {
       const dossier = makeDossier([makeBranch()], { b1: makeFuelInputs() })

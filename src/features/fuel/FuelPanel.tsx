@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { FlightDossier, FuelInputs, FuelExtra, FlightBranch } from '../../types'
 import { computeBranchFuel, DEFAULT_FUEL_INPUTS } from '../../lib/aviation/fuelCalc'
+import { FlightTabStrip } from '../../components/ui/FlightTabStrip'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
@@ -121,22 +122,8 @@ export function FuelPanel({ dossier, onUpdate, onUpdateBranches }: Props) {
 
   return (
     <div className="flex flex-col h-full">
+      <FlightTabStrip branches={branches} activeId={validId} onSelect={setActiveBranchId} />
       <div className="flex-1 overflow-auto p-4 space-y-5">
-      {branches.length > 1 && (
-        <div className="flex gap-1 border-b border-[var(--border)]">
-          {branches.map(b => (
-            <button key={b.id} onClick={() => setActiveBranchId(b.id)}
-              className={`px-3 py-1.5 text-sm border-b-2 transition-colors ${
-                b.id === validId
-                  ? 'border-[var(--amber)] text-[var(--text-1)]'
-                  : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-1)]'
-              }`}>
-              {b.label}
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* Bloc 1 — Appareil */}
       <Card padding="md" inset>
         {sectionHeader('Appareil')}
