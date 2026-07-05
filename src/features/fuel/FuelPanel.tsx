@@ -120,7 +120,8 @@ export function FuelPanel({ dossier, onUpdate, onUpdateBranches }: Props) {
   const alternateDetail = result.segmentDetails.find(d => d.role === 'ALTERNATE')
 
   return (
-    <div className="p-4 max-w-2xl mx-auto space-y-5 overflow-auto">
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-auto p-4 space-y-5">
       {branches.length > 1 && (
         <div className="flex gap-1 border-b border-[var(--border)]">
           {branches.map(b => (
@@ -261,6 +262,7 @@ export function FuelPanel({ dossier, onUpdate, onUpdateBranches }: Props) {
           <Badge variant={statusVariant}>{statusLabel}</Badge>
         </div>
       </Card>
+      </div>
     </div>
   )
 }
