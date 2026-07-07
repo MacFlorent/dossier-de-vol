@@ -1,4 +1,5 @@
 import { normAngle } from './coordinates'
+import type { FlightSegment } from '../../types'
 
 export interface WindCorrectionResult {
   wca: number   // wind correction angle (°), positif = droite
@@ -62,4 +63,26 @@ export function computeSegmentWind(
     gs: Math.round(gs * 10) / 10,
     wca: Math.round(wca * 10) / 10,
   }
+}
+
+export interface SegmentTimingResult {
+  gs: number    // vitesse sol (kt)
+  wca: number   // angle de correction vent (°)
+  timeMin: number  // durée du segment (min), Infinity si gs = 0
+}
+
+/**
+ * Calcule GS, WCA et durée pour un segment depuis son cap/distance et le vent saisi.
+ * Ne dépend d'aucune donnée carburant — utilisable sans FuelInputs/CruiseRegime.
+ */
+export function computeSegmentTiming(segment: FlightSegment, tas: number): SegmentTimingResult {
+  let gs = tas
+  let wca = 0
+  if (segment.wind) {
+    const r = computeSegmentWind(segment.headingMag, tas, segment.wind.directionDeg, segment.wind.speedKt)
+    gs = r.gs
+    wca = r.wca
+  }
+  const timeMin = gs !== 0 ? (segment.distanceNm / gs) * 60 : Infinity
+  return { gs, wca, timeMin }
 }

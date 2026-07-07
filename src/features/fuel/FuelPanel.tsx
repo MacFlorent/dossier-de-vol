@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { FlightDossier, FuelInputs, FuelExtra, FlightBranch } from '../../types'
 import { computeBranchFuel, DEFAULT_FUEL_INPUTS } from '../../lib/aviation/fuelCalc'
 import { FlightTabStrip } from '../../components/ui/FlightTabStrip'
+import { formatDuration } from '../../lib/format'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
@@ -27,13 +28,6 @@ export function FuelPanel({ dossier, onUpdate, onUpdateBranches }: Props) {
     () => activeBranch ? computeBranchFuel(activeBranch, fi, regime) : null,
     [activeBranch, fi, regime]
   )
-
-  const fmtTime = (min: number) => {
-    if (!isFinite(min)) return '∞'
-    const h = Math.floor(min / 60)
-    const m = Math.round(min % 60)
-    return `${h}h${String(m).padStart(2, '0')}`
-  }
 
   const update = (partial: Partial<FuelInputs>) =>
     onUpdate({ ...fuelInputs, [validId]: { ...fi, ...partial } })
@@ -109,7 +103,7 @@ export function FuelPanel({ dossier, onUpdate, onUpdateBranches }: Props) {
           </div>
         </div>
         <p className="text-xs text-[var(--text-dim)] text-right">
-          WCA {d.wca > 0 ? '+' : ''}{d.wca.toFixed(1)}° · {fmtTime(d.timeMin)}
+          WCA {d.wca > 0 ? '+' : ''}{d.wca.toFixed(1)}° · {formatDuration(d.timeMin)}
         </p>
       </div>
     )
@@ -133,7 +127,7 @@ export function FuelPanel({ dossier, onUpdate, onUpdateBranches }: Props) {
             ['FB', (60 / regime.speed).toFixed(2)],
             ['Conso', `${regime.fuelBurn} L/h`],
             ['Capacité', `${fuelCapacity} L`],
-            ['Autonomie max', fmtTime((fuelCapacity / regime.fuelBurn) * 60)],
+            ['Autonomie max', formatDuration((fuelCapacity / regime.fuelBurn) * 60)],
           ] as [string, string][]).map(([label, value]) => (
             <div key={label} className="flex justify-between">
               <dt className="text-[var(--text-muted)]">{label}</dt>
@@ -157,7 +151,7 @@ export function FuelPanel({ dossier, onUpdate, onUpdateBranches }: Props) {
             </div>
           ))}
         </div>
-        {subtotalRow('Temps vol brut', fmtTime(result.rawFlightTimeMin))}
+        {subtotalRow('Temps vol brut', formatDuration(result.rawFlightTimeMin))}
       </Card>
 
       {/* Bloc 3 — Temps complémentaires */}
@@ -184,7 +178,7 @@ export function FuelPanel({ dossier, onUpdate, onUpdateBranches }: Props) {
           </div>
         ))}
         <Button variant="ghost" size="sm" onClick={addExtra}>+ Ajouter phase</Button>
-        {subtotalRow('Temps de vol total', fmtTime(result.totalFlightTimeMin))}
+        {subtotalRow('Temps de vol total', formatDuration(result.totalFlightTimeMin))}
         {subtotalRow('Essence vol', `${result.flightFuelL.toFixed(1)} L`)}
       </Card>
 
@@ -199,7 +193,7 @@ export function FuelPanel({ dossier, onUpdate, onUpdateBranches }: Props) {
             <Input label="Intégration alt. (min)" type="number" value={fi.alternateLandingMin}
               onChange={e => update({ alternateLandingMin: Number(e.target.value) })} />
           </div>
-          {subtotalRow('Temps de déroutement', fmtTime(result.totalAlternateTimeMin))}
+          {subtotalRow('Temps de déroutement', formatDuration(result.totalAlternateTimeMin))}
           {subtotalRow('Essence déroutement', `${result.alternateFuelL.toFixed(1)} L`)}
         </Card>
       )}
@@ -228,7 +222,7 @@ export function FuelPanel({ dossier, onUpdate, onUpdateBranches }: Props) {
           <div className="flex justify-between items-baseline">
             <dt className="text-[var(--text-2)]">Autonomie requise</dt>
             <dd className="font-mono text-xl font-bold text-[var(--text-1)]">
-              {fmtTime(result.requiredEnduranceMin)}
+              {formatDuration(result.requiredEnduranceMin)}
             </dd>
           </div>
           <div className="flex justify-between items-baseline">

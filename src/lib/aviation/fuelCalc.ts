@@ -1,4 +1,4 @@
-import { computeSegmentWind } from './windTriangle'
+import { computeSegmentTiming } from './windTriangle'
 import { FUEL_DENSITY_KGL } from './constants'
 import type { FlightBranch, FuelInputs, CruiseRegime, FlightSegment } from '../../types'
 
@@ -37,14 +37,7 @@ export interface BranchFuelResult {
 }
 
 function computeSegmentDetail(segment: FlightSegment, tas: number): SegmentFuelDetail {
-  let gs = tas
-  let wca = 0
-  if (segment.wind) {
-    const r = computeSegmentWind(segment.headingMag, tas, segment.wind.directionDeg, segment.wind.speedKt)
-    gs = r.gs
-    wca = r.wca
-  }
-  const timeMin = gs !== 0 ? (segment.distanceNm / gs) * 60 : Infinity
+  const { gs, wca, timeMin } = computeSegmentTiming(segment, tas)
   return { segmentId: segment.id, name: segment.name, role: segment.role, distanceNm: segment.distanceNm, gs, wca, timeMin }
 }
 

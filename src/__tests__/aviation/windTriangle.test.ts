@@ -1,4 +1,9 @@
-import { solveWindTriangle, computeSegmentWind } from '../../lib/aviation/windTriangle'
+import { solveWindTriangle, computeSegmentWind, computeSegmentTiming } from '../../lib/aviation/windTriangle'
+import type { FlightSegment } from '../../types'
+
+function makeSegment(overrides: Partial<FlightSegment> = {}): FlightSegment {
+  return { id: 's1', role: 'ENROUTE', name: 'Vol', distanceNm: 120, headingMag: 270, wind: null, ...overrides }
+}
 
 describe('solveWindTriangle', () => {
   it('no wind: wca=0, gs=tas, th=tc', () => {
@@ -75,5 +80,29 @@ describe('computeSegmentWind', () => {
     // headwindComponent = 10*cos(90°) = 0 → GS = TAS
     expect(r.gs).toBeCloseTo(100, 1)
     expect(r.wca).not.toBe(0)
+  })
+})
+
+describe('computeSegmentTiming', () => {
+  it('no wind: gs=tas, wca=0, timeMin = distanceNm / tas * 60', () => {
+    const r = computeSegmentTiming(makeSegment({ distanceNm: 120 }), 120)
+    expect(r.gs).toBe(120)
+    expect(r.wca).toBe(0)
+    expect(r.timeMin).toBeCloseTo(60, 1)
+  })
+
+  it('with wind: delegates to computeSegmentWind for gs/wca', () => {
+    const seg = makeSegment({ distanceNm: 120, headingMag: 270, wind: { directionDeg: 270, speedKt: 20 } })
+    const r = computeSegmentTiming(seg, 120)
+    expect(r.gs).toBeCloseTo(100, 1)
+    expect(r.timeMin).toBeCloseTo(72, 1)
+  })
+
+  it('timeMin is Infinity when gs is exactly 0', () => {
+    // cap 270, vent du 270 à 120kt (pile en face, tas=120) → gs = 0
+    const seg = makeSegment({ headingMag: 270, wind: { directionDeg: 270, speedKt: 120 } })
+    const r = computeSegmentTiming(seg, 120)
+    expect(r.gs).toBe(0)
+    expect(r.timeMin).toBe(Infinity)
   })
 })
