@@ -63,9 +63,9 @@ export function SegmentCard({
       {!collapsed && (
         <>
           <div className="grid grid-cols-2 gap-2 mb-2" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr' }}>
-            <Input label="Dist (nm)" type="number" value={segment.distanceNm || ''}
+            <Input label="Dist (nm)" type="number" value={segment.distanceNm ?? ''}
               onChange={e => onChange({ ...segment, distanceNm: Number(e.target.value) })} />
-            <Input label="Cap°M" type="number" value={segment.headingMag || ''}
+            <Input label="Cap°M" type="number" value={segment.headingMag ?? ''}
               onChange={e => onChange({ ...segment, headingMag: Number(e.target.value) })} />
             <Input label="Vent °M" type="number" value={segment.wind?.directionDeg ?? ''}
               onChange={e => onChange({ ...segment, wind: { ...segment.wind ?? { speedKt: 0 }, directionDeg: Number(e.target.value) } })} />

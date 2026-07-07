@@ -33,6 +33,12 @@ describe('SegmentCard', () => {
     expect(screen.getByText('1h00')).toBeInTheDocument()
   })
 
+  it('displays zero distance and heading as 0, not blank', () => {
+    render(<SegmentCard segment={makeSegment({ distanceNm: 0, headingMag: 0 })} tas={120} isLastEnroute={false} onChange={vi.fn()} />)
+    expect(screen.getByLabelText(/Dist \(nm\)/i)).toHaveValue(0)
+    expect(screen.getByLabelText(/Cap°M/i)).toHaveValue(0)
+  })
+
   it('calls onChange when distance is edited', async () => {
     const onChange = vi.fn()
     render(<SegmentCard segment={makeSegment()} tas={120} isLastEnroute={false} onChange={onChange} />)
