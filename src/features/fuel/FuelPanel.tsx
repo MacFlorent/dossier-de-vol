@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import type { FlightDossier, FuelInputs, FuelExtra, FlightBranch } from '../../types'
+import type { FlightDossier, FuelInputs, FuelExtra, FlightBranch, FlightSegment } from '../../types'
 import { computeBranchFuel, DEFAULT_FUEL_INPUTS } from '../../lib/aviation/fuelCalc'
 import { FlightTabStrip } from '../../components/ui/FlightTabStrip'
 import { formatDuration } from '../../lib/format'
@@ -7,6 +7,8 @@ import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
+import { SegmentCard } from '../../components/ui/SegmentCard'
+import { SegmentsSection } from '../../components/ui/SegmentsSection'
 
 interface Props {
   dossier: FlightDossier
@@ -32,26 +34,8 @@ export function FuelPanel({ dossier, onUpdate, onUpdateBranches }: Props) {
   const update = (partial: Partial<FuelInputs>) =>
     onUpdate({ ...fuelInputs, [validId]: { ...fi, ...partial } })
 
-  const patchSegmentWind = (segmentId: string, wind: { directionDeg: number; speedKt: number } | null) => {
-    if (!activeBranch) return
-    const updatedBranch = {
-      ...activeBranch,
-      segments: activeBranch.segments.map(s => s.id === segmentId ? { ...s, wind } : s),
-    }
-    onUpdateBranches(branches.map(b => b.id === validId ? updatedBranch : b))
-  }
-
-  const updateWindDir = (segmentId: string, dirDeg: number) => {
-    const seg = activeBranch?.segments.find(s => s.id === segmentId)
-    if (!seg) return
-    patchSegmentWind(segmentId, { ...seg.wind ?? { speedKt: 0 }, directionDeg: dirDeg })
-  }
-
-  const updateWindSpeed = (segmentId: string, speedKt: number) => {
-    const seg = activeBranch?.segments.find(s => s.id === segmentId)
-    if (!seg) return
-    patchSegmentWind(segmentId, speedKt === 0 ? null : { ...seg.wind ?? { directionDeg: 0 }, speedKt })
-  }
+  const updateSegment = (seg: FlightSegment) =>
+    onUpdateBranches(branches.map(b => b.id === validId ? { ...b, segments: b.segments.map(s => s.id === seg.id ? seg : s) } : b))
 
   const addExtra = () => update({ extras: [...fi.extras, { id: crypto.randomUUID(), label: '', durationMin: 15 }] })
   const removeExtra = (id: string) => update({ extras: fi.extras.filter(e => e.id !== id) })
@@ -75,44 +59,10 @@ export function FuelPanel({ dossier, onUpdate, onUpdateBranches }: Props) {
     </div>
   )
 
-  const segmentRow = (detailId: string) => {
-    if (!activeBranch || !result) return null
-    const d = result.segmentDetails.find(s => s.segmentId === detailId)
-    const seg = activeBranch.segments.find(s => s.id === detailId)
-    if (!d || !seg) return null
-    return (
-      <div key={d.segmentId} className="space-y-2 text-sm">
-        <div className="flex justify-between items-center">
-          <span className="font-medium text-[var(--text-1)]">{d.name || 'Segment'}</span>
-          <span className="text-[var(--text-muted)] font-mono text-xs">{d.distanceNm} nm</span>
-        </div>
-        <div className="grid grid-cols-4 gap-2 items-end">
-          <div>
-            <p className="text-xs text-[var(--text-dim)] mb-1">Cap °M</p>
-            <p className="font-mono text-sm text-[var(--text-2)] px-2 py-1.5">{seg.headingMag}</p>
-          </div>
-          <Input label="Vent °M" type="number" value={seg.wind?.directionDeg ?? ''}
-            onChange={e => updateWindDir(seg.id, Number(e.target.value))} />
-          <Input label="Force kt" type="number" value={seg.wind?.speedKt ?? ''}
-            onChange={e => updateWindSpeed(seg.id, Number(e.target.value))} />
-          <div>
-            <p className="text-xs text-[var(--text-dim)] mb-1">GS</p>
-            <p className={`font-mono text-sm px-2 py-1.5 ${d.gs <= 0 ? 'text-[var(--red)]' : 'text-[var(--text-2)]'}`}>
-              {d.gs.toFixed(0)} kt{d.gs <= 0 && ' ⚠'}
-            </p>
-          </div>
-        </div>
-        <p className="text-xs text-[var(--text-dim)] text-right">
-          WCA {d.wca > 0 ? '+' : ''}{d.wca.toFixed(1)}° · {formatDuration(d.timeMin)}
-        </p>
-      </div>
-    )
-  }
-
   if (!activeBranch || !result) return null
 
-  const enrouteDetails = result.segmentDetails.filter(d => d.role === 'ENROUTE')
   const alternateDetail = result.segmentDetails.find(d => d.role === 'ALTERNATE')
+  const alternateSegment = activeBranch.segments.find(s => s.role === 'ALTERNATE')
 
   return (
     <div className="flex flex-col h-full">
@@ -143,14 +93,11 @@ export function FuelPanel({ dossier, onUpdate, onUpdateBranches }: Props) {
 
       {/* Bloc 2 — Segments */}
       <Card padding="md">
-        {sectionHeader('Segments')}
-        <div className="space-y-4 divide-y divide-[var(--border)]">
-          {enrouteDetails.map(d => (
-            <div key={d.segmentId} className="pt-3 first:pt-0">
-              {segmentRow(d.segmentId)}
-            </div>
-          ))}
-        </div>
+        <SegmentsSection
+          branch={activeBranch}
+          tas={regime.speed}
+          onChange={updatedBranch => onUpdateBranches(branches.map(b => b.id === validId ? updatedBranch : b))}
+        />
         {subtotalRow('Temps vol brut', formatDuration(result.rawFlightTimeMin))}
       </Card>
 
@@ -183,11 +130,16 @@ export function FuelPanel({ dossier, onUpdate, onUpdateBranches }: Props) {
       </Card>
 
       {/* Bloc 4 — Déroutement planifié */}
-      {alternateDetail && (
+      {alternateDetail && alternateSegment && (
         <Card padding="md">
           {sectionHeader('Déroutement planifié')}
           <div className="mb-4">
-            {segmentRow(alternateDetail.segmentId)}
+            <SegmentCard
+              segment={alternateSegment} tas={regime.speed}
+              isLastEnroute={false}
+              onChange={updateSegment}
+              canMoveUp={false} canMoveDown={false}
+            />
           </div>
           <div className="max-w-xs mb-2">
             <Input label="Intégration alt. (min)" type="number" value={fi.alternateLandingMin}

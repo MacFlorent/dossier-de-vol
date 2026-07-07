@@ -63,10 +63,35 @@ describe('FuelPanel', () => {
   })
 
   describe('Bloc 2 — Segments', () => {
-    it('shows segment name', () => {
+    it('shows segment name as an editable input', () => {
       const dossier = makeDossier([makeBranch()], { b1: makeFuelInputs() })
       render(<FuelPanel dossier={dossier} onUpdate={vi.fn()} onUpdateBranches={vi.fn()} />)
-      expect(screen.getByText('Vol')).toBeInTheDocument()
+      expect(screen.getByDisplayValue('Vol')).toBeInTheDocument()
+    })
+
+    it('shows distance and heading as editable inputs', () => {
+      const dossier = makeDossier([makeBranch()], { b1: makeFuelInputs() })
+      render(<FuelPanel dossier={dossier} onUpdate={vi.fn()} onUpdateBranches={vi.fn()} />)
+      expect(screen.getByLabelText(/Dist \(nm\)/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Cap°M/i)).toBeInTheDocument()
+    })
+
+    it('calls onUpdateBranches when the segment name is edited', async () => {
+      const onUpdateBranches = vi.fn()
+      const dossier = makeDossier([makeBranch()], { b1: makeFuelInputs() })
+      render(<FuelPanel dossier={dossier} onUpdate={vi.fn()} onUpdateBranches={onUpdateBranches} />)
+      const nameInput = screen.getByDisplayValue('Vol')
+      await userEvent.type(nameInput, 'X')
+      expect(onUpdateBranches).toHaveBeenCalled()
+    })
+
+    it('adds a segment when "+ Segment" is clicked', async () => {
+      const onUpdateBranches = vi.fn()
+      const dossier = makeDossier([makeBranch()], { b1: makeFuelInputs() })
+      render(<FuelPanel dossier={dossier} onUpdate={vi.fn()} onUpdateBranches={onUpdateBranches} />)
+      await userEvent.click(screen.getByText('+ Segment'))
+      const updated = onUpdateBranches.mock.calls[0][0] as FlightBranch[]
+      expect(updated[0].segments).toHaveLength(2)
     })
 
     it('shows wind direction and speed inputs', () => {
