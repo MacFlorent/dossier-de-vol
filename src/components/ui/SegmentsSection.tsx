@@ -14,7 +14,7 @@ export function SegmentsSection({ branch, tas, onChange }: SegmentsSectionProps)
   const addSegment = () => {
     const newSeg: FlightSegment = {
       id: crypto.randomUUID(), role: 'ENROUTE', name: '',
-      distanceNm: 0, headingMag: 0, wind: null,
+      distanceNm: 0, headingMag: 0, wind: null, notes: '',
     }
     const altIdx = branch.segments.findIndex(s => s.role === 'ALTERNATE')
     const segs = [...branch.segments]
