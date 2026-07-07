@@ -5,13 +5,13 @@ import iconUrl from 'leaflet/dist/images/marker-icon.png'
 import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png'
 import shadowUrl from 'leaflet/dist/images/marker-shadow.png'
 import type { AircraftSnapshot, FlightBranch, FlightAerodrome, FlightSegment } from '../../types'
-import { computeSegmentWind } from '../../lib/aviation/windTriangle'
 import { getAerodromeDb, getAerodrome } from '../../lib/icao/aerodromeDb'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
-import { Input } from '../../components/ui/Input'
 import { FlightTabStrip } from '../../components/ui/FlightTabStrip'
+import { SegmentCard } from '../../components/ui/SegmentCard'
+import { SegmentsSection } from '../../components/ui/SegmentsSection'
 
 delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl
 L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl })
@@ -124,69 +124,6 @@ function AddAerodromeModal({ onAdd, onClose }: AddAerodromeModalProps) {
   )
 }
 
-interface SegmentCardProps {
-  segment: FlightSegment
-  tas: number
-  isLastEnroute: boolean
-  onRemove: () => void
-  onChange: (seg: FlightSegment) => void
-  onMoveUp?: () => void
-  onMoveDown?: () => void
-  canMoveUp: boolean
-  canMoveDown: boolean
-}
-
-function SegmentCard({ segment, tas, isLastEnroute, onRemove, onChange, onMoveUp, onMoveDown, canMoveUp, canMoveDown }: SegmentCardProps) {
-  const isAlternate = segment.role === 'ALTERNATE'
-  const wind = segment.wind
-    ? computeSegmentWind(segment.headingMag, tas, segment.wind.directionDeg, segment.wind.speedKt)
-    : { gs: tas, wca: 0 }
-
-  return (
-    <Card padding="sm" className={isAlternate ? 'border-[var(--amber)]/50 bg-[var(--amber)]/5' : ''}>
-      <div className="flex items-center gap-2 mb-2">
-        {isAlternate && <Badge variant="warning">ALT</Badge>}
-        <input value={segment.name} onChange={e => onChange({ ...segment, name: e.target.value })}
-          placeholder="Nom du segment"
-          className="flex-1 text-sm font-medium bg-transparent border-b border-[var(--border)] focus:border-[var(--amber)] focus:outline-none text-[var(--text-1)]" />
-        {!isAlternate && (
-          <div className="flex gap-1">
-            <button onClick={onMoveUp} disabled={!canMoveUp}
-              className="text-[var(--text-dim)] hover:text-[var(--text-1)] disabled:opacity-30 px-1">↑</button>
-            <button onClick={onMoveDown} disabled={!canMoveDown}
-              className="text-[var(--text-dim)] hover:text-[var(--text-1)] disabled:opacity-30 px-1">↓</button>
-          </div>
-        )}
-        <button
-          onClick={onRemove}
-          disabled={isAlternate || isLastEnroute}
-          aria-label="Supprimer segment"
-          className="text-[var(--text-dim)] hover:text-[var(--red)] disabled:opacity-30 text-sm px-1">✕</button>
-      </div>
-      <div className="grid grid-cols-2 gap-2 mb-2" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr' }}>
-        <Input label="Dist (nm)" type="number" value={segment.distanceNm || ''}
-          onChange={e => onChange({ ...segment, distanceNm: Number(e.target.value) })} />
-        <Input label="Cap°M" type="number" value={segment.headingMag || ''}
-          onChange={e => onChange({ ...segment, headingMag: Number(e.target.value) })} />
-        <Input label="Vent °M" type="number" value={segment.wind?.directionDeg ?? ''}
-          onChange={e => onChange({ ...segment, wind: { ...segment.wind ?? { speedKt: 0 }, directionDeg: Number(e.target.value) } })} />
-        <Input label="Force kt" type="number" value={segment.wind?.speedKt ?? ''}
-          onChange={e => {
-            const kt = Number(e.target.value)
-            onChange({ ...segment, wind: kt === 0 ? null : { ...segment.wind ?? { directionDeg: 0 }, speedKt: kt } })
-          }} />
-      </div>
-      <div className="flex gap-4 text-xs text-[var(--text-dim)]">
-        <span>GS: <span className={`font-mono ${wind.gs < 0 ? 'text-[var(--red)]' : 'text-[var(--text-2)]'}`}>{wind.gs.toFixed(0)} kt</span></span>
-        <span>WCA: <span className="font-mono text-[var(--text-2)]">{wind.wca > 0 ? '+' : ''}{wind.wca.toFixed(1)}°</span></span>
-      </div>
-      <input value={segment.notes} onChange={e => onChange({ ...segment, notes: e.target.value })}
-        placeholder="Notes..."
-        className="mt-2 w-full text-xs bg-[var(--bg-inset)] border border-[var(--border)] rounded px-2 py-0.5 text-[var(--text-2)] focus:border-[var(--amber)] focus:outline-none" />
-    </Card>
-  )
-}
-
 interface BranchViewProps {
   branch: FlightBranch
   isOnly: boolean
@@ -212,7 +149,6 @@ function BranchView({ branch, isOnly, speedKt, onChange, onDelete }: BranchViewP
 
   const totalDistNm = branch.segments.filter(s => s.role === 'ENROUTE').reduce((s, seg) => s + seg.distanceNm, 0)
 
-  const enrouteSegments = branch.segments.filter(s => s.role === 'ENROUTE')
   const alternateSegment = branch.segments.find(s => s.role === 'ALTERNATE')
 
   const addAerodrome = (a: Omit<FlightAerodrome, 'id'>) => {
@@ -233,36 +169,6 @@ function BranchView({ branch, isOnly, speedKt, onChange, onDelete }: BranchViewP
       ),
     }
     onChange(syncAlternateSegment(updated))
-  }
-
-  const addSegment = () => {
-    const newSeg: FlightSegment = {
-      id: crypto.randomUUID(), role: 'ENROUTE', name: '',
-      distanceNm: 0, headingMag: 0, wind: null, notes: '',
-    }
-    const altIdx = branch.segments.findIndex(s => s.role === 'ALTERNATE')
-    const segs = [...branch.segments]
-    altIdx >= 0 ? segs.splice(altIdx, 0, newSeg) : segs.push(newSeg)
-    onChange({ ...branch, segments: segs })
-  }
-
-  const removeSegment = (id: string) => {
-    const seg = branch.segments.find(s => s.id === id)
-    if (!seg || seg.role === 'ALTERNATE') return
-    if (enrouteSegments.length <= 1) return
-    onChange({ ...branch, segments: branch.segments.filter(s => s.id !== id) })
-  }
-
-  const moveSegment = (id: string, dir: -1 | 1) => {
-    const idx = enrouteSegments.findIndex(s => s.id === id)
-    if (idx < 0) return
-    const swap = idx + dir
-    if (swap < 0 || swap >= enrouteSegments.length) return
-    const segs = [...branch.segments]
-    const ai = segs.findIndex(s => s.id === enrouteSegments[idx].id)
-    const bi = segs.findIndex(s => s.id === enrouteSegments[swap].id)
-    ;[segs[ai], segs[bi]] = [segs[bi], segs[ai]]
-    onChange({ ...branch, segments: segs })
   }
 
   const updateSegment = (seg: FlightSegment) =>
@@ -326,30 +232,12 @@ function BranchView({ branch, isOnly, speedKt, onChange, onDelete }: BranchViewP
 
         {/* Segments */}
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs text-[var(--text-dim)] uppercase tracking-wider">Segments</p>
-            <Button variant="ghost" size="sm" onClick={addSegment}>+ Segment</Button>
-          </div>
-          {enrouteSegments.map((seg, idx) => (
-            <div key={seg.id} className="mb-2">
-              <SegmentCard
-                segment={seg} tas={speedKt}
-                isLastEnroute={enrouteSegments.length === 1}
-                onRemove={() => removeSegment(seg.id)}
-                onChange={updateSegment}
-                onMoveUp={() => moveSegment(seg.id, -1)}
-                onMoveDown={() => moveSegment(seg.id, 1)}
-                canMoveUp={idx > 0}
-                canMoveDown={idx < enrouteSegments.length - 1}
-              />
-            </div>
-          ))}
+          <SegmentsSection branch={branch} tas={speedKt} onChange={onChange} />
           {alternateSegment && (
             <div className="mb-2">
               <SegmentCard
                 segment={alternateSegment} tas={speedKt}
                 isLastEnroute={false}
-                onRemove={() => {}}
                 onChange={updateSegment}
                 canMoveUp={false} canMoveDown={false}
               />
