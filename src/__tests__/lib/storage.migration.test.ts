@@ -136,7 +136,7 @@ describe('migrateDossier', () => {
           id: 'branch-existing',
           label: 'Aller',
           aerodromes: [],
-          segments: [{ id: 's1', role: 'ENROUTE' as const, name: 'Vol', distanceNm: 100, headingMag: 0, wind: null, notes: '' }],
+          segments: [{ id: 's1', role: 'ENROUTE' as const, name: 'Vol', distanceNm: 100, headingMag: 0, wind: null }],
           notes: 'already migrated',
         },
       ]
@@ -159,7 +159,7 @@ describe('migrateDossier', () => {
       }
       const modern: FlightDossier = {
         ...baseDossierFields,
-        branches: [{ id: 'branch-existing', label: 'Aller', aerodromes: [], segments: [{ id: 's1', role: 'ENROUTE' as const, name: 'Vol', distanceNm: 0, headingMag: 0, wind: null, notes: '' }], notes: '' }],
+        branches: [{ id: 'branch-existing', label: 'Aller', aerodromes: [], segments: [{ id: 's1', role: 'ENROUTE' as const, name: 'Vol', distanceNm: 0, headingMag: 0, wind: null }], notes: '' }],
         fuelInputs: fuelRecord,
       }
 

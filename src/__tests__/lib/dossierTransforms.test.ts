@@ -4,7 +4,7 @@ import type { FlightDossier, Aircraft, FlightSegment } from '../../types'
 
 const defaultSegment: FlightSegment = {
   id: 's1', role: 'ENROUTE', name: 'Vol',
-  distanceNm: 0, headingMag: 0, wind: null, notes: '',
+  distanceNm: 0, headingMag: 0, wind: null,
 }
 
 const oldAircraft = {

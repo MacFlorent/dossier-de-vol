@@ -105,7 +105,7 @@ export function App() {
                     id: branchId,
                     label: 'Aller',
                     aerodromes: [],
-                    segments: [{ id: crypto.randomUUID(), role: 'ENROUTE' as const, name: 'Vol', distanceNm: 0, headingMag: 0, wind: null, notes: '' }],
+                    segments: [{ id: crypto.randomUUID(), role: 'ENROUTE' as const, name: 'Vol', distanceNm: 0, headingMag: 0, wind: null }],
                     notes: '',
                   }],
                   fuelInputs: {

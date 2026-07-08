@@ -7,7 +7,7 @@ const regime: CruiseRegime = { label: '75%', speed: 120, fuelBurn: 30 }
 function makeSegment(overrides: Partial<FlightSegment> = {}): FlightSegment {
   return {
     id: 's1', role: 'ENROUTE', name: 'Vol',
-    distanceNm: 120, headingMag: 270, wind: null, notes: '',
+    distanceNm: 120, headingMag: 270, wind: null,
     ...overrides,
   }
 }

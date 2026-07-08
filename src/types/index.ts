@@ -102,7 +102,6 @@ export interface FlightSegment {
   distanceNm: number
   headingMag: number             // Cap magnétique (°M)
   wind: { directionDeg: number; speedKt: number } | null  // Direction °M
-  notes: string
 }
 
 export interface FlightBranch {

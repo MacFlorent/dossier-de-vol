@@ -39,7 +39,7 @@ const aircraftStub: AircraftSnapshot = {
 }
 
 function makeSegment(overrides: Partial<FlightSegment> = {}): FlightSegment {
-  return { id: 's1', role: 'ENROUTE', name: 'Vol', distanceNm: 0, headingMag: 0, wind: null, notes: '', ...overrides }
+  return { id: 's1', role: 'ENROUTE', name: 'Vol', distanceNm: 0, headingMag: 0, wind: null, ...overrides }
 }
 function makeAerodrome(identifier: string, role: FlightAerodrome['role'] = 'DEP'): FlightAerodrome {
   return { id: identifier, identifier, role }

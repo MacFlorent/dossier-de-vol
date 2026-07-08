@@ -109,7 +109,7 @@ export function migrateDossier(d: unknown): FlightDossier {
       id: branchId,
       label: 'Aller',
       aerodromes: [],
-      segments: [{ id: crypto.randomUUID(), role: 'ENROUTE', name: 'Vol', distanceNm: 0, headingMag: 0, wind: null, notes: '' }],
+      segments: [{ id: crypto.randomUUID(), role: 'ENROUTE', name: 'Vol', distanceNm: 0, headingMag: 0, wind: null }],
       notes: '',
     }]
     // Migrate fuelInputs: FuelInputs → Record<branchId, FuelInputs>

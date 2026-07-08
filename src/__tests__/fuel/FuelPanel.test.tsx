@@ -20,7 +20,7 @@ function makeAircraft() {
 }
 
 function makeSegment(overrides: Partial<FlightSegment> = {}): FlightSegment {
-  return { id: 's1', role: 'ENROUTE', name: 'Vol', distanceNm: 120, headingMag: 270, wind: null, notes: '', ...overrides }
+  return { id: 's1', role: 'ENROUTE', name: 'Vol', distanceNm: 120, headingMag: 270, wind: null, ...overrides }
 }
 
 function makeBranch(overrides: Partial<FlightBranch> = {}): FlightBranch {

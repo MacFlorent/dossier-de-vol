@@ -43,7 +43,7 @@ function syncAlternateSegment(branch: FlightBranch): FlightBranch {
   if (hasAlternate && !hasAltSeg) {
     const altSeg: FlightSegment = {
       id: crypto.randomUUID(), role: 'ALTERNATE',
-      name: 'Déroutement', distanceNm: 0, headingMag: 0, wind: null, notes: '',
+      name: 'Déroutement', distanceNm: 0, headingMag: 0, wind: null,
     }
     return { ...branch, segments: [...branch.segments, altSeg] }
   }
@@ -275,7 +275,7 @@ export function BranchesPanel({ branches, aircraft, onUpdate }: Props) {
       id: crypto.randomUUID(),
       label: `Vol ${branches.length + 1}`,
       aerodromes: [],
-      segments: [{ id: crypto.randomUUID(), role: 'ENROUTE', name: 'Vol', distanceNm: 0, headingMag: 0, wind: null, notes: '' }],
+      segments: [{ id: crypto.randomUUID(), role: 'ENROUTE', name: 'Vol', distanceNm: 0, headingMag: 0, wind: null }],
       notes: '',
     }
     const updated = [...branches, newBranch]

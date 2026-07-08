@@ -5,7 +5,7 @@ import { SegmentCard } from '../../components/ui/SegmentCard'
 import type { FlightSegment } from '../../types'
 
 function makeSegment(overrides: Partial<FlightSegment> = {}): FlightSegment {
-  return { id: 's1', role: 'ENROUTE', name: 'Vol', distanceNm: 120, headingMag: 270, wind: null, notes: '', ...overrides }
+  return { id: 's1', role: 'ENROUTE', name: 'Vol', distanceNm: 120, headingMag: 270, wind: null, ...overrides }
 }
 
 describe('SegmentCard', () => {
