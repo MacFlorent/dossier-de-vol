@@ -51,6 +51,14 @@ describe('computeBranchFuel', () => {
     expect(result.rawFlightTimeMin).toBeCloseTo(60, 1)
   })
 
+  it('totalDistanceNm sums ENROUTE segment distances, excluding ALTERNATE', () => {
+    const s1 = makeSegment({ id: 's1', distanceNm: 60 })
+    const s2 = makeSegment({ id: 's2', distanceNm: 40 })
+    const alt = makeSegment({ id: 's3', role: 'ALTERNATE', distanceNm: 30 })
+    const result = computeBranchFuel(makeBranch([s1, s2, alt]), baseFi, regime)
+    expect(result.totalDistanceNm).toBe(100)
+  })
+
   it('totalFlightTimeMin = (rawFlight + taxi + landing) * factor + extras (pilotFactor=0, no extras)', () => {
     // (60 + 10 + 15) * 1.0 + 0 = 85
     const result = computeBranchFuel(makeBranch([makeSegment()]), baseFi, regime)

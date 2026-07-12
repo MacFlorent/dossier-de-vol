@@ -23,6 +23,7 @@ export interface SegmentFuelDetail {
 
 export interface BranchFuelResult {
   segmentDetails: SegmentFuelDetail[]
+  totalDistanceNm: number
   rawFlightTimeMin: number
   alternateTimeMin: number
   extrasMin: number
@@ -51,6 +52,7 @@ export function computeBranchFuel(
   const alternate = segmentDetails.find(s => s.role === 'ALTERNATE')
 
   const rawFlightTimeMin = enroute.reduce((s, d) => s + d.timeMin, 0)
+  const totalDistanceNm = enroute.reduce((s, d) => s + d.distanceNm, 0)
   const alternateTimeMin = alternate?.timeMin ?? 0
   const extrasMin = fi.extras.reduce((s, e) => s + e.durationMin, 0)
 
@@ -70,7 +72,7 @@ export function computeBranchFuel(
   const requiredFuelKg = requiredFuelL * FUEL_DENSITY_KGL
 
   return {
-    segmentDetails, rawFlightTimeMin, alternateTimeMin, extrasMin,
+    segmentDetails, totalDistanceNm, rawFlightTimeMin, alternateTimeMin, extrasMin,
     totalFlightTimeMin, flightFuelL,
     totalAlternateTimeMin, alternateFuelL,
     reserveMin, requiredEnduranceMin, requiredFuelL, requiredFuelKg,
