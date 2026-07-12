@@ -5,6 +5,7 @@ import type { FlightDossier, Aircraft } from '../types'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { FleetImportModal } from '../features/fleet/FleetImportModal'
+import { totalFuelCapacity } from '../lib/aviation/wbCalc'
 
 interface HomeScreenProps {
   onNewAircraft: () => void
@@ -144,7 +145,7 @@ export function HomeScreen({ onNewAircraft, onEditAircraft, onDuplicateAircraft,
                 <div className="flex-1">
                   <div className="font-medium text-[var(--text-1)]">{ac.name}</div>
                   <div className="text-sm text-[var(--text-muted)]">
-                    {ac.registration} · {ac.characteristics.regimes[0].speed}kt · {ac.characteristics.regimes[0].fuelBurn}L/h · {ac.characteristics.fuelCapacity}L
+                    {ac.registration} · {ac.characteristics.regimes[0].speed}kt · {ac.characteristics.regimes[0].fuelBurn}L/h · {totalFuelCapacity(ac.massBalance)}L
                   </div>
                 </div>
                 <div className="flex gap-2">

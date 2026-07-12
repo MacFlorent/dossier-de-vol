@@ -8,9 +8,10 @@ import { saveAircraft } from '../../lib/storage'
 function makeAircraft() {
   return {
     id: 'ac-1', name: 'DR400', registration: 'F-GABC', snapshotAt: '2026-06-17T00:00:00Z',
-    characteristics: { regimes: [{ label: '75%', speed: 120, fuelBurn: 30 }], fuelCapacity: 110 },
+    characteristics: { regimes: [{ label: '75%', speed: 120, fuelBurn: 30 }] },
     massBalance: {
-      emptyWeight: 600, emptyArm: 800, stations: [],
+      emptyWeight: 600, emptyArm: 800,
+      stations: [{ name: 'Carburant', arm: 800, kind: 'fuel' as const, capacityL: 110 }],
       envelopePoints: [[600, 800], [900, 800], [900, 1000], [600, 1000]] as [number, number][],
     },
     performance: {
@@ -23,8 +24,12 @@ function makeAircraft() {
 function makeOtherAircraft(): Aircraft {
   return {
     id: 'ac-2', name: 'Cessna 172', registration: 'F-GXYZ',
-    characteristics: { regimes: [{ label: '75%', speed: 110, fuelBurn: 28 }], fuelCapacity: 100 },
-    massBalance: { emptyWeight: 620, emptyArm: 810, stations: [], envelopePoints: [] },
+    characteristics: { regimes: [{ label: '75%', speed: 110, fuelBurn: 28 }] },
+    massBalance: {
+      emptyWeight: 620, emptyArm: 810,
+      stations: [{ name: 'Carburant', arm: 810, kind: 'fuel', capacityL: 100 }],
+      envelopePoints: [],
+    },
     performance: {
       toTable: { weights: [750], pressureAltitudes: [0], oats: [15], values: [[[300]]] },
       ldgTable: { weights: [750], pressureAltitudes: [0], oats: [15], values: [[[300]]] },

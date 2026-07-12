@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { FlightDossier, FuelInputs, FuelExtra, FlightBranch, FlightSegment } from '../../types'
 import { computeBranchFuel, DEFAULT_FUEL_INPUTS } from '../../lib/aviation/fuelCalc'
+import { totalFuelCapacity } from '../../lib/aviation/wbCalc'
 import { FlightTabStrip } from '../../components/ui/FlightTabStrip'
 import { formatDuration } from '../../lib/format'
 import { Card } from '../../components/ui/Card'
@@ -21,7 +22,7 @@ interface Props {
 export function FuelPanel({ dossier, onUpdate, onUpdateBranches, onChangeAircraft }: Props) {
   const { branches, fuelInputs, aircraft } = dossier
   const regime = aircraft.characteristics.regimes[0]
-  const fuelCapacity = aircraft.characteristics.fuelCapacity
+  const fuelCapacity = totalFuelCapacity(aircraft.massBalance)
 
   const [activeBranchId, setActiveBranchId] = useState(() => branches[0]?.id ?? '')
   const [showChangeModal, setShowChangeModal] = useState(false)
