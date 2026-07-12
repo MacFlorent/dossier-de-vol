@@ -71,6 +71,47 @@ export function FuelPanel({ dossier, onUpdate, onUpdateBranches, onChangeAircraf
     <div className="flex flex-col h-full">
       <FlightTabStrip branches={branches} activeId={validId} onSelect={setActiveBranchId} />
       <div className="flex-1 overflow-auto p-4 space-y-5">
+      {/* Résumé — Autonomie requise */}
+      <Card padding="md">
+        {sectionHeader('Autonomie requise')}
+        <dl className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <dt className="text-[var(--text-muted)]">Distance totale</dt>
+            <dd className="font-mono text-[var(--text-2)]">{result.totalDistanceNm} nm</dd>
+          </div>
+          <div className="flex justify-between text-sm">
+            <dt className="text-[var(--text-muted)]">Temps de vol brut</dt>
+            <dd className="font-mono text-[var(--text-2)]">{formatDuration(result.rawFlightTimeMin)}</dd>
+          </div>
+          <div className="flex justify-between text-sm">
+            <dt className="text-[var(--text-muted)]">Temps de vol réel</dt>
+            <dd className="font-mono text-[var(--text-2)]">{formatDuration(result.totalFlightTimeMin)}</dd>
+          </div>
+          <div className="flex justify-between items-baseline border-t border-[var(--border)] pt-2">
+            <dt className="text-[var(--text-2)]">Autonomie requise</dt>
+            <dd className="font-mono text-xl font-bold text-[var(--text-1)]">
+              {formatDuration(result.requiredEnduranceMin)}
+            </dd>
+          </div>
+          <div className="flex justify-between items-baseline">
+            <dt className="text-[var(--text-2)]">Essence requise</dt>
+            <dd className="font-mono text-xl font-bold text-[var(--text-1)]">
+              {result.requiredFuelL.toFixed(1)} L
+              <span className="text-sm font-normal text-[var(--text-dim)] ml-2">
+                / {result.requiredFuelKg.toFixed(1)} kg
+              </span>
+            </dd>
+          </div>
+          <div className="flex justify-between items-center border-t border-[var(--border)] pt-2 text-sm">
+            <dt className="text-[var(--text-muted)]">Capacité</dt>
+            <dd className="font-mono text-[var(--text-2)]">{fuelCapacity} L</dd>
+          </div>
+        </dl>
+        <div className="mt-3">
+          <Badge variant={statusVariant}>{statusLabel}</Badge>
+        </div>
+      </Card>
+
       {/* Bloc 1 — Appareil */}
       <Card padding="md" inset>
         <div className="flex items-center justify-between mb-3">
@@ -175,35 +216,6 @@ export function FuelPanel({ dossier, onUpdate, onUpdateBranches, onChangeAircraf
               {mode === 'day' ? 'Jour (30 min)' : 'Nuit (45 min)'}
             </button>
           ))}
-        </div>
-      </Card>
-
-      {/* Bloc 6 — Autonomie requise */}
-      <Card padding="md">
-        {sectionHeader('Autonomie requise')}
-        <dl className="space-y-2">
-          <div className="flex justify-between items-baseline">
-            <dt className="text-[var(--text-2)]">Autonomie requise</dt>
-            <dd className="font-mono text-xl font-bold text-[var(--text-1)]">
-              {formatDuration(result.requiredEnduranceMin)}
-            </dd>
-          </div>
-          <div className="flex justify-between items-baseline">
-            <dt className="text-[var(--text-2)]">Essence requise</dt>
-            <dd className="font-mono text-xl font-bold text-[var(--text-1)]">
-              {result.requiredFuelL.toFixed(1)} L
-              <span className="text-sm font-normal text-[var(--text-dim)] ml-2">
-                / {result.requiredFuelKg.toFixed(1)} kg
-              </span>
-            </dd>
-          </div>
-          <div className="flex justify-between items-center border-t border-[var(--border)] pt-2 text-sm">
-            <dt className="text-[var(--text-muted)]">Capacité</dt>
-            <dd className="font-mono text-[var(--text-2)]">{fuelCapacity} L</dd>
-          </div>
-        </dl>
-        <div className="mt-3">
-          <Badge variant={statusVariant}>{statusLabel}</Badge>
         </div>
       </Card>
       </div>

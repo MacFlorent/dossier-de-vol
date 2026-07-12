@@ -67,6 +67,28 @@ describe('FuelPanel', () => {
     })
   })
 
+  describe('Résumé — Autonomie requise (haut de page)', () => {
+    it('shows total distance, raw flight time and real flight time', () => {
+      const branch = makeBranch({
+        segments: [makeSegment({ id: 's1', distanceNm: 60 }), makeSegment({ id: 's2', distanceNm: 60 })],
+      })
+      const dossier = makeDossier([branch], { b1: makeFuelInputs() })
+      render(<FuelPanel dossier={dossier} onUpdate={vi.fn()} onUpdateBranches={vi.fn()} />)
+      expect(screen.getByText('Distance totale')).toBeInTheDocument()
+      expect(screen.getByText(/120\s*nm/)).toBeInTheDocument()
+      expect(screen.getByText('Temps de vol brut')).toBeInTheDocument()
+      expect(screen.getByText('Temps de vol réel')).toBeInTheDocument()
+    })
+
+    it('renders the autonomy summary card before the Appareil block', () => {
+      const dossier = makeDossier([makeBranch()], { b1: makeFuelInputs() })
+      const { container } = render(<FuelPanel dossier={dossier} onUpdate={vi.fn()} onUpdateBranches={vi.fn()} />)
+      const headings = Array.from(container.querySelectorAll('h2')).map(h => h.textContent)
+      expect(headings.indexOf('Autonomie requise')).toBeGreaterThanOrEqual(0)
+      expect(headings.indexOf('Autonomie requise')).toBeLessThan(headings.indexOf('Appareil'))
+    })
+  })
+
   describe('Bloc 1 — Appareil', () => {
     afterEach(() => localStorage.clear())
 
