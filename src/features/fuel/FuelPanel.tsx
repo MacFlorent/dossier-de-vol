@@ -9,19 +9,22 @@ import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { SegmentCard } from '../../components/ui/SegmentCard'
 import { SegmentsSection } from '../../components/ui/SegmentsSection'
+import { ChangeAircraftModal } from '../../components/ui/ChangeAircraftModal'
 
 interface Props {
   dossier: FlightDossier
   onUpdate: (fuelInputs: Record<string, FuelInputs>) => void
   onUpdateBranches: (branches: FlightBranch[]) => void
+  onChangeAircraft?: (newAircraftId: string) => void
 }
 
-export function FuelPanel({ dossier, onUpdate, onUpdateBranches }: Props) {
+export function FuelPanel({ dossier, onUpdate, onUpdateBranches, onChangeAircraft }: Props) {
   const { branches, fuelInputs, aircraft } = dossier
   const regime = aircraft.characteristics.regimes[0]
   const fuelCapacity = aircraft.characteristics.fuelCapacity
 
   const [activeBranchId, setActiveBranchId] = useState(() => branches[0]?.id ?? '')
+  const [showChangeModal, setShowChangeModal] = useState(false)
   const validId = branches.some(b => b.id === activeBranchId) ? activeBranchId : (branches[0]?.id ?? '')
   const activeBranch = branches.find(b => b.id === validId)
   const fi: FuelInputs = fuelInputs[validId] ?? DEFAULT_FUEL_INPUTS
@@ -70,7 +73,15 @@ export function FuelPanel({ dossier, onUpdate, onUpdateBranches }: Props) {
       <div className="flex-1 overflow-auto p-4 space-y-5">
       {/* Bloc 1 — Appareil */}
       <Card padding="md" inset>
-        {sectionHeader('Appareil')}
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Appareil</h2>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-[var(--text-1)]">{aircraft.name}</span>
+            {onChangeAircraft && (
+              <Button variant="ghost" size="sm" onClick={() => setShowChangeModal(true)}>Changer</Button>
+            )}
+          </div>
+        </div>
         <dl className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm mb-4">
           {([
             ['TAS', `${regime.speed} kt`],
@@ -196,6 +207,13 @@ export function FuelPanel({ dossier, onUpdate, onUpdateBranches }: Props) {
         </div>
       </Card>
       </div>
+      {showChangeModal && onChangeAircraft && (
+        <ChangeAircraftModal
+          currentAircraftId={aircraft.id}
+          onConfirm={onChangeAircraft}
+          onClose={() => setShowChangeModal(false)}
+        />
+      )}
     </div>
   )
 }

@@ -5,6 +5,8 @@ import { WBPanel } from '../features/wb/WBPanel'
 import { PerfPanel } from '../features/perf/PerfPanel'
 import { DossierPanel } from '../features/dossier/DossierPanel'
 import { DEFAULT_FUEL_INPUTS } from '../lib/aviation/fuelCalc'
+import { getAircraft } from '../lib/storage'
+import { applyAircraftChange } from '../lib/dossierTransforms'
 
 interface DossierScreenProps {
   dossier: FlightDossier
@@ -37,6 +39,10 @@ export function DossierScreen({ dossier, activeTab, onUpdate }: DossierScreenPro
           dossier={dossier}
           onUpdate={(fuelInputs) => update({ fuelInputs })}
           onUpdateBranches={(branches: FlightBranch[]) => update({ branches })}
+          onChangeAircraft={(newAircraftId) => {
+            const newAircraft = getAircraft(newAircraftId)
+            if (newAircraft) onUpdate(applyAircraftChange(dossier, newAircraft))
+          }}
         />
       )}
       {activeTab === 'wb' && (

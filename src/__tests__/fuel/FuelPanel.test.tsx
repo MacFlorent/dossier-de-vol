@@ -1,8 +1,9 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { FuelPanel } from '../../features/fuel/FuelPanel'
-import type { FlightDossier, FlightBranch, FuelInputs, FlightSegment } from '../../types'
+import type { FlightDossier, FlightBranch, FuelInputs, FlightSegment, Aircraft } from '../../types'
+import { saveAircraft } from '../../lib/storage'
 
 function makeAircraft() {
   return {
@@ -12,6 +13,18 @@ function makeAircraft() {
       emptyWeight: 600, emptyArm: 800, stations: [],
       envelopePoints: [[600, 800], [900, 800], [900, 1000], [600, 1000]] as [number, number][],
     },
+    performance: {
+      toTable: { weights: [750], pressureAltitudes: [0], oats: [15], values: [[[300]]] },
+      ldgTable: { weights: [750], pressureAltitudes: [0], oats: [15], values: [[[300]]] },
+    },
+  }
+}
+
+function makeOtherAircraft(): Aircraft {
+  return {
+    id: 'ac-2', name: 'Cessna 172', registration: 'F-GXYZ',
+    characteristics: { regimes: [{ label: '75%', speed: 110, fuelBurn: 28 }], fuelCapacity: 100 },
+    massBalance: { emptyWeight: 620, emptyArm: 810, stations: [], envelopePoints: [] },
     performance: {
       toTable: { weights: [750], pressureAltitudes: [0], oats: [15], values: [[[300]]] },
       ldgTable: { weights: [750], pressureAltitudes: [0], oats: [15], values: [[[300]]] },
@@ -55,10 +68,44 @@ describe('FuelPanel', () => {
   })
 
   describe('Bloc 1 — Appareil', () => {
+    afterEach(() => localStorage.clear())
+
     it('shows Facteur pilote input', () => {
       const dossier = makeDossier([makeBranch()], { b1: makeFuelInputs() })
       render(<FuelPanel dossier={dossier} onUpdate={vi.fn()} onUpdateBranches={vi.fn()} />)
       expect(screen.getByLabelText(/Facteur pilote/i)).toBeInTheDocument()
+    })
+
+    it('shows the aircraft name', () => {
+      const dossier = makeDossier([makeBranch()], { b1: makeFuelInputs() })
+      render(<FuelPanel dossier={dossier} onUpdate={vi.fn()} onUpdateBranches={vi.fn()} />)
+      expect(screen.getByText('DR400')).toBeInTheDocument()
+    })
+
+    it('does not show a "Changer" button when onChangeAircraft is not provided', () => {
+      const dossier = makeDossier([makeBranch()], { b1: makeFuelInputs() })
+      render(<FuelPanel dossier={dossier} onUpdate={vi.fn()} onUpdateBranches={vi.fn()} />)
+      expect(screen.queryByRole('button', { name: 'Changer' })).not.toBeInTheDocument()
+    })
+
+    it('opens the change-aircraft modal listing the fleet when "Changer" is clicked', async () => {
+      saveAircraft(makeOtherAircraft())
+      const dossier = makeDossier([makeBranch()], { b1: makeFuelInputs() })
+      render(<FuelPanel dossier={dossier} onUpdate={vi.fn()} onUpdateBranches={vi.fn()} onChangeAircraft={vi.fn()} />)
+      await userEvent.click(screen.getByRole('button', { name: 'Changer' }))
+      expect(screen.getByText("Changer d'avion")).toBeInTheDocument()
+      expect(screen.getByText('Cessna 172')).toBeInTheDocument()
+    })
+
+    it('calls onChangeAircraft with the selected aircraft id after confirmation', async () => {
+      saveAircraft(makeOtherAircraft())
+      const onChangeAircraft = vi.fn()
+      const dossier = makeDossier([makeBranch()], { b1: makeFuelInputs() })
+      render(<FuelPanel dossier={dossier} onUpdate={vi.fn()} onUpdateBranches={vi.fn()} onChangeAircraft={onChangeAircraft} />)
+      await userEvent.click(screen.getByRole('button', { name: 'Changer' }))
+      await userEvent.click(screen.getByText('Cessna 172'))
+      await userEvent.click(screen.getByRole('button', { name: 'Confirmer' }))
+      expect(onChangeAircraft).toHaveBeenCalledWith('ac-2')
     })
   })
 
