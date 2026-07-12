@@ -460,7 +460,7 @@ export function AircraftEditorScreen({ editingAircraftId, prefillAircraft, onSav
                             <input
                               id={`station-capacity-${idx}`}
                               type="number"
-                              aria-label="Capacité (L)"
+                              aria-label={`${s.name} (L)`}
                               className="w-24 px-2 py-1 rounded text-xs font-mono text-[var(--text-1)] bg-[var(--bg-inset)] border border-[var(--border)] focus:outline-none focus:border-[var(--amber)]"
                               value={s.capacityL}
                               onChange={e => updateStation(idx, 'capacityL', Number(e.target.value))}

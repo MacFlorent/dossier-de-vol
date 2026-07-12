@@ -15,20 +15,22 @@ describe('AircraftEditorScreen — per-station fuel capacity', () => {
   it('shows a capacity input only for fuel-kind stations', async () => {
     render(<AircraftEditorScreen editingAircraftId={null} onSave={vi.fn()} onCancel={vi.fn()} />)
     await userEvent.click(screen.getByText('+ Ajouter station'))
+    await userEvent.type(screen.getByPlaceholderText('Pilote'), 'Avant')
 
-    expect(screen.queryByLabelText('Capacité (L)')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Avant (L)')).not.toBeInTheDocument()
 
     await userEvent.selectOptions(screen.getByRole('combobox'), 'fuel')
 
-    expect(screen.getByLabelText('Capacité (L)')).toBeInTheDocument()
+    expect(screen.getByLabelText('Avant (L)')).toBeInTheDocument()
   })
 
   it('defaults a new fuel station capacity to 0', async () => {
     render(<AircraftEditorScreen editingAircraftId={null} onSave={vi.fn()} onCancel={vi.fn()} />)
     await userEvent.click(screen.getByText('+ Ajouter station'))
+    await userEvent.type(screen.getByPlaceholderText('Pilote'), 'Avant')
     await userEvent.selectOptions(screen.getByRole('combobox'), 'fuel')
 
-    expect(screen.getByLabelText('Capacité (L)')).toHaveValue(0)
+    expect(screen.getByLabelText('Avant (L)')).toHaveValue(0)
   })
 
   it('saves the edited capacityL when loading from the DR221 template', async () => {
@@ -36,7 +38,7 @@ describe('AircraftEditorScreen — per-station fuel capacity', () => {
     render(<AircraftEditorScreen editingAircraftId={null} onSave={onSave} onCancel={vi.fn()} />)
     await userEvent.click(screen.getByText('Depuis modèle : DR221'))
 
-    const capacityInput = screen.getByLabelText('Capacité (L)')
+    const capacityInput = screen.getByLabelText('Carburant (L)')
     await userEvent.clear(capacityInput)
     await userEvent.type(capacityInput, '95')
 
@@ -46,5 +48,13 @@ describe('AircraftEditorScreen — per-station fuel capacity', () => {
     const fuelStation = saved.massBalance.stations.find(s => s.kind === 'fuel')!
     expect(fuelStation.capacityL).toBe(95)
     expect((saved.characteristics as { fuelCapacity?: number }).fuelCapacity).toBeUndefined()
+  })
+
+  it('gives each fuel station a distinct label when the aircraft has more than one tank', async () => {
+    render(<AircraftEditorScreen editingAircraftId={null} onSave={vi.fn()} onCancel={vi.fn()} />)
+    await userEvent.click(screen.getByText('Depuis modèle : DR48'))
+
+    expect(screen.getByLabelText('Essence Avant (80L max) (L)')).toBeInTheDocument()
+    expect(screen.getByLabelText('Essence Arrière (110L max) (L)')).toBeInTheDocument()
   })
 })
