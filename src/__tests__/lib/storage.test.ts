@@ -1,4 +1,4 @@
-import { importFleet, duplicateAircraft, saveAircraft, listAircraft } from '../../lib/storage'
+import { importFleet, duplicateAircraft, saveAircraft, listAircraft, getAircraft } from '../../lib/storage'
 import type { Aircraft } from '../../types'
 
 const makeAircraft = (overrides: Partial<Aircraft> = {}): Aircraft => ({
@@ -7,7 +7,6 @@ const makeAircraft = (overrides: Partial<Aircraft> = {}): Aircraft => ({
   registration: 'F-BPCT',
   characteristics: {
     regimes: [{ label: '75%', speed: 108, fuelBurn: 22 }],
-    fuelCapacity: 116,
   },
   massBalance: {
     emptyWeight: 615,
@@ -118,5 +117,51 @@ describe('duplicateAircraft', () => {
     expect(copy.massBalance).toEqual(ac.massBalance)
     expect(copy.performance).toEqual(ac.performance)
     expect(copy.characteristics).toEqual(ac.characteristics)
+  })
+})
+
+describe('getAircraft — fuelCapacity migration', () => {
+  afterEach(() => localStorage.clear())
+
+  it('splits a legacy global fuelCapacity evenly across fuel stations without capacityL', () => {
+    const legacy = {
+      id: 'legacy-1', name: 'DR221', registration: 'F-BPCT',
+      characteristics: { regimes: [{ label: '75%', speed: 108, fuelBurn: 22 }], fuelCapacity: 190 },
+      massBalance: {
+        emptyWeight: 615, emptyArm: 345,
+        stations: [
+          { name: 'Avant', arm: 100, kind: 'fuel' },
+          { name: 'Arrière', arm: 1120, kind: 'fuel' },
+        ],
+        envelopePoints: [],
+      },
+      performance: {
+        toTable: { weights: [840], pressureAltitudes: [0], oats: [15], values: [[[440]]] },
+        ldgTable: { weights: [840], pressureAltitudes: [0], oats: [15], values: [[[510]]] },
+      },
+    }
+    saveAircraft(legacy as unknown as Aircraft)
+
+    const migrated = getAircraft('legacy-1')!
+
+    expect(migrated.massBalance.stations[0].capacityL).toBe(95)
+    expect(migrated.massBalance.stations[1].capacityL).toBe(95)
+    expect((migrated.characteristics as { fuelCapacity?: number }).fuelCapacity).toBeUndefined()
+  })
+
+  it('leaves an aircraft that already has capacityL unchanged', () => {
+    const modern = makeAircraft({
+      id: 'modern-1',
+      massBalance: {
+        emptyWeight: 615, emptyArm: 345,
+        stations: [{ name: 'Carburant', arm: 350, kind: 'fuel', capacityL: 116 }],
+        envelopePoints: [],
+      },
+    })
+    saveAircraft(modern)
+
+    const result = getAircraft('modern-1')!
+
+    expect(result.massBalance.stations[0].capacityL).toBe(116)
   })
 })
