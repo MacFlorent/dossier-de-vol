@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import type { FlightDossier, StationLoading, WBResult } from '../../types'
-import { computeWB } from '../../lib/aviation/wbCalc'
+import { computeWB, totalFuelCapacity } from '../../lib/aviation/wbCalc'
 import { FUEL_DENSITY_KGL } from '../../lib/aviation/constants'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
@@ -119,7 +119,7 @@ function arrivalFuelLoading(
 
 export function WBPanel({ dossier, onUpdate }: Props) {
   const { aircraft, loading } = dossier
-  const { massBalance, characteristics } = aircraft
+  const { massBalance } = aircraft
   const { stations, emptyWeight, envelopePoints } = massBalance
 
   // Derive MTOW from envelope points (max weight in envelope)
@@ -163,7 +163,8 @@ export function WBPanel({ dossier, onUpdate }: Props) {
   const totalArrFuelKg = totalArrFuelL * FUEL_DENSITY_KGL
 
   return (
-    <div className="p-4 max-w-4xl mx-auto">
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-auto p-4 space-y-5">
       <div className="grid gap-6 md:grid-cols-2">
         {/* Left: station inputs */}
         <div className="space-y-4">
@@ -219,7 +220,7 @@ export function WBPanel({ dossier, onUpdate }: Props) {
                       <td className="py-1.5">
                         <div className="text-[var(--text-2)]">{st.name}</div>
                         <div className="text-xs text-[var(--text-dim)] mt-0.5">
-                          Cap. {characteristics.fuelCapacity} L
+                          Cap. {totalFuelCapacity(massBalance)} L
                         </div>
                       </td>
                       <td className="py-1.5 pl-2">
@@ -227,7 +228,7 @@ export function WBPanel({ dossier, onUpdate }: Props) {
                           <input
                             type="number"
                             min={0}
-                            max={characteristics.fuelCapacity}
+                            max={totalFuelCapacity(massBalance)}
                             value={depL === 0 ? '' : depL}
                             placeholder="0"
                             onChange={e => handleChange(st.name, e.target.value)}
@@ -323,15 +324,6 @@ export function WBPanel({ dossier, onUpdate }: Props) {
             </table>
           </Card>
 
-          <Card padding="sm">
-            <p className="text-xs text-[var(--text-dim)] uppercase tracking-wider mb-2">Enveloppe de centrage</p>
-            <EnvelopeSVG
-              points={envelopePoints}
-              departure={{ weight: depResult.totalWeight, cg: depResult.cg }}
-              arrival={{ weight: arrResult.totalWeight, cg: arrResult.cg }}
-            />
-          </Card>
-
           {depResult.totalWeight > maxWeight && (
             <Card padding="sm">
               <p className="text-[var(--red)] text-sm font-medium">
@@ -354,6 +346,16 @@ export function WBPanel({ dossier, onUpdate }: Props) {
             </Card>
           )}
         </div>
+      </div>
+
+      <Card padding="sm">
+        <p className="text-xs text-[var(--text-dim)] uppercase tracking-wider mb-2">Enveloppe de centrage</p>
+        <EnvelopeSVG
+          points={envelopePoints}
+          departure={{ weight: depResult.totalWeight, cg: depResult.cg }}
+          arrival={{ weight: arrResult.totalWeight, cg: arrResult.cg }}
+        />
+      </Card>
       </div>
     </div>
   )
