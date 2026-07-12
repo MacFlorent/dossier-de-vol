@@ -143,6 +143,10 @@ Pas de `FlightTabStrip` : le chargement (`loading`) est au niveau du dossier, pa
 
 ## 4. Graphe (`EnvelopeSVG`)
 
+### Choix technique : pas de librairie de graphe
+
+Le projet n'a aujourd'hui aucune dépendance de charting (seul `leaflet` pour les cartes). Ce graphe reste en SVG fait main plutôt que d'introduire une librairie (recharts, visx…) : le polygone d'enveloppe rempli n'est pas un type de graphe standard proposé clé en main par ces librairies, donc même avec une lib il faudrait passer par une échappatoire bas niveau pour le dessiner — autant garder le contrôle total sans ajouter de dépendance pour un seul graphe dans toute l'application.
+
 ### Points affichés
 
 Props redéfinies :
