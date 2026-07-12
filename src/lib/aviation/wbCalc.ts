@@ -22,6 +22,12 @@ export function computeWB(
   return { totalWeight, totalMoment, cg, inEnvelope }
 }
 
+export function totalFuelCapacity(massBalance: AircraftMassBalance): number {
+  return massBalance.stations
+    .filter(s => s.kind === 'fuel')
+    .reduce((sum, s) => sum + s.capacityL, 0)
+}
+
 function pointInPolygon(w: number, cg: number, polygon: [number, number][]): boolean {
   let inside = false
   const n = polygon.length
