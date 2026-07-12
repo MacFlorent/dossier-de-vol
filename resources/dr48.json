@@ -19,8 +19,7 @@
         "speed": 144,
         "fuelBurn": 39
       }
-    ],
-    "fuelCapacity": 190
+    ]
   },
   "massBalance": {
     "emptyWeight": 634,
@@ -54,12 +53,14 @@
       {
         "name": "Essence Avant (80L max)",
         "arm": 100,
-        "kind": "fuel"
+        "kind": "fuel",
+        "capacityL": 80
       },
       {
         "name": "Essence Arrière (110L max)",
         "arm": 1120,
-        "kind": "fuel"
+        "kind": "fuel",
+        "capacityL": 110
       }
     ],
     "envelopePoints": [

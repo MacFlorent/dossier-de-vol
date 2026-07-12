@@ -6,8 +6,7 @@
   "characteristics": {
     "regimes": [
       { "label": "75% puissance", "speed": 115, "fuelBurn": 25 }
-    ],
-    "fuelCapacity": 110
+    ]
   },
   "massBalance": {
     "emptyWeight": 521,
@@ -17,7 +16,7 @@
       { "name": "Copilote", "arm": 430, "kind": "dry" },
       { "name": "Passager Gauche", "arm": 1220, "kind": "dry" },
       { "name": "Passager Droit", "arm": 1220, "kind": "dry" },
-      { "name": "Carburant", "arm": 1120, "kind": "fuel" }
+      { "name": "Carburant", "arm": 1120, "kind": "fuel", "capacityL": 110 }
     ],
     "envelopePoints": [
       [440, 310],

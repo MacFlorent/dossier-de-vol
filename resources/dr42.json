@@ -9,8 +9,7 @@
         "speed": 108,
         "fuelBurn": 25
       }
-    ],
-    "fuelCapacity": 110
+    ]
   },
   "massBalance": {
     "emptyWeight": 569,
@@ -44,7 +43,8 @@
       {
         "name": "Essence",
         "arm": 1120,
-        "kind": "fuel"
+        "kind": "fuel",
+        "capacityL": 110
       }
     ],
     "envelopePoints": [
