@@ -86,6 +86,7 @@ describe('FuelPanel', () => {
       const headings = Array.from(container.querySelectorAll('h2')).map(h => h.textContent)
       expect(headings.indexOf('Autonomie requise')).toBeGreaterThanOrEqual(0)
       expect(headings.indexOf('Autonomie requise')).toBeLessThan(headings.indexOf('Appareil'))
+      expect(headings.filter(h => h === 'Autonomie requise')).toHaveLength(1)
     })
   })
 
