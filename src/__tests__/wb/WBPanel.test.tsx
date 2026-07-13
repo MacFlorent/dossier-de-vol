@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { WBPanel } from '../../features/wb/WBPanel'
 import type { FlightDossier } from '../../types'
 
@@ -46,5 +46,78 @@ describe('WBPanel — layout', () => {
     render(<WBPanel dossier={makeDossier()} onUpdate={vi.fn()} />)
     expect(screen.getByText('Chargement')).toBeInTheDocument()
     expect(screen.getByText(/Résultats M&C/)).toBeInTheDocument()
+  })
+})
+
+describe('WBPanel — three W&B points', () => {
+  it('renders Sans carburant, Actuel and Plein carburant rows in the results table', () => {
+    render(<WBPanel dossier={makeDossier()} onUpdate={vi.fn()} />)
+    const table = screen.getByTestId('wb-results-table')
+    expect(within(table).getByText('Sans carburant')).toBeInTheDocument()
+    expect(within(table).getByText('Actuel')).toBeInTheDocument()
+    expect(within(table).getByText('Plein carburant')).toBeInTheDocument()
+  })
+
+  it('computes the zero-fuel point by zeroing fuel stations while keeping dry load', () => {
+    render(<WBPanel dossier={makeDossier()} onUpdate={vi.fn()} />)
+    const table = screen.getByTestId('wb-results-table')
+    // 600 (empty) + 80 (Pilote) + 0 fuel = 680
+    expect(within(table).getByText('680.0 kg')).toBeInTheDocument()
+  })
+
+  it('computes the current point from the entered loading, as before', () => {
+    render(<WBPanel dossier={makeDossier()} onUpdate={vi.fn()} />)
+    const table = screen.getByTestId('wb-results-table')
+    // 600 + 80 + 50L*0.72 = 716
+    expect(within(table).getByText('716.0 kg')).toBeInTheDocument()
+  })
+
+  it('computes the full-fuel point using each fuel station capacityL', () => {
+    render(<WBPanel dossier={makeDossier()} onUpdate={vi.fn()} />)
+    const table = screen.getByTestId('wb-results-table')
+    // 600 + 80 + 100L*0.72 = 752
+    expect(within(table).getByText('752.0 kg')).toBeInTheDocument()
+  })
+
+  it('shows an informational note and coincident points when there are no fuel stations', () => {
+    const dossier = makeDossier()
+    dossier.aircraft.massBalance.stations = dossier.aircraft.massBalance.stations.filter(s => s.kind !== 'fuel')
+    render(<WBPanel dossier={dossier} onUpdate={vi.fn()} />)
+    expect(screen.getByText('Aucune station carburant — le centrage ne varie pas avec le carburant')).toBeInTheDocument()
+  })
+
+  it('bounds each fuel station input by its own capacityL, not a shared figure', () => {
+    const dossier = makeDossier()
+    dossier.aircraft.massBalance.stations = [
+      { name: 'Pilote', arm: 700, kind: 'dry', capacityL: 0 },
+      { name: 'Avant', arm: 100, kind: 'fuel', capacityL: 80 },
+      { name: 'Arrière', arm: 1120, kind: 'fuel', capacityL: 110 },
+    ]
+    render(<WBPanel dossier={dossier} onUpdate={vi.fn()} />)
+    expect(screen.getByRole('spinbutton', { name: 'Avant (L)' })).toHaveAttribute('max', '80')
+    expect(screen.getByRole('spinbutton', { name: 'Arrière (L)' })).toHaveAttribute('max', '110')
+  })
+})
+
+describe('WBPanel — envelope graph', () => {
+  it('renders axis titles', () => {
+    render(<WBPanel dossier={makeDossier()} onUpdate={vi.fn()} />)
+    expect(screen.getByText('Masse (kg)')).toBeInTheDocument()
+    expect(screen.getByText('CG (mm)')).toBeInTheDocument()
+  })
+
+  it('draws exactly three point markers and a dashed trajectory line', () => {
+    const { container } = render(<WBPanel dossier={makeDossier()} onUpdate={vi.fn()} />)
+    const svg = container.querySelector('svg[aria-label="Enveloppe de centrage"]')!
+    expect(svg.querySelectorAll('circle')).toHaveLength(3)
+    expect(svg.querySelector('line[stroke-dasharray]')).toBeInTheDocument()
+  })
+
+  it('shows a legend naming the three points', () => {
+    render(<WBPanel dossier={makeDossier()} onUpdate={vi.fn()} />)
+    const legend = screen.getByTestId('wb-graph-legend')
+    expect(within(legend).getByText('Sans carburant')).toBeInTheDocument()
+    expect(within(legend).getByText('Actuel')).toBeInTheDocument()
+    expect(within(legend).getByText('Plein carburant')).toBeInTheDocument()
   })
 })
