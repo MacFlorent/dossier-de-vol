@@ -16,6 +16,17 @@ describe('TEMPLATES — autodiscovery', () => {
     }
   })
 
+  it('every fuel station has a positive capacityL, and no template has a legacy global fuelCapacity', () => {
+    for (const t of TEMPLATES) {
+      expect((t.template.characteristics as { fuelCapacity?: number }).fuelCapacity).toBeUndefined()
+      for (const station of t.template.massBalance.stations) {
+        if (station.kind === 'fuel') {
+          expect(station.capacityL).toBeGreaterThan(0)
+        }
+      }
+    }
+  })
+
   it('dr221 template is present', () => {
     const t = getTemplate('dr221')
     expect(t).not.toBeNull()

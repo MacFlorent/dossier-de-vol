@@ -10,8 +10,8 @@ const defaultSegment: FlightSegment = {
 const oldAircraft = {
   id: 'ac-old', name: 'DR221', registration: 'F-BPCT',
   snapshotAt: '2026-01-01T00:00:00.000Z',
-  characteristics: { regimes: [{ label: '75%', speed: 108, fuelBurn: 22 }], fuelCapacity: 116 },
-  massBalance: { emptyWeight: 615, emptyArm: 345, stations: [{ name: 'Pilote', arm: 300, kind: 'dry' as const }], envelopePoints: [] },
+  characteristics: { regimes: [{ label: '75%', speed: 108, fuelBurn: 22 }] },
+  massBalance: { emptyWeight: 615, emptyArm: 345, stations: [{ name: 'Pilote', arm: 300, kind: 'dry' as const, capacityL: 0 }], envelopePoints: [] },
   performance: {
     toTable: { weights: [840], pressureAltitudes: [0], oats: [15], values: [[[440]]] },
     ldgTable: { weights: [840], pressureAltitudes: [0], oats: [15], values: [[[510]]] },
@@ -20,8 +20,8 @@ const oldAircraft = {
 
 const newAircraft: Aircraft = {
   id: 'ac-new', name: 'DR42', registration: 'F-WXYZ',
-  characteristics: { regimes: [{ label: '75%', speed: 120, fuelBurn: 25 }], fuelCapacity: 130 },
-  massBalance: { emptyWeight: 700, emptyArm: 350, stations: [{ name: 'Passager', arm: 320, kind: 'dry' as const }], envelopePoints: [] },
+  characteristics: { regimes: [{ label: '75%', speed: 120, fuelBurn: 25 }] },
+  massBalance: { emptyWeight: 700, emptyArm: 350, stations: [{ name: 'Passager', arm: 320, kind: 'dry' as const, capacityL: 0 }], envelopePoints: [] },
   performance: {
     toTable: { weights: [900], pressureAltitudes: [0], oats: [15], values: [[[450]]] },
     ldgTable: { weights: [900], pressureAltitudes: [0], oats: [15], values: [[[520]]] },

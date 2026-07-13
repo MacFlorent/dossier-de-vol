@@ -4,6 +4,7 @@ export interface WeightStation {
   name: string
   arm: number   // mm depuis le datum
   kind: 'dry' | 'fuel'
+  capacityL: number   // capacité utilisable, pertinent seulement si kind === 'fuel'
 }
 
 export interface PerformanceTable {
@@ -30,7 +31,6 @@ export interface CruiseRegime {
 
 export interface AircraftCharacteristics {
   regimes: CruiseRegime[]  // premier = régime par défaut du navlog
-  fuelCapacity: number     // L utilisables
 }
 
 export interface AircraftMassBalance {

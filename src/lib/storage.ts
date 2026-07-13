@@ -1,7 +1,20 @@
-import type { Aircraft, AircraftMassBalance, FlightDossier } from '../types'
+import type { Aircraft, AircraftMassBalance, FlightDossier, WeightStation } from '../types'
 
 const AIRCRAFT_KEY_PREFIX = 'dossier-de-vol:aircraft:'
 const AIRCRAFT_INDEX_KEY = 'dossier-de-vol:aircraft:index'
+
+function migrateAircraftFuelCapacity(ac: Aircraft): void {
+  const legacyCapacity = (ac.characteristics as { fuelCapacity?: number }).fuelCapacity
+  if (legacyCapacity === undefined) return
+  const fuelStations = ac.massBalance.stations.filter(s => s.kind === 'fuel')
+  const each = fuelStations.length > 0 ? legacyCapacity / fuelStations.length : 0
+  ac.massBalance.stations = ac.massBalance.stations.map(s =>
+    s.kind === 'fuel' && (s as WeightStation & { capacityL?: number }).capacityL === undefined
+      ? { ...s, capacityL: each }
+      : s
+  )
+  delete (ac.characteristics as { fuelCapacity?: number }).fuelCapacity
+}
 
 // ── Aircraft (localStorage) ──────────────────────────────────────────────────
 
@@ -37,6 +50,8 @@ export function getAircraft(id: string): Aircraft | null {
       }
       return r
     })
+    // Migrate: fuelCapacity (global) → capacityL per fuel station
+    migrateAircraftFuelCapacity(ac)
   }
   return ac
 }
@@ -119,6 +134,11 @@ export function migrateDossier(d: unknown): FlightDossier {
       data.fuelInputs = { [branchId]: rest }
     }
   }
+  // Migrate legacy embedded aircraft snapshot: fuelCapacity (global) → capacityL per fuel station
+  if (data.aircraft) {
+    migrateAircraftFuelCapacity(data.aircraft as Aircraft)
+  }
+
   // Remove legacy fields
   delete data.route
   delete data.navOverrides

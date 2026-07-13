@@ -1,5 +1,5 @@
 import type { FlightDossier } from '../../types'
-import { computeWB } from '../../lib/aviation/wbCalc'
+import { computeWB, totalFuelCapacity } from '../../lib/aviation/wbCalc'
 import { FUEL_DENSITY_KGL } from '../../lib/aviation/constants'
 import { computeBranchFuel } from '../../lib/aviation/fuelCalc'
 import { downloadDossier } from '../../lib/storage'
@@ -196,7 +196,7 @@ export function DossierPanel({ dossier }: Props) {
                 })}
                 <div className="flex justify-between text-[var(--text-dim)]">
                   <dt>Capacité avion</dt>
-                  <dd className="font-mono">{aircraft.characteristics.fuelCapacity} L</dd>
+                  <dd className="font-mono">{totalFuelCapacity(aircraft.massBalance)} L</dd>
                 </div>
               </dl>
             )}

@@ -30,7 +30,7 @@ import type { AircraftSnapshot, FlightBranch, FlightSegment, FlightAerodrome } f
 
 const aircraftStub: AircraftSnapshot = {
   id: 'ac-1', name: 'DR221', registration: 'F-BPCT', snapshotAt: '2026-01-01T00:00:00.000Z',
-  characteristics: { regimes: [{ label: '75%', speed: 108, fuelBurn: 22 }], fuelCapacity: 116 },
+  characteristics: { regimes: [{ label: '75%', speed: 108, fuelBurn: 22 }] },
   massBalance: { emptyWeight: 615, emptyArm: 345, stations: [], envelopePoints: [] },
   performance: {
     toTable: { weights: [840], pressureAltitudes: [0], oats: [15], values: [[[440]]] },

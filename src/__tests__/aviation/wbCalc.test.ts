@@ -1,13 +1,13 @@
-import { computeWB } from '../../lib/aviation/wbCalc'
+import { computeWB, totalFuelCapacity } from '../../lib/aviation/wbCalc'
 import type { AircraftMassBalance } from '../../types'
 
 const massBalance: AircraftMassBalance = {
   emptyWeight: 615,
   emptyArm: 345,
   stations: [
-    { name: 'Pilote', arm: 375, kind: 'dry' as const },
-    { name: 'Passager', arm: 505, kind: 'dry' as const },
-    { name: 'Carburant', arm: 350, kind: 'fuel' as const },
+    { name: 'Pilote', arm: 375, kind: 'dry' as const, capacityL: 0 },
+    { name: 'Passager', arm: 505, kind: 'dry' as const, capacityL: 0 },
+    { name: 'Carburant', arm: 350, kind: 'fuel' as const, capacityL: 100 },
   ],
   envelopePoints: [
     [615, 295], [615, 430], [880, 430], [1000, 425], [1000, 360], [880, 295],
@@ -76,5 +76,29 @@ describe('computeWB', () => {
     // density 0.80 kg/L: 50 L → 40 kg
     const result = computeWB(massBalance, { Carburant: 50 }, 0.80)
     expect(result.totalWeight).toBeCloseTo(615 + 40, 1)
+  })
+})
+
+describe('totalFuelCapacity', () => {
+  it('sums capacityL across all fuel stations', () => {
+    const mb: AircraftMassBalance = {
+      emptyWeight: 615, emptyArm: 345,
+      stations: [
+        { name: 'Pilote', arm: 375, kind: 'dry', capacityL: 0 },
+        { name: 'Avant', arm: 100, kind: 'fuel', capacityL: 80 },
+        { name: 'Arrière', arm: 1120, kind: 'fuel', capacityL: 110 },
+      ],
+      envelopePoints: [],
+    }
+    expect(totalFuelCapacity(mb)).toBe(190)
+  })
+
+  it('returns 0 when there are no fuel stations', () => {
+    const mb: AircraftMassBalance = {
+      emptyWeight: 615, emptyArm: 345,
+      stations: [{ name: 'Pilote', arm: 375, kind: 'dry', capacityL: 0 }],
+      envelopePoints: [],
+    }
+    expect(totalFuelCapacity(mb)).toBe(0)
   })
 })

@@ -8,7 +8,7 @@ import type { Aircraft } from '../../types'
 function makeAircraft(overrides: Partial<Aircraft> = {}): Aircraft {
   return {
     id: 'ac-1', name: 'DR400', registration: 'F-GABC',
-    characteristics: { regimes: [{ label: '75%', speed: 120, fuelBurn: 30 }], fuelCapacity: 110 },
+    characteristics: { regimes: [{ label: '75%', speed: 120, fuelBurn: 30 }] },
     massBalance: { emptyWeight: 600, emptyArm: 800, stations: [], envelopePoints: [] },
     performance: {
       toTable: { weights: [750], pressureAltitudes: [0], oats: [15], values: [[[300]]] },

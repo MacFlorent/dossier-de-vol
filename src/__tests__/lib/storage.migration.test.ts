@@ -7,7 +7,7 @@ const aircraftStub = {
   name: 'DR221',
   registration: 'F-BPCT',
   snapshotAt: '2026-01-01T00:00:00.000Z',
-  characteristics: { regimes: [{ label: '75%', speed: 108, fuelBurn: 22 }], fuelCapacity: 116 },
+  characteristics: { regimes: [{ label: '75%', speed: 108, fuelBurn: 22 }] },
   massBalance: { emptyWeight: 615, emptyArm: 345, stations: [], envelopePoints: [] },
   performance: {
     toTable: { weights: [840], pressureAltitudes: [0], oats: [15], values: [[[440]]] },
@@ -168,6 +168,26 @@ describe('migrateDossier', () => {
       expect(result.fuelInputs).toEqual(fuelRecord)
       expect(Object.keys(result.fuelInputs)).toHaveLength(1)
       expect(Object.keys(result.fuelInputs)[0]).toBe('branch-existing')
+    })
+  })
+
+  describe('legacy aircraft snapshot embedded in an imported dossier', () => {
+    it('migrates fuelCapacity to per-station capacityL on the embedded aircraft', () => {
+      const legacyAircraft = {
+        ...aircraftStub,
+        characteristics: { regimes: [{ label: '75%', speed: 108, fuelBurn: 22 }], fuelCapacity: 116 },
+        massBalance: {
+          emptyWeight: 615, emptyArm: 345,
+          stations: [{ name: 'Carburant', arm: 350, kind: 'fuel' as const }],
+          envelopePoints: [],
+        },
+      }
+      const old = { ...baseDossierFields, aircraft: legacyAircraft, branches: [], fuelInputs: {} }
+
+      const result = migrateDossier(old)
+
+      expect(result.aircraft.massBalance.stations[0].capacityL).toBe(116)
+      expect((result.aircraft.characteristics as { fuelCapacity?: number }).fuelCapacity).toBeUndefined()
     })
   })
 })

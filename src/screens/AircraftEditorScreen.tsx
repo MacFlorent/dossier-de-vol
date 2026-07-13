@@ -7,6 +7,7 @@ import { Input } from '../components/ui/Input'
 import { Card } from '../components/ui/Card'
 import { validatePerformanceTable } from '../lib/aviation/perfTableValidation'
 import type { PerfTableValidation } from '../lib/aviation/perfTableValidation'
+import { totalFuelCapacity } from '../lib/aviation/wbCalc'
 
 interface Props {
   editingAircraftId: string | null
@@ -156,7 +157,6 @@ export function AircraftEditorScreen({ editingAircraftId, prefillAircraft, onSav
   const [sdReference, setSdReference] = useState('')
 
   const [regimes, setRegimes] = useState<CruiseRegime[]>([{ label: '75% puissance', speed: 100, fuelBurn: 20 }])
-  const [fuelCapacity, setFuelCapacity] = useState(116)
 
   const [emptyWeight, setEmptyWeight] = useState(615)
   const [emptyArm, setEmptyArm] = useState(345)
@@ -186,7 +186,6 @@ export function AircraftEditorScreen({ editingAircraftId, prefillAircraft, onSav
     setRegistration(ac.registration)
     setSdReference(ac.sdReference ?? '')
     setRegimes(ac.characteristics.regimes.map(r => ({ ...r })))
-    setFuelCapacity(ac.characteristics.fuelCapacity)
     setEmptyWeight(ac.massBalance.emptyWeight)
     setEmptyArm(ac.massBalance.emptyArm)
     setStations(ac.massBalance.stations.map(s => ({ ...s })))
@@ -232,7 +231,7 @@ export function AircraftEditorScreen({ editingAircraftId, prefillAircraft, onSav
       name,
       registration,
       sdReference: sdReference || undefined,
-      characteristics: { regimes, fuelCapacity },
+      characteristics: { regimes },
       massBalance: { emptyWeight, emptyArm, stations, envelopePoints },
       performance: { toTable, ldgTable },
     }
@@ -241,7 +240,7 @@ export function AircraftEditorScreen({ editingAircraftId, prefillAircraft, onSav
   }, [
     editingAircraftId,
     name, registration, sdReference,
-    regimes, fuelCapacity,
+    regimes,
     emptyWeight, emptyArm, stations, envelopeJson,
     toTableJson, ldgTableJson,
     onSave,
@@ -260,7 +259,7 @@ export function AircraftEditorScreen({ editingAircraftId, prefillAircraft, onSav
   }, [])
 
   const addStation = useCallback(() => {
-    setStations(prev => [...prev, { name: '', arm: 0, kind: 'dry' as const }])
+    setStations(prev => [...prev, { name: '', arm: 0, kind: 'dry' as const, capacityL: 0 }])
   }, [])
 
   const removeStation = useCallback((idx: number) => {
@@ -272,6 +271,7 @@ export function AircraftEditorScreen({ editingAircraftId, prefillAircraft, onSav
       if (i !== idx) return s
       if (field === 'kind') return { ...s, kind: value as 'dry' | 'fuel' }
       if (field === 'arm') return { ...s, arm: Number(value) }
+      if (field === 'capacityL') return { ...s, capacityL: Number(value) }
       return { ...s, name: String(value) }
     }))
   }, [])
@@ -388,15 +388,6 @@ export function AircraftEditorScreen({ editingAircraftId, prefillAircraft, onSav
             </div>
           )}
           <Button variant="ghost" size="sm" onClick={addRegime}>+ Ajouter régime</Button>
-
-          <div className="mt-4 max-w-xs">
-            <Input
-              label="Capacité carburant (L)"
-              type="number"
-              value={fuelCapacity}
-              onChange={e => setFuelCapacity(Number(e.target.value))}
-            />
-          </div>
         </Card>
 
         {/* Masse & centrage */}
@@ -432,6 +423,7 @@ export function AircraftEditorScreen({ editingAircraftId, prefillAircraft, onSav
                       <th className="pb-1 pr-3 font-medium">Nom</th>
                       <th className="pb-1 pr-3 font-medium">Bras (mm)</th>
                       <th className="pb-1 pr-3 font-medium">Type</th>
+                      <th className="pb-1 pr-3 font-medium">Capacité (L)</th>
                       <th className="pb-1 font-medium"></th>
                     </tr>
                   </thead>
@@ -463,6 +455,18 @@ export function AircraftEditorScreen({ editingAircraftId, prefillAircraft, onSav
                             <option value="fuel">Carburant (L)</option>
                           </select>
                         </td>
+                        <td className="py-1.5 pr-3">
+                          {s.kind === 'fuel' && (
+                            <input
+                              id={`station-capacity-${idx}`}
+                              type="number"
+                              aria-label={`${s.name} (L)`}
+                              className="w-24 px-2 py-1 rounded text-xs font-mono text-[var(--text-1)] bg-[var(--bg-inset)] border border-[var(--border)] focus:outline-none focus:border-[var(--amber)]"
+                              value={s.capacityL}
+                              onChange={e => updateStation(idx, 'capacityL', Number(e.target.value))}
+                            />
+                          )}
+                        </td>
                         <td className="py-1.5">
                           <button
                             className="text-[var(--text-dim)] hover:text-[var(--red)] text-xs px-1"
@@ -478,6 +482,9 @@ export function AircraftEditorScreen({ editingAircraftId, prefillAircraft, onSav
               </div>
             )}
             <Button variant="ghost" size="sm" onClick={addStation}>+ Ajouter station</Button>
+            <p className="text-xs text-[var(--text-dim)] mt-2">
+              Capacité totale : {totalFuelCapacity({ emptyWeight, emptyArm, stations, envelopePoints: [] })} L
+            </p>
           </div>
 
           <div className="flex flex-col gap-1">
