@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, within, fireEvent } from '@testing-library/react'
 import { WBPanel } from '../../features/wb/WBPanel'
 import type { FlightDossier } from '../../types'
 
@@ -96,6 +96,15 @@ describe('WBPanel — three W&B points', () => {
     render(<WBPanel dossier={dossier} onUpdate={vi.fn()} />)
     expect(screen.getByRole('spinbutton', { name: 'Avant (L)' })).toHaveAttribute('max', '80')
     expect(screen.getByRole('spinbutton', { name: 'Arrière (L)' })).toHaveAttribute('max', '110')
+  })
+
+  it('clamps a fuel value exceeding the station capacityL to that capacityL', () => {
+    const onUpdate = vi.fn()
+    render(<WBPanel dossier={makeDossier()} onUpdate={onUpdate} />)
+    const input = screen.getByRole('spinbutton', { name: 'Carburant (L)' })
+    fireEvent.change(input, { target: { value: '150' } })
+    const last = onUpdate.mock.calls.at(-1)![0] as Record<string, number>
+    expect(last['Carburant']).toBe(100)
   })
 })
 

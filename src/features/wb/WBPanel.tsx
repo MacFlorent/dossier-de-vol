@@ -184,7 +184,9 @@ export function WBPanel({ dossier, onUpdate }: Props) {
   const status = wbStatus([zfwResult, curResult, fullResult])
 
   const handleChange = (name: string, value: string) => {
-    const v = value === '' ? 0 : Math.max(0, Number(value))
+    let v = value === '' ? 0 : Math.max(0, Number(value))
+    const st = stations.find(s => s.name === name)
+    if (st?.kind === 'fuel') v = Math.min(v, st.capacityL)
     onUpdate({ ...loading, [name]: v })
   }
 
