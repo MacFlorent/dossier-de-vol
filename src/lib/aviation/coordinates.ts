@@ -33,3 +33,13 @@ export function headwindKt(
   const angle = ((windDirMag - runwayHeadingMag) + 360) % 360
   return Math.round(windSpeedKt * Math.cos(angle * Math.PI / 180))
 }
+
+/** Composante de vent traversier par rapport à une piste (kt). Positif = vent de droite, négatif = vent de gauche. */
+export function crosswindKt(
+  windDirMag: number,
+  windSpeedKt: number,
+  runwayHeadingMag: number,
+): number {
+  const angle = ((windDirMag - runwayHeadingMag) + 360) % 360
+  return Math.round(windSpeedKt * Math.sin(angle * Math.PI / 180))
+}
