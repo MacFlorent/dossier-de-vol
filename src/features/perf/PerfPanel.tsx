@@ -130,7 +130,6 @@ export function PerfPanel({ dossier, onUpdate, onUpdateRegulatory, onUpdateExtra
           return (
             <div className="space-y-4">
               <AerodromeConditionsCard
-                icao={icao}
                 runways={aero?.runways ?? []}
                 inputs={inputs}
                 elevation={elevation}

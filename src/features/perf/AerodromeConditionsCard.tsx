@@ -4,7 +4,6 @@ import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 
 interface Props {
-  icao: string
   runways: RunwayInfo[]
   inputs: TerrainPerfInputs
   elevation: number
@@ -23,7 +22,7 @@ function bestRunway(runways: RunwayInfo[], windDir: number, windSpeed: number): 
 }
 
 export function AerodromeConditionsCard({
-  icao, runways, inputs, elevation, qnh, temp, pa, da, onUpdate, onEditReferential,
+  runways, inputs, elevation, qnh, temp, pa, da, onUpdate, onEditReferential,
 }: Props) {
   const handleRunwaySelect = (ident: string) => {
     const rwy = runways.find(r => r.ident === ident)
