@@ -1,15 +1,18 @@
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 
 interface FlightTabStripProps {
-  branches: { id: string; label: string }[]
+  branches: { id: string; label: string; closable?: boolean }[]
   activeId: string
   onSelect: (id: string) => void
   onRename?: (id: string, label: string) => void
   onAdd?: () => void
+  onClose?: (id: string) => void
+  renderBadge?: (id: string) => ReactNode
   className?: string
 }
 
-export function FlightTabStrip({ branches, activeId, onSelect, onRename, onAdd, className = '' }: FlightTabStripProps) {
+export function FlightTabStrip({ branches, activeId, onSelect, onRename, onAdd, onClose, renderBadge, className = '' }: FlightTabStripProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
 
   return (
@@ -47,6 +50,17 @@ export function FlightTabStrip({ branches, activeId, onSelect, onRename, onAdd, 
             />
           ) : (
             <span onDoubleClick={onRename ? () => setEditingId(b.id) : undefined}>{b.label}</span>
+          )}
+          {renderBadge?.(b.id)}
+          {onClose && b.closable && (
+            <button
+              type="button"
+              aria-label={`Fermer ${b.label}`}
+              onClick={e => { e.stopPropagation(); onClose(b.id) }}
+              className="text-[var(--text-dim)] hover:text-[var(--red)] text-xs px-0.5"
+            >
+              ✕
+            </button>
           )}
         </div>
       ))}

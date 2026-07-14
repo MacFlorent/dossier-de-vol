@@ -77,4 +77,40 @@ describe('FlightTabStrip', () => {
     fireEvent.blur(input)
     expect(onRename).toHaveBeenCalledWith('b1', 'Retour bis')
   })
+
+  it('does not render a close button when onClose is omitted', () => {
+    render(<FlightTabStrip branches={[{ id: 'b1', label: 'LFPN', closable: true }]} activeId="b1" onSelect={vi.fn()} />)
+    expect(screen.queryByLabelText(/fermer/i)).not.toBeInTheDocument()
+  })
+
+  it('does not render a close button on a non-closable tab even with onClose provided', () => {
+    render(<FlightTabStrip branches={[{ id: 'b1', label: 'LFPN', closable: false }]} activeId="b1" onSelect={vi.fn()} onClose={vi.fn()} />)
+    expect(screen.queryByLabelText(/fermer/i)).not.toBeInTheDocument()
+  })
+
+  it('renders a close button and calls onClose with the tab id when closable', async () => {
+    const onClose = vi.fn()
+    render(<FlightTabStrip branches={[{ id: 'b1', label: 'LFPN', closable: true }]} activeId="b1" onSelect={vi.fn()} onClose={onClose} />)
+    await userEvent.click(screen.getByLabelText(/fermer/i))
+    expect(onClose).toHaveBeenCalledWith('b1')
+  })
+
+  it('clicking the close button does not trigger onSelect', async () => {
+    const onSelect = vi.fn()
+    render(<FlightTabStrip branches={[{ id: 'b1', label: 'LFPN', closable: true }]} activeId="b1" onSelect={onSelect} onClose={vi.fn()} />)
+    await userEvent.click(screen.getByLabelText(/fermer/i))
+    expect(onSelect).not.toHaveBeenCalled()
+  })
+
+  it('renders badge content from renderBadge next to the label', () => {
+    render(
+      <FlightTabStrip
+        branches={[{ id: 'b1', label: 'LFPN' }]}
+        activeId="b1"
+        onSelect={vi.fn()}
+        renderBadge={id => <span>badge-{id}</span>}
+      />
+    )
+    expect(screen.getByText('badge-b1')).toBeInTheDocument()
+  })
 })
