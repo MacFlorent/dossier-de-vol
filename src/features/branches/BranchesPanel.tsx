@@ -6,6 +6,7 @@ import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png'
 import shadowUrl from 'leaflet/dist/images/marker-shadow.png'
 import type { AircraftSnapshot, FlightBranch, FlightAerodrome, FlightSegment } from '../../types'
 import { getAerodromeDb, getAerodrome } from '../../lib/icao/aerodromeDb'
+import { ROLE_LABELS, ROLE_COLORS, ROLE_CYCLE, type AeroRole } from '../../lib/aviation/aerodromeRoles'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
@@ -25,17 +26,10 @@ const makeIcon = (color: string, size: number) => new L.Icon({
   iconSize: [size, size * 1.5], iconAnchor: [size / 2, size * 1.5], popupAnchor: [0, -size * 1.5],
 })
 
-type AeroRole = FlightAerodrome['role']
-
 const ROLE_ICONS: Record<AeroRole, L.Icon> = {
   DEP: makeIcon('#4d8df0', 24), ARR: makeIcon('#46c98a', 24),
   ALTERNATE: makeIcon('#f0a93b', 20), OVERFLY: makeIcon('#888888', 16),
 }
-const ROLE_LABELS: Record<AeroRole, string> = { DEP: 'DEP', ARR: 'ARR', ALTERNATE: 'ALT', OVERFLY: 'OVFL' }
-const ROLE_COLORS: Record<AeroRole, string> = {
-  DEP: 'var(--blue)', ARR: 'var(--green)', ALTERNATE: 'var(--amber)', OVERFLY: 'var(--text-dim)',
-}
-const ROLE_CYCLE: AeroRole[] = ['DEP', 'ARR', 'ALTERNATE', 'OVERFLY']
 
 function syncAlternateSegment(branch: FlightBranch): FlightBranch {
   const hasAlternate = branch.aerodromes.some(a => a.role === 'ALTERNATE')
