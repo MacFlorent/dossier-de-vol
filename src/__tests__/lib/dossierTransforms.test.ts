@@ -42,6 +42,7 @@ const baseDossier: FlightDossier = {
   loading: { 'Pilote': 80 },
   perfRegulatory: 1.15,
   perfInputs: { 'b1': { surface: 'hard', windKt: 5 } },
+  perfExtraAerodromes: [],
   notes: 'vol test',
   createdAt: '2026-06-18T10:00:00.000Z',
   updatedAt: '2026-06-18T10:00:00.000Z',

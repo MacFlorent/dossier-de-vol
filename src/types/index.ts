@@ -141,6 +141,12 @@ export interface TerrainPerfInputs {
   windKt: number    // kt positif = face, négatif = arrière
   toda?: number     // m disponible (optionnel, pour validation)
   lda?: number      // m disponible (optionnel, pour validation)
+  windDirDeg?: number      // vent réel saisi — direction magnétique
+  windSpeedKt?: number     // vent réel saisi — vitesse en kt
+  selectedRunway?: string  // piste active choisie (auto ou manuelle)
+  elevation?: number       // élévation terrain saisie (survit au changement d'onglet)
+  qnh?: number             // QNH saisi
+  temp?: number            // température saisie
 }
 
 // ── Dossier de vol ────────────────────────────────────────────────────────────
@@ -159,6 +165,7 @@ export interface FlightDossier {
   loading: StationLoading
   perfRegulatory: number
   perfInputs: Record<string, TerrainPerfInputs>
+  perfExtraAerodromes: string[]   // ICAO ajoutés manuellement sur Performances (hors DEP/ARR/DVRT)
 
   notes: string
 

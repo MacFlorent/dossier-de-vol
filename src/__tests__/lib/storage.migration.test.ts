@@ -144,6 +144,7 @@ describe('migrateDossier', () => {
         ...baseDossierFields,
         branches: existingBranches,
         fuelInputs: { 'branch-existing': { pilotFactor: 0, taxiMin: 10, landingMin: 15, alternateLandingMin: 15, extras: [], reserveMode: 'day' } },
+        perfExtraAerodromes: [],
       }
 
       const result = migrateDossier(modern)
@@ -161,6 +162,7 @@ describe('migrateDossier', () => {
         ...baseDossierFields,
         branches: [{ id: 'branch-existing', label: 'Aller', aerodromes: [], segments: [{ id: 's1', role: 'ENROUTE' as const, name: 'Vol', distanceNm: 0, headingMag: 0, wind: null }], notes: '' }],
         fuelInputs: fuelRecord,
+        perfExtraAerodromes: [],
       }
 
       const result = migrateDossier(modern)
@@ -188,6 +190,20 @@ describe('migrateDossier', () => {
 
       expect(result.aircraft.massBalance.stations[0].capacityL).toBe(116)
       expect((result.aircraft.characteristics as { fuelCapacity?: number }).fuelCapacity).toBeUndefined()
+    })
+  })
+
+  describe('dossier without perfExtraAerodromes', () => {
+    it('defaults perfExtraAerodromes to an empty array', () => {
+      const old = { ...baseDossierFields, branches: [], fuelInputs: {} }
+      const result = migrateDossier(old)
+      expect(result.perfExtraAerodromes).toEqual([])
+    })
+
+    it('preserves an existing perfExtraAerodromes array', () => {
+      const modern = { ...baseDossierFields, branches: [], fuelInputs: {}, perfExtraAerodromes: ['LFPN'] }
+      const result = migrateDossier(modern)
+      expect(result.perfExtraAerodromes).toEqual(['LFPN'])
     })
   })
 })

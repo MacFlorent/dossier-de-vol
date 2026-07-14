@@ -114,6 +114,7 @@ export function App() {
                   loading: Object.fromEntries(aircraft.massBalance.stations.map(s => [s.name, 0])),
                   perfRegulatory: 1.0,
                   perfInputs: {},
+                  perfExtraAerodromes: [],
                   notes: '',
                   createdAt: now.toISOString(),
                   updatedAt: now.toISOString(),

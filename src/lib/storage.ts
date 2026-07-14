@@ -139,6 +139,8 @@ export function migrateDossier(d: unknown): FlightDossier {
     migrateAircraftFuelCapacity(data.aircraft as Aircraft)
   }
 
+  if (!Array.isArray(data.perfExtraAerodromes)) data.perfExtraAerodromes = []
+
   // Remove legacy fields
   delete data.route
   delete data.navOverrides
