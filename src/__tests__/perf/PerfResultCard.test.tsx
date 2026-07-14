@@ -51,7 +51,7 @@ describe('PerfResultCard', () => {
 
   it('uses the landing table when tableKey is ldg', () => {
     // perfRegulatory is 1.15 (not 1) so the base and regulatory distances render as different
-    // text ("350 m" vs "403 m") — with a ×1 factor they'd collide and getByText would be ambiguous.
+    // text ("350 m" vs "402 m") — with a ×1 factor they'd collide and getByText would be ambiguous.
     render(<PerfResultCard label="Atterrissage" tableKey="ldg" aircraft={makeAircraft()} cond={makeCond()} availableLabel="LDA" perfRegulatory={1.15} />)
     expect(screen.getByText('350 m')).toBeInTheDocument()
   })

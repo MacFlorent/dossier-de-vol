@@ -102,6 +102,13 @@ describe('FlightTabStrip', () => {
     expect(onSelect).not.toHaveBeenCalled()
   })
 
+  it('pressing Enter on the close button does not trigger onSelect', () => {
+    const onSelect = vi.fn()
+    render(<FlightTabStrip branches={[{ id: 'b1', label: 'LFPN', closable: true }]} activeId="b1" onSelect={onSelect} onClose={vi.fn()} />)
+    fireEvent.keyDown(screen.getByLabelText(/fermer/i), { key: 'Enter' })
+    expect(onSelect).not.toHaveBeenCalled()
+  })
+
   it('renders badge content from renderBadge next to the label', () => {
     render(
       <FlightTabStrip

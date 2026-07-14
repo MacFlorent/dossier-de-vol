@@ -57,6 +57,7 @@ export function FlightTabStrip({ branches, activeId, onSelect, onRename, onAdd, 
               type="button"
               aria-label={`Fermer ${b.label}`}
               onClick={e => { e.stopPropagation(); onClose(b.id) }}
+              onKeyDown={e => e.stopPropagation()}
               className="text-[var(--text-dim)] hover:text-[var(--red)] text-xs px-0.5"
             >
               ✕

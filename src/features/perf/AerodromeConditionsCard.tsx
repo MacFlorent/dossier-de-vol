@@ -56,7 +56,9 @@ export function AerodromeConditionsCard({
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wider">Conditions</h2>
         <button type="button" aria-label="Éditer référentiel" onClick={onEditReferential}
-          className="text-[var(--text-dim)] hover:text-[var(--amber)] text-sm">✏️</button>
+          className="text-[var(--text-dim)] hover:text-[var(--amber)] text-sm">
+          <span aria-hidden="true">✏️</span>
+        </button>
       </div>
 
       {runways.length > 0 && (
@@ -80,7 +82,7 @@ export function AerodromeConditionsCard({
                       : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--text-muted)]'
                   }`}
                 >
-                  {rwy.ident} ({rwy.headingMag}° — {hw >= 0 ? '+' : ''}{hw}kt face / {Math.abs(xw)}kt trav.)
+                  {rwy.ident} ({rwy.headingMag}° — {hw >= 0 ? '+' : ''}{hw}kt face / {Math.abs(xw)}kt trav.{xw !== 0 ? (xw > 0 ? ' D' : ' G') : ''})
                 </button>
               )
             })}
@@ -92,12 +94,12 @@ export function AerodromeConditionsCard({
         <div className="space-y-3">
           <p className="text-xs text-[var(--text-dim)] uppercase tracking-wider">Terrain</p>
           <div className="grid grid-cols-2 gap-2">
-            <Input label="Élév. (ft)" type="number" value={elevation}
-              onChange={e => onUpdate({ elevation: Number(e.target.value) })} />
-            <Input label="QNH (hPa)" type="number" value={qnh}
-              onChange={e => onUpdate({ qnh: Number(e.target.value) })} />
-            <Input label="Temp (°C)" type="number" value={temp}
-              onChange={e => onUpdate({ temp: Number(e.target.value) })} />
+            <Input label="Élév. (ft)" type="number" value={elevation === 0 ? '' : elevation} placeholder="0"
+              onChange={e => onUpdate({ elevation: e.target.value === '' ? 0 : Number(e.target.value) })} />
+            <Input label="QNH (hPa)" type="number" value={qnh === 0 ? '' : qnh} placeholder="0"
+              onChange={e => onUpdate({ qnh: e.target.value === '' ? 0 : Number(e.target.value) })} />
+            <Input label="Temp (°C)" type="number" value={temp === 0 ? '' : temp} placeholder="0"
+              onChange={e => onUpdate({ temp: e.target.value === '' ? 0 : Number(e.target.value) })} />
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Surface</label>
               <button type="button"
