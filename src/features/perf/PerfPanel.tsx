@@ -7,7 +7,8 @@ import { ROLE_LABELS, ROLE_COLORS, type AeroRole } from '../../lib/aviation/aero
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { FlightTabStrip } from '../../components/ui/FlightTabStrip'
-import { AerodromeConditionsCard } from './AerodromeConditionsCard'
+import { AerodromeWeatherCard } from './AerodromeWeatherCard'
+import { AerodromeTerrainCard } from './AerodromeTerrainCard'
 import { PerfResultCard } from './PerfResultCard'
 import { AddPerfAerodromeModal } from './AddPerfAerodromeModal'
 import { AerodromeQuickEditModal } from './AerodromeQuickEditModal'
@@ -126,17 +127,24 @@ export function PerfPanel({ dossier, onUpdate, onUpdateRegulatory, onUpdateExtra
           const pa = pressureAltitude(elevation, qnh)
           const da = densityAltitude(pa, temp)
           const cond: PerfConditions = { weight: depWeight, pa, oat: temp, surfaceGrass: inputs.surface === 'grass', windKt: inputs.windKt }
+          const title = aero ? `${icao} — ${aero.name}` : icao
 
           return (
             <div className="space-y-4">
-              <AerodromeConditionsCard
+              <AerodromeWeatherCard
                 runways={aero?.runways ?? []}
                 inputs={inputs}
-                elevation={elevation}
                 qnh={qnh}
                 temp={temp}
                 pa={pa}
                 da={da}
+                onUpdate={changes => handleUpdate(icao, changes)}
+              />
+              <AerodromeTerrainCard
+                title={title}
+                runways={aero?.runways ?? []}
+                inputs={inputs}
+                elevation={elevation}
                 onUpdate={changes => handleUpdate(icao, changes)}
                 onEditReferential={() => setEditingIcao(icao)}
               />

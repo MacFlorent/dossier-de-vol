@@ -134,4 +134,15 @@ describe('PerfPanel', () => {
     fireEvent.change(screen.getByDisplayValue('1'), { target: { value: '1.15' } })
     expect(onUpdateRegulatory).toHaveBeenCalledWith(1.15)
   })
+
+  it('titles the aerodrome card with ICAO and name when the aerodrome is in the referential', () => {
+    const branch = makeBranch({ aerodromes: [makeAerodrome('LFPN', 'DEP')] })
+    render(<PerfPanel dossier={makeDossier({ branches: [branch] })} onUpdate={vi.fn()} onUpdateRegulatory={vi.fn()} onUpdateExtraAerodromes={vi.fn()} />)
+    expect(screen.getByRole('heading', { name: 'LFPN — Toussus' })).toBeInTheDocument()
+  })
+
+  it('titles the aerodrome card with the ICAO alone when the aerodrome is not in the referential', () => {
+    render(<PerfPanel dossier={makeDossier({ perfExtraAerodromes: ['LFXX'] })} onUpdate={vi.fn()} onUpdateRegulatory={vi.fn()} onUpdateExtraAerodromes={vi.fn()} />)
+    expect(screen.getByRole('heading', { name: 'LFXX' })).toBeInTheDocument()
+  })
 })
