@@ -71,3 +71,36 @@ describe('AppChrome — date editing', () => {
     expect(screen.getByText('2026-07-19')).toBeInTheDocument()
   })
 })
+
+describe('AppChrome — aircraft card', () => {
+  it('shows aircraft name, registration, TAS and autonomie', () => {
+    render(<AppChrome screen="dossier" dossier={makeDossier()} dossierTab="branches" onGoHome={vi.fn()} onSetTab={vi.fn()} />)
+    expect(screen.getByText('DR400 · F-GABC')).toBeInTheDocument()
+    // 120L / 30L/h = 4h -> formatDuration(240) = "4h00"
+    expect(screen.getByText(/120 kt · 4h00 autonomie/)).toBeInTheDocument()
+  })
+})
+
+describe('AppChrome — synthèse dossier', () => {
+  it('shows branch count, total distance and raw flight time badges', () => {
+    render(<AppChrome screen="dossier" dossier={makeDossier()} dossierTab="branches" onGoHome={vi.fn()} onSetTab={vi.fn()} />)
+    // 1 branch, 120nm ENROUTE, 120nm/120kt*60 = 60min -> "1h00"
+    expect(screen.getByText('1')).toBeInTheDocument()
+    expect(screen.getByText('120 nm')).toBeInTheDocument()
+    expect(screen.getByText('1h00')).toBeInTheDocument()
+  })
+
+  it('calls onDownload when the JSON button is clicked', () => {
+    const onDownload = vi.fn()
+    render(<AppChrome screen="dossier" dossier={makeDossier()} dossierTab="branches" onGoHome={vi.fn()} onSetTab={vi.fn()} onDownload={onDownload} />)
+    fireEvent.click(screen.getByRole('button', { name: '↓ JSON' }))
+    expect(onDownload).toHaveBeenCalled()
+  })
+
+  it('no longer shows a "Dossier" tab', () => {
+    render(<AppChrome screen="dossier" dossier={makeDossier()} dossierTab="branches" onGoHome={vi.fn()} onSetTab={vi.fn()} />)
+    expect(screen.queryByText('Dossier')).not.toBeInTheDocument()
+    expect(screen.getByText('Vols')).toBeInTheDocument()
+    expect(screen.getByText('Perf')).toBeInTheDocument()
+  })
+})

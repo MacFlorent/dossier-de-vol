@@ -3,13 +3,15 @@ import type { FlightDossier, DossierTab, Screen } from '../types'
 import { TabBar } from './ui/Tabs'
 import { Button } from './ui/Button'
 import { ChangeAircraftModal } from './ui/ChangeAircraftModal'
+import { computeDossierTotals } from '../lib/aviation/dossierTotals'
+import { totalFuelCapacity } from '../lib/aviation/wbCalc'
+import { formatDuration } from '../lib/format'
 
 const DOSSIER_TABS: { key: DossierTab; label: string }[] = [
   { key: 'branches', label: 'Vols' },
   { key: 'fuel', label: 'Carbu' },
   { key: 'wb', label: 'M&C' },
   { key: 'perf', label: 'Perf' },
-  { key: 'dossier', label: 'Dossier' },
 ]
 
 interface AppChromeProps {
@@ -24,12 +26,23 @@ interface AppChromeProps {
   onChangeAircraft?: (newAircraftId: string) => void
 }
 
+function StatBadge({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="text-center rounded border border-[var(--border)] bg-[var(--bg-inset)] px-3 py-1">
+      <p className="font-mono font-semibold text-sm text-[var(--text-1)]">{value}</p>
+      <p className="text-[10px] text-[var(--text-dim)] uppercase tracking-wider">{label}</p>
+    </div>
+  )
+}
+
 export function AppChrome({ screen, dossier, dossierTab, onGoHome, onSetTab, onDownload, onUpdateName, onUpdateDate, onChangeAircraft }: AppChromeProps) {
   const [editingName, setEditingName] = useState(false)
   const [nameValue, setNameValue] = useState('')
   const [editingDate, setEditingDate] = useState(false)
   const [dateValue, setDateValue] = useState('')
   const [showChangeModal, setShowChangeModal] = useState(false)
+
+  const totals = dossier ? computeDossierTotals(dossier) : null
 
   const handleNameClick = () => {
     if (!dossier || !onUpdateName) return
@@ -68,18 +81,29 @@ export function AppChrome({ screen, dossier, dossierTab, onGoHome, onSetTab, onD
       className="sticky top-0 z-50 flex flex-col no-print"
       style={{ backgroundColor: 'var(--bg-chrome)', borderBottom: '1px solid var(--border)' }}
     >
-      {/* Top bar */}
-      <div className="flex items-center gap-4 px-4 py-3">
+      {/* Thin top bar */}
+      <div className="flex items-center gap-3 px-4 py-2">
         <button
           onClick={onGoHome}
           className="text-[var(--amber)] font-semibold text-sm tracking-wide hover:opacity-80 transition-opacity"
         >
           dossier de vol
         </button>
+        {!dossier && (
+          <span className="text-[var(--text-dim)] text-xs">préparation de vol VFR</span>
+        )}
+        {screen !== 'home' && (
+          <Button variant="ghost" size="sm" className="ml-auto" onClick={onGoHome}>
+            ← Accueil
+          </Button>
+        )}
+      </div>
 
-        {dossier && (
-          <>
-            <span className="text-[var(--text-dim)] text-sm">·</span>
+      {/* Dossier block — identité + synthèse */}
+      {dossier && totals && (
+        <div className="px-4 py-3 border-t border-[var(--border)] flex flex-col gap-2.5">
+          {/* Row 1 — identité */}
+          <div className="flex items-center gap-3 flex-wrap">
             {editingName ? (
               <input
                 autoFocus
@@ -98,12 +122,7 @@ export function AppChrome({ screen, dossier, dossierTab, onGoHome, onSetTab, onD
                 {dossier.name}
               </span>
             )}
-            <span className="text-[var(--text-dim)] text-xs shrink-0">{dossier.aircraft.name}</span>
-            {onChangeAircraft && (
-              <Button variant="ghost" size="sm" className="shrink-0" onClick={() => setShowChangeModal(true)}>
-                Changer
-              </Button>
-            )}
+
             {editingDate ? (
               <input
                 autoFocus
@@ -123,26 +142,41 @@ export function AppChrome({ screen, dossier, dossierTab, onGoHome, onSetTab, onD
                 {dossier.date}
               </span>
             )}
-          </>
-        )}
 
-        {!dossier && (
-          <span className="text-[var(--text-dim)] text-xs">préparation de vol VFR</span>
-        )}
+            <div className="flex flex-col shrink-0 leading-tight">
+              <span className="text-[var(--text-2)] text-xs">
+                {dossier.aircraft.name} · {dossier.aircraft.registration}
+              </span>
+              <span className="text-[var(--text-dim)] text-[10px] font-mono">
+                {dossier.aircraft.characteristics.regimes[0].speed} kt ·{' '}
+                {formatDuration(
+                  (totalFuelCapacity(dossier.aircraft.massBalance) / dossier.aircraft.characteristics.regimes[0].fuelBurn) * 60
+                )}{' '}
+                autonomie
+              </span>
+            </div>
+            {onChangeAircraft && (
+              <Button variant="ghost" size="sm" className="shrink-0" onClick={() => setShowChangeModal(true)}>
+                Changer
+              </Button>
+            )}
+          </div>
 
-        <div className="ml-auto flex gap-2">
-          {onDownload && (
-            <Button variant="secondary" size="sm" onClick={onDownload}>
-              ↓ JSON
-            </Button>
-          )}
-          {screen !== 'home' && (
-            <Button variant="ghost" size="sm" onClick={onGoHome}>
-              ← Accueil
-            </Button>
-          )}
+          {/* Row 2 — synthèse + actions */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <StatBadge label="Branches" value={String(totals.branchCount)} />
+            <StatBadge label="Distance" value={`${totals.totalDistanceNm.toFixed(0)} nm`} />
+            <StatBadge label="Temps brut" value={formatDuration(totals.totalRawTimeMin)} />
+            <div className="ml-auto flex gap-2">
+              {onDownload && (
+                <Button variant="secondary" size="sm" onClick={onDownload}>
+                  ↓ JSON
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Tab bar (only when dossier is open) */}
       {screen === 'dossier' && dossier && (
