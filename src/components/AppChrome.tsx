@@ -168,6 +168,9 @@ export function AppChrome({ screen, dossier, dossierTab, onGoHome, onSetTab, onD
             <StatBadge label="Distance" value={`${totals.totalDistanceNm.toFixed(0)} nm`} />
             <StatBadge label="Temps brut" value={formatDuration(totals.totalRawTimeMin)} />
             <div className="ml-auto flex gap-2">
+              <Button variant="secondary" size="sm" onClick={() => window.print()}>
+                Imprimer
+              </Button>
               {onDownload && (
                 <Button variant="secondary" size="sm" onClick={onDownload}>
                   ↓ JSON

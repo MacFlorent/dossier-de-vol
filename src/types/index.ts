@@ -175,7 +175,7 @@ export interface FlightDossier {
 
 // ── UI ────────────────────────────────────────────────────────────────────────
 
-export type DossierTab = 'branches' | 'fuel' | 'wb' | 'perf' | 'dossier'
+export type DossierTab = 'branches' | 'fuel' | 'wb' | 'perf'
 export type Screen = 'home' | 'aircraft-editor' | 'dossier' | 'aerodrome-db'
 
 // ── Résultats de calcul (non stockés) ────────────────────────────────────────

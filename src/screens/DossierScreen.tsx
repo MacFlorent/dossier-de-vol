@@ -3,7 +3,7 @@ import { BranchesPanel } from '../features/branches/BranchesPanel'
 import { FuelPanel } from '../features/fuel/FuelPanel'
 import { WBPanel } from '../features/wb/WBPanel'
 import { PerfPanel } from '../features/perf/PerfPanel'
-import { DossierPanel } from '../features/dossier/DossierPanel'
+import { DossierPrintSheet } from '../features/dossier/DossierPrintSheet'
 import { DEFAULT_FUEL_INPUTS } from '../lib/aviation/fuelCalc'
 import { getAircraft } from '../lib/storage'
 import { applyAircraftChange } from '../lib/dossierTransforms'
@@ -56,7 +56,9 @@ export function DossierScreen({ dossier, activeTab, onUpdate }: DossierScreenPro
           onUpdateExtraAerodromes={(perfExtraAerodromes) => update({ perfExtraAerodromes })}
         />
       )}
-      {activeTab === 'dossier' && <DossierPanel dossier={dossier} />}
+      <div className="print-only">
+        <DossierPrintSheet dossier={dossier} />
+      </div>
     </div>
   )
 }

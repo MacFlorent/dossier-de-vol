@@ -2,17 +2,13 @@ import type { FlightDossier } from '../../types'
 import { computeWB, totalFuelCapacity } from '../../lib/aviation/wbCalc'
 import { FUEL_DENSITY_KGL } from '../../lib/aviation/constants'
 import { computeBranchFuel } from '../../lib/aviation/fuelCalc'
-import { downloadDossier } from '../../lib/storage'
-import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
-import { Card } from '../../components/ui/Card'
 
 interface Props { dossier: FlightDossier }
 
-export function DossierPanel({ dossier }: Props) {
+export function DossierPrintSheet({ dossier }: Props) {
   const { aircraft, branches, loading, fuelInputs } = dossier
 
-  // Compute W&B departure
   const wbDep = computeWB(aircraft.massBalance, loading)
 
   const fmtTime = (min: number) => {
@@ -21,27 +17,12 @@ export function DossierPanel({ dossier }: Props) {
     return `${h}h${String(m).padStart(2, '0')}`
   }
 
-  // Aggregate totals across all branches
-  const totalDistNm = branches.reduce((s, b) => s + b.segments.filter(seg => seg.role === 'ENROUTE').reduce((ss, seg) => ss + seg.distanceNm, 0), 0)
-
-  // Fuel summary per branch (fuelInputs is Record<branchId, FuelInputs>)
   const regime = aircraft.characteristics.regimes[0]
 
   return (
     <div className="max-w-4xl mx-auto">
-      {/* Action buttons — hidden in print */}
-      <div className="no-print flex items-center gap-3 p-4 border-b border-[var(--border)] mb-6">
-        <Button variant="primary" onClick={() => window.print()}>
-          Imprimer (A4)
-        </Button>
-        <Button variant="secondary" onClick={() => downloadDossier(dossier)}>
-          Télécharger JSON
-        </Button>
-      </div>
-
       {/* ── SHEET 1: Header + Branches summary ──────────────────────────── */}
       <div className="print-sheet px-6 pb-8">
-        {/* Header */}
         <header className="mb-6 pb-4 border-b-2 border-[var(--amber)]">
           <div className="flex justify-between items-start">
             <div>
@@ -57,20 +38,6 @@ export function DossierPanel({ dossier }: Props) {
           </div>
         </header>
 
-        {/* Summary row */}
-        <div className="grid grid-cols-2 gap-4 mb-6 text-center">
-          {[
-            { label: 'Branches', value: `${branches.length}` },
-            { label: 'Distance totale', value: `${totalDistNm.toFixed(0)} nm` },
-          ].map(({ label, value }) => (
-            <Card key={label} padding="sm" inset>
-              <p className="text-xs text-[var(--text-dim)] uppercase tracking-wider">{label}</p>
-              <p className="font-mono font-semibold text-[var(--text-1)] mt-1">{value}</p>
-            </Card>
-          ))}
-        </div>
-
-        {/* Branches table */}
         {branches.length > 0 ? (
           <section>
             <h2 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">Branches de vol</h2>
@@ -123,7 +90,6 @@ export function DossierPanel({ dossier }: Props) {
         </header>
 
         <div className="grid gap-6 sm:grid-cols-2">
-          {/* Station loading */}
           <section>
             <h3 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">Chargement</h3>
             <table className="w-full text-xs">
@@ -165,7 +131,6 @@ export function DossierPanel({ dossier }: Props) {
             </div>
           </section>
 
-          {/* Fuel summary per branch */}
           <section>
             <h3 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">Carburant par branche</h3>
             {branches.length === 0 ? (
@@ -203,7 +168,6 @@ export function DossierPanel({ dossier }: Props) {
           </section>
         </div>
 
-        {/* Remarks */}
         <section className="mt-6">
           <h3 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">Remarques</h3>
           <div className="border border-[var(--border)] rounded min-h-[80px] p-2 text-xs text-[var(--text-dim)]">

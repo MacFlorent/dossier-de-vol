@@ -104,3 +104,13 @@ describe('AppChrome — synthèse dossier', () => {
     expect(screen.getByText('Perf')).toBeInTheDocument()
   })
 })
+
+describe('AppChrome — impression', () => {
+  it('calls window.print when the Imprimer button is clicked', () => {
+    const printSpy = vi.spyOn(window, 'print').mockImplementation(() => {})
+    render(<AppChrome screen="dossier" dossier={makeDossier()} dossierTab="branches" onGoHome={vi.fn()} onSetTab={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Imprimer' }))
+    expect(printSpy).toHaveBeenCalled()
+    printSpy.mockRestore()
+  })
+})
