@@ -35,6 +35,22 @@ describe('ChangeAircraftModal', () => {
     expect(screen.getByText('Aucun autre avion dans la flotte.')).toBeInTheDocument()
   })
 
+  it('shows TAS and autonomie for each candidate aircraft', () => {
+    saveAircraft(makeAircraft({ id: 'ac-1' }))
+    saveAircraft(makeAircraft({
+      id: 'ac-2', name: 'Cessna 172', registration: 'F-GXYZ',
+      characteristics: { regimes: [{ label: '75%', speed: 110, fuelBurn: 28 }] },
+      massBalance: {
+        emptyWeight: 620, emptyArm: 810,
+        stations: [{ name: 'Carburant', arm: 810, kind: 'fuel', capacityL: 140 }],
+        envelopePoints: [],
+      },
+    }))
+    render(<ChangeAircraftModal currentAircraftId="ac-1" onConfirm={vi.fn()} onClose={vi.fn()} />)
+    // 140L / 28L/h = 5h -> formatDuration(300) = "5h00"
+    expect(screen.getByText(/110 kt · 5h00 autonomie/)).toBeInTheDocument()
+  })
+
   it('asks for confirmation before calling onConfirm', async () => {
     saveAircraft(makeAircraft({ id: 'ac-1' }))
     saveAircraft(makeAircraft({ id: 'ac-2', name: 'Cessna 172' }))
