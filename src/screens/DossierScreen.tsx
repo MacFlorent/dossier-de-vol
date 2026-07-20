@@ -21,41 +21,43 @@ export function DossierScreen({ dossier, activeTab, onUpdate }: DossierScreenPro
 
   return (
     <div className="flex flex-col min-h-0 flex-1">
-      {activeTab === 'branches' && (
-        <BranchesPanel
-          branches={dossier.branches}
-          aircraft={dossier.aircraft}
-          onUpdate={(branches: FlightBranch[]) => {
-            const synced: Record<string, FuelInputs> = {}
-            for (const b of branches) {
-              synced[b.id] = dossier.fuelInputs[b.id] ?? { ...DEFAULT_FUEL_INPUTS }
-            }
-            update({ branches, fuelInputs: synced })
-          }}
-        />
-      )}
-      {activeTab === 'fuel' && (
-        <FuelPanel
-          dossier={dossier}
-          onUpdate={(fuelInputs) => update({ fuelInputs })}
-          onUpdateBranches={(branches: FlightBranch[]) => update({ branches })}
-          onChangeAircraft={(newAircraftId) => {
-            const newAircraft = getAircraft(newAircraftId)
-            if (newAircraft) onUpdate(applyAircraftChange(dossier, newAircraft))
-          }}
-        />
-      )}
-      {activeTab === 'wb' && (
-        <WBPanel dossier={dossier} onUpdate={(loading) => update({ loading })} />
-      )}
-      {activeTab === 'perf' && (
-        <PerfPanel
-          dossier={dossier}
-          onUpdate={(perfInputs) => update({ perfInputs })}
-          onUpdateRegulatory={(perfRegulatory) => update({ perfRegulatory })}
-          onUpdateExtraAerodromes={(perfExtraAerodromes) => update({ perfExtraAerodromes })}
-        />
-      )}
+      <div className="no-print flex flex-col min-h-0 flex-1">
+        {activeTab === 'branches' && (
+          <BranchesPanel
+            branches={dossier.branches}
+            aircraft={dossier.aircraft}
+            onUpdate={(branches: FlightBranch[]) => {
+              const synced: Record<string, FuelInputs> = {}
+              for (const b of branches) {
+                synced[b.id] = dossier.fuelInputs[b.id] ?? { ...DEFAULT_FUEL_INPUTS }
+              }
+              update({ branches, fuelInputs: synced })
+            }}
+          />
+        )}
+        {activeTab === 'fuel' && (
+          <FuelPanel
+            dossier={dossier}
+            onUpdate={(fuelInputs) => update({ fuelInputs })}
+            onUpdateBranches={(branches: FlightBranch[]) => update({ branches })}
+            onChangeAircraft={(newAircraftId) => {
+              const newAircraft = getAircraft(newAircraftId)
+              if (newAircraft) onUpdate(applyAircraftChange(dossier, newAircraft))
+            }}
+          />
+        )}
+        {activeTab === 'wb' && (
+          <WBPanel dossier={dossier} onUpdate={(loading) => update({ loading })} />
+        )}
+        {activeTab === 'perf' && (
+          <PerfPanel
+            dossier={dossier}
+            onUpdate={(perfInputs) => update({ perfInputs })}
+            onUpdateRegulatory={(perfRegulatory) => update({ perfRegulatory })}
+            onUpdateExtraAerodromes={(perfExtraAerodromes) => update({ perfExtraAerodromes })}
+          />
+        )}
+      </div>
       <div className="print-only">
         <DossierPrintSheet dossier={dossier} />
       </div>
