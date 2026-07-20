@@ -77,6 +77,9 @@ export function App() {
         onUpdateName={state.dossier ? (name) => {
           dispatch({ type: 'UPDATE_DOSSIER', dossier: { ...state.dossier!, name, updatedAt: new Date().toISOString() } })
         } : undefined}
+        onUpdateDate={state.dossier ? (date) => {
+          dispatch({ type: 'UPDATE_DOSSIER', dossier: { ...state.dossier!, date, updatedAt: new Date().toISOString() } })
+        } : undefined}
         onChangeAircraft={state.dossier ? (newAircraftId) => {
           const newAircraft = getAircraft(newAircraftId)
           if (!newAircraft || !state.dossier) return

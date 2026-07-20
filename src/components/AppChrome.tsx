@@ -20,12 +20,15 @@ interface AppChromeProps {
   onSetTab: (tab: DossierTab) => void
   onDownload?: () => void
   onUpdateName?: (name: string) => void
+  onUpdateDate?: (date: string) => void
   onChangeAircraft?: (newAircraftId: string) => void
 }
 
-export function AppChrome({ screen, dossier, dossierTab, onGoHome, onSetTab, onDownload, onUpdateName, onChangeAircraft }: AppChromeProps) {
+export function AppChrome({ screen, dossier, dossierTab, onGoHome, onSetTab, onDownload, onUpdateName, onUpdateDate, onChangeAircraft }: AppChromeProps) {
   const [editingName, setEditingName] = useState(false)
   const [nameValue, setNameValue] = useState('')
+  const [editingDate, setEditingDate] = useState(false)
+  const [dateValue, setDateValue] = useState('')
   const [showChangeModal, setShowChangeModal] = useState(false)
 
   const handleNameClick = () => {
@@ -42,6 +45,22 @@ export function AppChrome({ screen, dossier, dossierTab, onGoHome, onSetTab, onD
   const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') handleNameConfirm()
     if (e.key === 'Escape') setEditingName(false)
+  }
+
+  const handleDateClick = () => {
+    if (!dossier || !onUpdateDate) return
+    setDateValue(dossier.date)
+    setEditingDate(true)
+  }
+
+  const handleDateConfirm = () => {
+    if (dateValue) onUpdateDate?.(dateValue)
+    setEditingDate(false)
+  }
+
+  const handleDateKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') handleDateConfirm()
+    if (e.key === 'Escape') setEditingDate(false)
   }
 
   return (
@@ -85,7 +104,25 @@ export function AppChrome({ screen, dossier, dossierTab, onGoHome, onSetTab, onD
                 Changer
               </Button>
             )}
-            <span className="text-[var(--text-dim)] text-xs shrink-0">{dossier.date}</span>
+            {editingDate ? (
+              <input
+                autoFocus
+                type="date"
+                value={dateValue}
+                onChange={e => setDateValue(e.target.value)}
+                onBlur={handleDateConfirm}
+                onKeyDown={handleDateKeyDown}
+                className="text-xs bg-transparent border-b border-[var(--amber)] text-[var(--text-2)] focus:outline-none shrink-0"
+              />
+            ) : (
+              <span
+                className={`text-[var(--text-dim)] text-xs shrink-0 ${onUpdateDate ? 'cursor-pointer hover:text-[var(--text-1)]' : ''}`}
+                onClick={handleDateClick}
+                title={onUpdateDate ? 'Cliquer pour modifier' : undefined}
+              >
+                {dossier.date}
+              </span>
+            )}
           </>
         )}
 
